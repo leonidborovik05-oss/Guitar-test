@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Студия песенной гитары | Главная</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4a2b7a;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .nav-btn {
+            background: linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%);
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(255, 105, 135, 0.4);
+            transition: transform 0.2s;
+        }
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+        .main-content {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+        .hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+        }
+        .hero h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .hero p {
+            font-size: 1.3em;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .advantages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        .advantage-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s;
+        }
+        .advantage-card:hover {
+            transform: translateY(-10px);
+        }
+        .advantage-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+        }
+        .advantage-card h3 {
+            font-size: 1.5em;
+            color: #4a2b7a;
+            margin-bottom: 15px;
+        }
+        .advantage-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 80px;
+            color: rgba(255,255,255,0.8);
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <a href="login.html" class="nav-btn">Вход в студию</a>
+    </div>
+
+    <div class="main-content">
+        <div class="hero">
+            <h1>Добро пожаловать в студию песенной гитары!</h1>
+            <p>Здесь живут аккорды, рифмы и вдохновение. Мы помогаем исполнить твою мечту — научиться играть и петь любимые песни.</p>
+        </div>
+
+        <h2 style="text-align: center; color: white; font-size: 2.2em; margin-bottom: 30px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);">Почему выбирают нас</h2>
+        
+        <div class="advantages">
+            <div class="advantage-card">
+                <div class="advantage-icon">🎯</div>
+                <h3>Индивидуальный подход</h3>
+                <p>Каждый ученик получает персональную программу, учитывающую его уровень, цели и музыкальные предпочтения.</p>
+            </div>
+            <div class="advantage-card">
+                <div class="advantage-icon">📹</div>
+                <h3>Видеоматериалы</h3>
+                <p>Доступ к библиотеке уроков, разборов песен и упражнений 24/7 из личного кабинета.</p>
+            </div>
+            <div class="advantage-card">
+                <div class="advantage-icon">👥</div>
+                <h3>Обратная связь</h3>
+                <p>Преподаватель всегда на связи, оставляет заметки, замечания и следит за твоим прогрессом.</p>
+            </div>
+            <div class="advantage-card">
+                <div class="advantage-icon">🎵</div>
+                <h3>Репертуар на выбор</h3>
+                <p>Играй то, что нравится! Мы поможем разобрать любую песню — от дворовых до мировых хитов.</p>
+            </div>
+            <div class="advantage-card">
+                <div class="advantage-icon">📊</div>
+                <h3>Отслеживание прогресса</h3>
+                <p>В личном кабинете видно, какие навыки уже освоены, а над чем ещё предстоит работать.</p>
+            </div>
+            <div class="advantage-card">
+                <div class="advantage-icon">🎤</div>
+                <h3>Открытые уроки</h3>
+                <p>Регулярные встречи, где можно выступить, получить опыт и вдохновиться игрой других.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Студия песенной гитары. Присоединяйся к музыкальной семье!</p>
+        </div>
+    </div>
+</body>
+</html>
