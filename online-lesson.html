@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Онлайн-урок | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        /* Верхняя панель */
+        .top-bar {
+            background: #16213e;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .lesson-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .lesson-title {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .timer {
+            background: #0f3460;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+        .participants-count {
+            background: #28a745;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        .exit-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        
+        /* Основная сетка видео */
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            padding: 10px;
+            background: #1a1a2e;
+            overflow-y: auto;
+        }
+        .video-container {
+            position: relative;
+            background: #0f3460;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .teacher-badge {
+            background: #ffc107;
+            color: #1e1e2f;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+        }
+        .muted-badge {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: 5px;
+        }
+        .screen-share-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        .no-video-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f3460;
+            color: #4a5a7a;
+            font-size: 3em;
+        }
+        
+        /* Нижняя панель управления */
+        .control-bar {
+            background: #16213e;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            background: #0f3460;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+        .control-btn.active {
+            background: #28a745;
+        }
+        .control-btn.danger {
+            background: #dc3545;
+        }
+        .control-btn.warning {
+            background: #ffc107;
+            color: #1e1e2f;
+        }
+        
+        /* Панель управления для учителя */
+        .teacher-panel {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            width: 250px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+        }
+        .teacher-panel.show {
+            display: block;
+        }
+        .panel-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1e1e2f;
+        }
+        .participant-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eaeef2;
+        }
+        .mute-timer {
+            display: flex;
+            gap: 5px;
+        }
+        .mute-timer input {
+            width: 50px;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .mute-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+            .teacher-panel {
+                left: 10px;
+                right: 10px;
+                width: auto;
+                top: auto;
+                bottom: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Верхняя панель -->
+        <div class="top-bar">
+            <div class="lesson-info">
+                <span class="lesson-title">🎸 Онлайн-урок гитары</span>
+                <span class="timer" id="timer">00:00</span>
+                <span class="participants-count" id="participantsCount">👥 1</span>
+            </div>
+            <div>
+                <button class="control-btn warning" id="teacherPanelBtn" onclick="toggleTeacherPanel()" style="width: auto; padding: 8px 20px; border-radius: 40px; margin-right: 10px; display: none;">
+                    👑 Управление
+                </button>
+                <a href="online-ready.html" class="exit-btn">Выйти</a>
+            </div>
+        </div>
+
+        <!-- Сетка видео -->
+        <div class="video-grid" id="videoGrid">
+            <!-- Видео будут добавляться динамически -->
+        </div>
+
+        <!-- Нижняя панель управления -->
+        <div class="control-bar">
+            <button class="control-btn" id="micBtn" onclick="toggleMic()" title="Микрофон">
+                🎤
+            </button>
+            <button class="control-btn" id="cameraBtn" onclick="toggleCamera()" title="Камера">
+                📷
+            </button>
+            <button class="control-btn" id="screenBtn" onclick="toggleScreenShare()" title="Демонстрация экрана">
+                🖥️
+            </button>
+            <button class="control-btn" id="participantsBtn" onclick="showParticipants()" title="Участники">
+                👥
+            </button>
+        </div>
+
+        <!-- Панель управления для учителя -->
+        <div class="teacher-panel" id="teacherPanel">
+            <div class="panel-title">👑 Управление участниками</div>
+            <div id="participantsControls">
+                <!-- Сюда будут добавляться элементы управления -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Получаем роль из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+        
+        // Данные пользователя
+        let userName = '';
+        let userLogin = '';
+        
+        if (role === 'teacher') {
+            userName = 'Евгения (Учитель)';
+            userLogin = 'EvgenyaGuitara01543';
+        } else {
+            userName = 'Леонид Зас (Ученик)';
+            userLogin = 'LeonidzasFire23457';
+        }
+        
+        // WebRTC переменные
+        let localStream = null;
+        let peers = {};
+        let screenStream = null;
+        let isMicMuted = false;
+        let isCameraOff = false;
+        let isScreenSharing = false;
+        
+        // Таймер урока
+        let startTime = Date.now();
+        let timerInterval = setInterval(updateTimer, 1000);
+        
+        // Загружаем участников
+        let participants = JSON.parse(localStorage.getItem('lessonParticipants')) || [];
+        
+        // Показываем панель учителя только для учителя
+        if (role === 'teacher') {
+            document.getElementById('teacherPanelBtn').style.display = 'inline-block';
+        }
+        
+        // Инициализация
+        async function initLesson() {
+            try {
+                // Получаем локальный поток из предыдущей страницы или создаём новый
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                // Добавляем себя в сетку
+                addVideoElement('local', userName, localStream, true);
+                
+                // Обновляем список участников
+                updateParticipantsList();
+                
+                // Симуляция других участников (для демо)
+                simulateParticipants();
+                
+            } catch (err) {
+                console.error('Ошибка:', err);
+            }
+        }
+        
+        // Добавление видео элемента
+        function addVideoElement(id, name, stream, isLocal = false, isTeacher = false) {
+            const grid = document.getElementById('videoGrid');
+            
+            // Проверяем, есть ли уже такой элемент
+            if (document.getElementById(`video-${id}`)) return;
+            
+            const container = document.createElement('div');
+            container.className = 'video-container';
+            container.id = `video-${id}`;
+            
+            const video = document.createElement('video');
+            video.autoplay = true;
+            video.playsInline = true;
+            if (isLocal) {
+                video.muted = true; // Себя не слышим
+            }
+            video.srcObject = stream;
+            
+            const label = document.createElement('div');
+            label.className = 'video-label';
+            label.innerHTML = `
+                ${name}
+                ${isTeacher ? '<span class="teacher-badge">👑 Учитель</span>' : ''}
+                <span class="muted-badge" id="muted-${id}" style="display: none;">🔇</span>
+            `;
+            
+            container.appendChild(video);
+            container.appendChild(label);
+            grid.appendChild(container);
+        }
+        
+        // Обновление списка участников
+        function updateParticipantsList() {
+            participants = JSON.parse(localStorage.getItem('lessonParticipants')) || [];
+            document.getElementById('participantsCount').textContent = `👥 ${participants.length}`;
+            
+            // Обновляем панель учителя
+            if (role === 'teacher') {
+                updateTeacherPanel();
+            }
+        }
+        
+        // Обновление панели учителя
+        function updateTeacherPanel() {
+            const container = document.getElementById('participantsControls');
+            let html = '';
+            
+            participants.forEach(p => {
+                if (p.login !== userLogin) { // Не показываем себя
+                    html += `
+                        <div class="participant-control">
+                            <span>${p.name}</span>
+                            <div class="mute-timer">
+                                <input type="number" id="mute-time-${p.login}" min="1" max="60" value="5" style="width: 50px;">
+                                <button class="mute-btn" onclick="muteParticipant('${p.login}')">
+                                    🔇 Заглушить
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html || '<p style="color: #999;">Нет других участников</p>';
+        }
+        
+        // Заглушить участника
+        function muteParticipant(login) {
+            const minutes = document.getElementById(`mute-time-${login}`).value;
+            alert(`🔇 Участник ${login} заглушен на ${minutes} минут (демо-режим)`);
+            
+            // В реальном WebRTC здесь отправляется сигнал через сервер
+            // Показываем визуально
+            const mutedBadge = document.getElementById(`muted-${login}`);
+            if (mutedBadge) {
+                mutedBadge.style.display = 'inline';
+                setTimeout(() => {
+                    mutedBadge.style.display = 'none';
+                }, minutes * 60 * 1000);
+            }
+        }
+        
+        // Переключение микрофона
+        function toggleMic() {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0];
+                if (audioTrack) {
+                    audioTrack.enabled = !audioTrack.enabled;
+                    isMicMuted = !audioTrack.enabled;
+                    
+                    const btn = document.getElementById('micBtn');
+                    if (isMicMuted) {
+                        btn.style.background = '#dc3545';
+                        btn.innerHTML = '🔇';
+                    } else {
+                        btn.style.background = '#0f3460';
+                        btn.innerHTML = '🎤';
+                    }
+                }
+            }
+        }
+        
+        // Переключение камеры
+        function toggleCamera() {
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                if (videoTrack) {
+                    videoTrack.enabled = !videoTrack.enabled;
+                    isCameraOff = !videoTrack.enabled;
+                    
+                    const btn = document.getElementById('cameraBtn');
+                    if (isCameraOff) {
+                        btn.style.background = '#dc3545';
+                        btn.innerHTML = '🚫';
+                    } else {
+                        btn.style.background = '#0f3460';
+                        btn.innerHTML = '📷';
+                    }
+                }
+            }
+        }
+        
+        // Демонстрация экрана
+        async function toggleScreenShare() {
+            if (!isScreenSharing) {
+                try {
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+                        video: true 
+                    });
+                    
+                    // Заменяем видеодорожку на экран
+                    const videoTrack = screenStream.getVideoTracks()[0];
+                    const sender = localStream.getVideoTracks()[0];
+                    
+                    if (sender) {
+                        localStream.removeTrack(sender);
+                        localStream.addTrack(videoTrack);
+                    }
+                    
+                    // Обновляем видео
+                    const localVideo = document.querySelector('#video-local video');
+                    if (localVideo) {
+                        localVideo.srcObject = localStream;
+                    }
+                    
+                    isScreenSharing = true;
+                    document.getElementById('screenBtn').style.background = '#28a745';
+                    
+                    // Добавляем метку
+                    const container = document.getElementById('video-local');
+                    let badge = container.querySelector('.screen-share-badge');
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'screen-share-badge';
+                        badge.textContent = '📺 Демонстрация';
+                        container.appendChild(badge);
+                    }
+                    
+                    // Когда пользователь останавливает демонстрацию
+                    videoTrack.onended = () => {
+                        stopScreenShare();
+                    };
+                    
+                } catch (err) {
+                    console.error('Ошибка демонстрации экрана:', err);
+                }
+            } else {
+                stopScreenShare();
+            }
+        }
+        
+        // Остановка демонстрации экрана
+        async function stopScreenShare() {
+            if (screenStream) {
+                screenStream.getTracks().forEach(track => track.stop());
+                
+                // Возвращаем камеру
+                const newStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                
+                const videoTrack = newStream.getVideoTracks()[0];
+                const audioTrack = newStream.getAudioTracks()[0];
+                
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = newStream;
+                }
+                
+                const localVideo = document.querySelector('#video-local video');
+                if (localVideo) {
+                    localVideo.srcObject = localStream;
+                }
+                
+                isScreenSharing = false;
+                document.getElementById('screenBtn').style.background = '#0f3460';
+                
+                // Убираем метку
+                const badge = document.querySelector('#video-local .screen-share-badge');
+                if (badge) badge.remove();
+            }
+        }
+        
+        // Показать список участников
+        function showParticipants() {
+            const names = participants.map(p => `• ${p.name}${p.role === 'teacher' ? ' 👑' : ''}`).join('\n');
+            alert(`👥 Участники (${participants.length}):\n\n${names}`);
+        }
+        
+        // Переключение панели учителя
+        function toggleTeacherPanel() {
+            const panel = document.getElementById('teacherPanel');
+            panel.classList.toggle('show');
+        }
+        
+        // Таймер
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Симуляция других участников (для демо)
+        function simulateParticipants() {
+            // Добавляем учеников из списка (кроме себя)
+            participants.forEach(p => {
+                if (p.login !== userLogin) {
+                    // Создаём фейковый поток (в реальности через WebRTC)
+                    setTimeout(() => {
+                        addVideoElement(p.login, p.name, null, false, p.role === 'teacher');
+                    }, 1000);
+                }
+            });
+        }
+        
+        // Обновляем список участников каждые 2 секунды
+        setInterval(updateParticipantsList, 2000);
+        
+        // Запускаем урок
+        initLesson();
+        
+        // При выходе очищаем
+        window.addEventListener('beforeunload', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            if (screenStream) {
+                screenStream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Если учитель выходит, урок заканчивается
+            if (role === 'teacher') {
+                localStorage.setItem('onlineLesson', JSON.stringify({ active: false }));
+            }
+        });
+    </script>
+</body>
+</html>
