@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя библиотека | Ученик</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.5em;
+            padding: 5px;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.6em;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+        .user-name {
+            background: #3a3a55;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .main-container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Приветствие */
+        .greeting-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border-left: 8px solid #17a2b8;
+        }
+        .greeting-card h1 {
+            color: #1e1e2f;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .greeting-card p {
+            color: #555;
+            font-size: 1.1em;
+        }
+        
+        /* Фильтры */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 40px;
+            font-size: 1em;
+            background: white;
+            min-width: 150px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 40px;
+            font-size: 1em;
+            min-width: 250px;
+        }
+        
+        /* Сетка материалов */
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .material-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .material-preview {
+            width: 100%;
+            height: 200px;
+            background: #1e1e2f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3em;
+            position: relative;
+        }
+        .material-preview.video::after {
+            content: "▶️";
+            position: absolute;
+            font-size: 3em;
+            opacity: 0.8;
+        }
+        .material-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .material-info {
+            padding: 20px;
+        }
+        .material-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .material-description {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .material-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #999;
+        }
+        .material-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .type-video {
+            background: #ffc107;
+            color: #1e1e2f;
+        }
+        .type-photo {
+            background: #17a2b8;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-size: 1.2em;
+            background: white;
+            border-radius: 20px;
+            grid-column: 1 / -1;
+        }
+        .footer-links {
+            margin-top: 30px;
+            text-align: right;
+        }
+        .footer-links a {
+            color: #1e1e2f;
+            text-decoration: none;
+            border-bottom: 1px dashed #aaa;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="user-info">
+            <div class="notification-bell" onclick="window.location.href='student-cabinet.html#notifications'">
+                🔔
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </div>
+            <div class="user-name">Леонид Зас (Ученик)</div>
+            <a href="student-cabinet.html" class="back-btn">← В кабинет</a>
+            <a href="login.html" class="logout-btn">Выйти</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Приветствие -->
+        <div class="greeting-card">
+            <h1>📹 Моя библиотека</h1>
+            <p>Здесь хранятся все видео и фото, которые учитель загрузил специально для тебя.</p>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="filters">
+            <select class="filter-select" id="filterType" onchange="applyFilters()">
+                <option value="">Все типы</option>
+                <option value="video">🎥 Видео</option>
+                <option value="photo">📸 Фото</option>
+            </select>
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по названию..." oninput="applyFilters()">
+        </div>
+
+        <!-- Сетка материалов -->
+        <div id="materialsGrid" class="materials-grid">
+            <!-- Сюда будут загружаться материалы -->
+        </div>
+
+        <div class="footer-links">
+            <a href="student-cabinet.html">← Назад в кабинет</a>
+        </div>
+    </div>
+
+    <script>
+        // Данные ученика
+        const studentLogin = "LeonidzasFire23457";
+        const studentName = "Леонид Зас";
+        
+        // Загружаем материалы
+        let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+        
+        // Загружаем заметки для уведомлений
+        let notes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+
+        // Функция обновления уведомлений
+        function updateNotifications() {
+            const studentNotes = notes.filter(n => n.studentLogin === studentLogin);
+            const unreadCount = studentNotes.filter(n => !n.read).length;
+            
+            const badge = document.getElementById('notificationBadge');
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Применение фильтров
+        function applyFilters() {
+            renderMaterials();
+        }
+
+        // Отображение материалов для ученика
+        function renderMaterials() {
+            const grid = document.getElementById('materialsGrid');
+            const filterType = document.getElementById('filterType').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            // Фильтруем материалы только для этого ученика
+            let filteredMaterials = materials.filter(m => m.studentLogin === studentLogin);
+            
+            if (filterType) {
+                filteredMaterials = filteredMaterials.filter(m => m.type === filterType);
+            }
+            
+            if (searchTerm) {
+                filteredMaterials = filteredMaterials.filter(m => 
+                    m.title.toLowerCase().includes(searchTerm) || 
+                    m.description.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Сортируем по дате (сначала новые)
+            filteredMaterials.sort((a, b) => b.id - a.id);
+
+            if (filteredMaterials.length === 0) {
+                grid.innerHTML = '<div class="empty-state">📭 Учитель ещё не загрузил для тебя материалы</div>';
+                return;
+            }
+
+            let html = '';
+            filteredMaterials.forEach(material => {
+                // Превью
+                let previewHtml = '';
+                if (material.type === 'video') {
+                    previewHtml = `<div class="material-preview video">🎥</div>`;
+                } else {
+                    if (material.fileData && material.fileData.startsWith('data:image')) {
+                        previewHtml = `<div class="material-preview"><img src="${material.fileData}" alt="${material.title}"></div>`;
+                    } else {
+                        previewHtml = `<div class="material-preview">📸</div>`;
+                    }
+                }
+
+                html += `
+                    <div class="material-card" onclick="viewMaterial(${material.id})">
+                        ${previewHtml}
+                        <div class="material-info">
+                            <span class="material-type ${material.type === 'video' ? 'type-video' : 'type-photo'}">
+                                ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'}
+                            </span>
+                            <div class="material-title">${material.title}</div>
+                            <div class="material-description">${material.description}</div>
+                            <div class="material-meta">
+                                <span>📅 ${material.date}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        // Просмотр материала
+        function viewMaterial(id) {
+            window.location.href = `view-material.html?id=${id}&role=student`;
+        }
+
+        // Инициализация
+        updateNotifications();
+        renderMaterials();
+        // Проверяем уведомления каждые 5 секунд
+        setInterval(updateNotifications, 5000);
+    </script>
+</body>
+</html>
