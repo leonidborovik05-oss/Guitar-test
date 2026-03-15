@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Библиотека материалов | Учитель</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .user-name {
+            background: #3a3a55;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .back-btn:hover {
+            background: #5a6268;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover {
+            background: #b02a37;
+        }
+        .main-container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Форма загрузки */
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .section-title {
+            font-size: 1.5em;
+            color: #1e1e2f;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .upload-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        .form-group input[type="file"] {
+            padding: 10px;
+            background: #f8f9fc;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .btn-upload {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s;
+            height: 50px;
+        }
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40,167,69,0.3);
+        }
+        
+        /* Фильтры */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 40px;
+            font-size: 1em;
+            background: white;
+            min-width: 200px;
+        }
+        
+        /* Сетка материалов */
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .material-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .material-preview {
+            width: 100%;
+            height: 200px;
+            background: #1e1e2f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3em;
+            position: relative;
+        }
+        .material-preview.video::after {
+            content: "▶️";
+            position: absolute;
+            font-size: 3em;
+            opacity: 0.8;
+        }
+        .material-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .material-info {
+            padding: 20px;
+        }
+        .material-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .material-description {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .material-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        .material-student {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .material-date {
+            color: #999;
+        }
+        .material-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        .type-video {
+            background: #ffc107;
+            color: #1e1e2f;
+        }
+        .type-photo {
+            background: #17a2b8;
+            color: white;
+        }
+        .material-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-view {
+            flex: 1;
+            background: #1e1e2f;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-size: 1.2em;
+            background: white;
+            border-radius: 20px;
+            grid-column: 1 / -1;
+        }
+        .footer-links {
+            margin-top: 30px;
+            text-align: right;
+        }
+        .footer-links a {
+            color: #1e1e2f;
+            text-decoration: none;
+            border-bottom: 1px dashed #aaa;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="user-info">
+            <div class="user-name">EvgenyaGuitara01543 (Учитель)</div>
+            <a href="teacher-cabinet.html" class="back-btn">← В кабинет</a>
+            <a href="login.html" class="logout-btn">Выйти</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Заголовок -->
+        <h1 style="margin-bottom: 20px; color: #1e1e2f;">📹 Библиотека материалов</h1>
+        
+        <!-- Форма загрузки -->
+        <div class="upload-section">
+            <div class="section-title">📤 Загрузить новый материал</div>
+            <div class="upload-form">
+                <div class="form-group">
+                    <label>Тип материала</label>
+                    <select id="materialType">
+                        <option value="video">🎥 Видео</option>
+                        <option value="photo">📸 Фото</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Выберите файл</label>
+                    <input type="file" id="materialFile" accept="video/*,image/*">
+                </div>
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="materialTitle" placeholder="Например: Урок 5 - бой">
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="materialDescription" placeholder="Краткое описание материала..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Для ученика</label>
+                    <select id="materialStudent">
+                        <option value="">-- Выберите ученика --</option>
+                    </select>
+                </div>
+                <button class="btn-upload" onclick="uploadMaterial()">
+                    ⬆️ Загрузить
+                </button>
+            </div>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="filters">
+            <select class="filter-select" id="filterStudent" onchange="applyFilters()">
+                <option value="">Все ученики</option>
+            </select>
+            <select class="filter-select" id="filterType" onchange="applyFilters()">
+                <option value="">Все типы</option>
+                <option value="video">🎥 Видео</option>
+                <option value="photo">📸 Фото</option>
+            </select>
+        </div>
+
+        <!-- Сетка материалов -->
+        <div id="materialsGrid" class="materials-grid">
+            <!-- Сюда будут загружаться материалы -->
+        </div>
+
+        <div class="footer-links">
+            <a href="teacher-cabinet.html">← Назад в кабинет</a>
+        </div>
+    </div>
+
+    <script>
+        // Загружаем учеников
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        
+        // Загружаем материалы
+        let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+
+        // Обновляем выпадающие списки учеников
+        function updateStudentSelects() {
+            const studentSelects = ['materialStudent', 'filterStudent'];
+            
+            studentSelects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (!select) return;
+                
+                let options = selectId === 'materialStudent' 
+                    ? '<option value="">-- Выберите ученика --</option>'
+                    : '<option value="">Все ученики</option>';
+                    
+                students.forEach(student => {
+                    options += `<option value="${student.login}">${student.name}</option>`;
+                });
+                
+                // Сохраняем выбранное значение, если оно было
+                const currentValue = select.value;
+                select.innerHTML = options;
+                if (currentValue && Array.from(select.options).some(opt => opt.value === currentValue)) {
+                    select.value = currentValue;
+                }
+            });
+        }
+
+        // Загрузка материала
+        function uploadMaterial() {
+            const type = document.getElementById('materialType').value;
+            const file = document.getElementById('materialFile').files[0];
+            const title = document.getElementById('materialTitle').value.trim();
+            const description = document.getElementById('materialDescription').value.trim();
+            const studentLogin = document.getElementById('materialStudent').value;
+
+            if (!file || !title || !description || !studentLogin) {
+                alert('❌ Заполните все поля и выберите файл!');
+                return;
+            }
+
+            // Создаём объект материала
+            const material = {
+                id: Date.now(),
+                type: type,
+                title: title,
+                description: description,
+                studentLogin: studentLogin,
+                date: new Date().toLocaleString(),
+                fileName: file.name,
+                fileType: file.type,
+                fileSize: file.size
+            };
+
+            // Сохраняем файл в localStorage
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                material.fileData = e.target.result; // base64 данные файла
+                materials.push(material);
+                localStorage.setItem('libraryMaterials', JSON.stringify(materials));
+                
+                // Очищаем форму
+                document.getElementById('materialFile').value = '';
+                document.getElementById('materialTitle').value = '';
+                document.getElementById('materialDescription').value = '';
+                
+                // Обновляем отображение
+                renderMaterials();
+                alert('✅ Материал успешно загружен!');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Применение фильтров
+        function applyFilters() {
+            renderMaterials();
+        }
+
+        // Отображение материалов
+        function renderMaterials() {
+            const grid = document.getElementById('materialsGrid');
+            const filterStudent = document.getElementById('filterStudent').value;
+            const filterType = document.getElementById('filterType').value;
+
+            // Фильтруем материалы
+            let filteredMaterials = [...materials];
+            
+            if (filterStudent) {
+                filteredMaterials = filteredMaterials.filter(m => m.studentLogin === filterStudent);
+            }
+            
+            if (filterType) {
+                filteredMaterials = filteredMaterials.filter(m => m.type === filterType);
+            }
+
+            // Сортируем по дате (сначала новые)
+            filteredMaterials.sort((a, b) => b.id - a.id);
+
+            if (filteredMaterials.length === 0) {
+                grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет. Загрузите первый!</div>';
+                return;
+            }
+
+            let html = '';
+            filteredMaterials.forEach(material => {
+                // Находим имя ученика
+                const student = students.find(s => s.login === material.studentLogin);
+                const studentName = student ? student.name : material.studentLogin;
+
+                // Превью
+                let previewHtml = '';
+                if (material.type === 'video') {
+                    previewHtml = `<div class="material-preview video">🎥</div>`;
+                } else {
+                    if (material.fileData && material.fileData.startsWith('data:image')) {
+                        previewHtml = `<div class="material-preview"><img src="${material.fileData}" alt="${material.title}"></div>`;
+                    } else {
+                        previewHtml = `<div class="material-preview">📸</div>`;
+                    }
+                }
+
+                html += `
+                    <div class="material-card">
+                        ${previewHtml}
+                        <div class="material-info">
+                            <span class="material-type ${material.type === 'video' ? 'type-video' : 'type-photo'}">
+                                ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'}
+                            </span>
+                            <div class="material-title">${material.title}</div>
+                            <div class="material-description">${material.description}</div>
+                            <div class="material-meta">
+                                <span class="material-student">👤 ${studentName}</span>
+                                <span class="material-date">${material.date}</span>
+                            </div>
+                            <div class="material-actions">
+                                <a href="view-material.html?id=${material.id}&role=teacher" class="btn-view" target="_blank">👁️ Просмотр</a>
+                                <button class="btn-delete" onclick="deleteMaterial(${material.id})">🗑️</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        // Удаление материала
+        function deleteMaterial(id) {
+            if (confirm('Удалить этот материал?')) {
+                materials = materials.filter(m => m.id !== id);
+                localStorage.setItem('libraryMaterials', JSON.stringify(materials));
+                renderMaterials();
+            }
+        }
+
+        // Инициализация
+        updateStudentSelects();
+        renderMaterials();
+    </script>
+</body>
+</html>
