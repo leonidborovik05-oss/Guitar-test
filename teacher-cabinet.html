@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кабинет учителя | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .online-status {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #28a745;
+            padding: 5px 15px;
+            border-radius: 40px;
+            font-size: 0.9em;
+        }
+        .online-status.active {
+            display: flex;
+        }
+        .online-status .pulse {
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        .online-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .online-btn:hover {
+            background: #b02a37;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .user-name {
+            background: #3a3a55;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover {
+            background: #b02a37;
+        }
+        .main-container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .greeting-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border-left: 8px solid #f0b90b;
+        }
+        .greeting-card h2 {
+            color: #1e1e2f;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .greeting-card p {
+            color: #555;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        .role-badge {
+            background: #28a745;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 30px;
+            display: inline-block;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            background: #1e1e2f;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .action-btn.add-student {
+            background: #28a745;
+        }
+        .action-btn.add-note {
+            background: #ffc107;
+            color: #1e1e2f;
+        }
+        .action-btn.library {
+            background: #17a2b8;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 {
+            font-size: 1.5em;
+            color: #1e1e2f;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #43C6AC;
+            outline: none;
+        }
+        .btn-save {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .students-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .section-title {
+            font-size: 1.4em;
+            color: #1e1e2f;
+            margin-bottom: 20px;
+        }
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .student-card {
+            background: #f8f9fc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #eaeef2;
+            transition: transform 0.2s;
+        }
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+        .student-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .student-login {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            word-break: break-all;
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+        .student-progress {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .progress-label {
+            color: #555;
+        }
+        .progress-value {
+            font-weight: 600;
+            color: #1976d2;
+        }
+        .student-notes-badge {
+            background: #ffc107;
+            color: #1e1e2f;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .view-student-btn {
+            background: #1e1e2f;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1em;
+        }
+        .footer-links {
+            margin-top: 30px;
+            text-align: right;
+        }
+        .footer-links a {
+            color: #1e1e2f;
+            text-decoration: none;
+            border-bottom: 1px dashed #aaa;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            🎸 Guitar<span>Studio</span>
+            <div id="onlineStatus" class="online-status">
+                <span class="pulse"></span>
+                <span>Идёт урок</span>
+            </div>
+            <a href="online-ready.html?role=teacher" class="online-btn">📹 Онлайн-урок</a>
+        </div>
+        <div class="user-info">
+            <div class="user-name">EvgenyaGuitara01543 (Учитель)</div>
+            <a href="login.html" class="logout-btn">Выйти</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="greeting-card">
+            <h2>Здравствуйте, Евгения!</h2>
+            <p>Панель управления учениками. Добавляйте новых учеников, оставляйте им заметки и загружайте материалы.</p>
+            <span class="role-badge">Преподаватель (полный доступ)</span>
+            
+            <div class="action-buttons">
+                <button class="action-btn add-student" onclick="openAddStudentModal()">
+                    ➕ Добавить ученика
+                </button>
+                <button class="action-btn add-note" onclick="openAddNoteModal()">
+                    📝 Добавить заметку
+                </button>
+                <a href="library-teacher.html" class="action-btn library">
+                    📹 Библиотека материалов
+                </a>
+            </div>
+        </div>
+
+        <div class="students-section">
+            <div class="section-title">👥 Мои ученики</div>
+            <div id="studentsContainer" class="students-grid">
+            </div>
+        </div>
+
+        <div id="addStudentModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>➕ Добавить нового ученика</h3>
+                    <button class="close-btn" onclick="closeAddStudentModal()">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>👤 Логин ученика</label>
+                    <input type="text" id="studentLogin" placeholder="Например: ivanov_123">
+                </div>
+                <div class="form-group">
+                    <label>🔑 Пароль</label>
+                    <input type="text" id="studentPassword" placeholder="Пароль">
+                </div>
+                <div class="form-group">
+                    <label>📝 Имя ученика</label>
+                    <input type="text" id="studentName" placeholder="Имя и фамилия">
+                </div>
+                <button class="btn-save" onclick="addStudent()">Добавить ученика</button>
+            </div>
+        </div>
+
+        <div id="addNoteModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📝 Добавить заметку ученику</h3>
+                    <button class="close-btn" onclick="closeAddNoteModal()">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>👤 Выберите ученика</label>
+                    <select id="noteStudentSelect">
+                        <option value="">-- Выберите ученика --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>📌 Тема заметки</label>
+                    <input type="text" id="noteTitle" placeholder="Например: Замечание по технике">
+                </div>
+                <div class="form-group">
+                    <label>📋 Текст заметки</label>
+                    <textarea id="noteText" placeholder="Напишите заметку..."></textarea>
+                </div>
+                <button class="btn-save" onclick="addNote()">Отправить заметку</button>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <a href="index.html">🏠 На главную страницу студии</a>
+        </div>
+    </div>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let notes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+
+        function renderStudents() {
+            const container = document.getElementById('studentsContainer');
+            
+            if (students.length === 0) {
+                container.innerHTML = '<div class="empty-state">👥 Список учеников пуст. Добавьте первого ученика!</div>';
+                return;
+            }
+
+            let html = '';
+            students.forEach((student, index) => {
+                const progress = JSON.parse(localStorage.getItem(`progress_${student.login}`)) || {
+                    beginner: 0,
+                    intermediate: 0,
+                    expert: 0
+                };
+                
+                const studentNotes = notes.filter(n => n.studentLogin === student.login);
+                const unreadCount = studentNotes.filter(n => !n.read).length;
+
+                html += `
+                    <div class="student-card">
+                        <div class="student-name">${student.name}</div>
+                        <div class="student-login">Логин: ${student.login}</div>
+                        ${unreadCount > 0 ? `<div class="student-notes-badge">📝 ${unreadCount} новая заметка</div>` : ''}
+                        <div class="student-progress">
+                            <div class="progress-item">
+                                <span class="progress-label">🌱 С нуля:</span>
+                                <span class="progress-value">${progress.beginner}/10</span>
+                            </div>
+                            <div class="progress-item">
+                                <span class="progress-label">🌿 Немного знающий:</span>
+                                <span class="progress-value">${progress.intermediate}/10</span>
+                            </div>
+                            <div class="progress-item">
+                                <span class="progress-label">🌳 Знаток:</span>
+                                <span class="progress-value">${progress.expert}/10</span>
+                            </div>
+                        </div>
+                        <button class="view-student-btn" onclick="viewStudent('${student.login}')">📊 Подробнее</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            updateStudentSelect();
+        }
+
+        function updateStudentSelect() {
+            const select = document.getElementById('noteStudentSelect');
+            if (!select) return;
+            
+            let options = '<option value="">-- Выберите ученика --</option>';
+            students.forEach(student => {
+                options += `<option value="${student.login}">${student.name} (${student.login})</option>`;
+            });
+            select.innerHTML = options;
+        }
+
+        function openAddStudentModal() {
+            document.getElementById('addStudentModal').classList.add('active');
+        }
+
+        function closeAddStudentModal() {
+            document.getElementById('addStudentModal').classList.remove('active');
+            document.getElementById('studentLogin').value = '';
+            document.getElementById('studentPassword').value = '';
+            document.getElementById('studentName').value = '';
+        }
+
+        function openAddNoteModal() {
+            if (students.length === 0) {
+                alert('❌ Сначала добавьте хотя бы одного ученика!');
+                return;
+            }
+            document.getElementById('addNoteModal').classList.add('active');
+        }
+
+        function closeAddNoteModal() {
+            document.getElementById('addNoteModal').classList.remove('active');
+            document.getElementById('noteStudentSelect').value = '';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteText').value = '';
+        }
+
+        function addStudent() {
+            const login = document.getElementById('studentLogin').value.trim();
+            const password = document.getElementById('studentPassword').value.trim();
+            const name = document.getElementById('studentName').value.trim();
+
+            if (!login || !password || !name) {
+                alert('❌ Заполните все поля!');
+                return;
+            }
+
+            if (students.some(s => s.login === login)) {
+                alert('❌ Ученик с таким логином уже существует!');
+                return;
+            }
+
+            students.push({
+                login: login,
+                password: password,
+                name: name
+            });
+
+            localStorage.setItem('students', JSON.stringify(students));
+
+            if (!localStorage.getItem(`progress_${login}`)) {
+                localStorage.setItem(`progress_${login}`, JSON.stringify({
+                    beginner: 0,
+                    intermediate: 0,
+                    expert: 0
+                }));
+            }
+
+            closeAddStudentModal();
+            renderStudents();
+            alert('✅ Ученик успешно добавлен!');
+        }
+
+        function addNote() {
+            const studentLogin = document.getElementById('noteStudentSelect').value;
+            const title = document.getElementById('noteTitle').value.trim();
+            const text = document.getElementById('noteText').value.trim();
+
+            if (!studentLogin || !title || !text) {
+                alert('❌ Заполните все поля!');
+                return;
+            }
+
+            const note = {
+                id: Date.now(),
+                studentLogin: studentLogin,
+                title: title,
+                text: text,
+                date: new Date().toLocaleString(),
+                read: false
+            };
+
+            notes.push(note);
+            localStorage.setItem('teacherNotes', JSON.stringify(notes));
+
+            closeAddNoteModal();
+            renderStudents();
+            alert('✅ Заметка успешно добавлена!');
+        }
+
+        function viewStudent(login) {
+            const student = students.find(s => s.login === login);
+            const studentNotes = notes.filter(n => n.studentLogin === login);
+            
+            let notesText = '';
+            if (studentNotes.length > 0) {
+                notesText = '\n\n📝 Заметки:\n' + studentNotes.map(n => 
+                    `- ${n.title} (${n.date}): ${n.text}`
+                ).join('\n');
+            } else {
+                notesText = '\n\n📝 Заметок пока нет.';
+            }
+
+            alert(`👤 ${student.name}\nЛогин: ${student.login}\nПароль: ${student.password}${notesText}`);
+        }
+
+        function checkOnlineLesson() {
+            const lessonStatus = JSON.parse(localStorage.getItem('onlineLesson')) || { active: false };
+            const statusDiv = document.getElementById('onlineStatus');
+            if (lessonStatus.active) {
+                statusDiv.classList.add('active');
+            } else {
+                statusDiv.classList.remove('active');
+            }
+        }
+
+        renderStudents();
+        setInterval(checkOnlineLesson, 3000);
+        checkOnlineLesson();
+    </script>
+</body>
+</html>
