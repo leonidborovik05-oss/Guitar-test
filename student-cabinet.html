@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кабинет ученика | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .online-status {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: #28a745;
+            padding: 5px 15px;
+            border-radius: 40px;
+            font-size: 0.9em;
+        }
+        .online-status.active {
+            display: flex;
+        }
+        .online-status .pulse {
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        .online-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .online-btn:hover {
+            background: #b02a37;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.5em;
+            padding: 5px;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.6em;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+        .user-name {
+            background: #3a3a55;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover {
+            background: #b02a37;
+        }
+        .main-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .greeting-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border-left: 8px solid #f0b90b;
+        }
+        .greeting-card h2 {
+            color: #1e1e2f;
+            font-size: 2em;
+        }
+        .greeting-card p {
+            color: #555;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+        .role-badge {
+            background: #ffc107;
+            color: #1e1e2f;
+            padding: 5px 15px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            background: #1e1e2f;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .action-btn.tasks {
+            background: #28a745;
+        }
+        .action-btn.notifications {
+            background: #ffc107;
+            color: #1e1e2f;
+        }
+        .action-btn.library {
+            background: #17a2b8;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 {
+            font-size: 1.5em;
+            color: #1e1e2f;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .note-item {
+            background: #f8f9fc;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 5px solid #ffc107;
+        }
+        .note-item.unread {
+            background: #fff9e6;
+            border-left-color: #dc3545;
+        }
+        .note-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .note-date {
+            color: #999;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+        .note-text {
+            color: #555;
+            line-height: 1.5;
+        }
+        .unread-badge {
+            background: #dc3545;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        .level-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .level-btn {
+            background: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-radius: 50px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .level-btn.active {
+            background: #1e1e2f;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .level-btn.beginner.active { background: #28a745; }
+        .level-btn.intermediate.active { background: #ffc107; color: #1e1e2f; }
+        .level-btn.expert.active { background: #dc3545; }
+        
+        .tasks-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .question-counter {
+            font-size: 1.2em;
+            color: #666;
+        }
+        .progress-badge {
+            background: #e9ecef;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #1e1e2f;
+        }
+        .question-text {
+            font-size: 1.4em;
+            color: #1e1e2f;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .answers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .answer-item {
+            background: #f8f9fc;
+            border: 2px solid #eaeef2;
+            border-radius: 15px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .answer-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .answer-item.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            box-shadow: 0 4px 12px rgba(33,150,243,0.2);
+        }
+        .answer-marker {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #2196f3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2196f3;
+        }
+        .answer-item.selected .answer-marker {
+            background: #2196f3;
+            color: white;
+        }
+        .answer-text {
+            font-size: 1.1em;
+            color: #333;
+            flex: 1;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .nav-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        .nav-btn.prev {
+            background: #6c757d;
+            color: white;
+        }
+        .nav-btn.next {
+            background: #1e1e2f;
+            color: white;
+        }
+        .nav-btn.submit {
+            background: #28a745;
+            color: white;
+        }
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .nav-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .result-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .result-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .footer-links {
+            margin-top: 30px;
+            text-align: right;
+        }
+        .footer-links a {
+            color: #1e1e2f;
+            text-decoration: none;
+            border-bottom: 1px dashed #aaa;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            🎸 Guitar<span>Studio</span>
+            <div id="onlineStatus" class="online-status">
+                <span class="pulse"></span>
+                <span>Идёт урок</span>
+            </div>
+            <a href="online-ready.html?role=student" class="online-btn">📹 Онлайн-урок</a>
+        </div>
+        <div class="user-info">
+            <div class="notification-bell" onclick="openNotificationsModal()">
+                🔔
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </div>
+            <div class="user-name">Леонид Зас (Ученик)</div>
+            <a href="login.html" class="logout-btn">Выйти</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="greeting-card">
+            <h2>Привет, Леонид!</h2>
+            <p>Продолжай заниматься. Выбери, чем хочешь заняться сейчас.</p>
+            <span class="role-badge">Ученик</span>
+            
+            <div class="action-buttons">
+                <button class="action-btn tasks" onclick="openTasksModal()">
+                    📚 Задания
+                </button>
+                <button class="action-btn notifications" onclick="openNotificationsModal()">
+                    🔔 Уведомления
+                    <span id="notificationCount" style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.8em;">0</span>
+                </button>
+                <a href="library-student.html" class="action-btn library">
+                    📹 Библиотека
+                </a>
+            </div>
+        </div>
+
+        <div id="notificationsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔔 Уведомления от учителя</h3>
+                    <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
+                </div>
+                <div id="notesContainer" class="notes-list">
+                </div>
+            </div>
+        </div>
+
+        <div id="tasksModal" class="modal">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3>📚 Задания по гитаре</h3>
+                    <button class="close-btn" onclick="closeTasksModal()">&times;</button>
+                </div>
+                
+                <div class="level-tabs">
+                    <button class="level-btn beginner active" onclick="switchLevel('beginner')">
+                        🌱 С нуля
+                        <span id="beginnerProgress" class="progress-count">0/10</span>
+                    </button>
+                    <button class="level-btn intermediate" onclick="switchLevel('intermediate')">
+                        🌿 Немного знающий
+                        <span id="intermediateProgress" class="progress-count">0/10</span>
+                    </button>
+                    <button class="level-btn expert" onclick="switchLevel('expert')">
+                        🌳 Знаток
+                        <span id="expertProgress" class="progress-count">0/10</span>
+                    </button>
+                </div>
+
+                <div class="tasks-content">
+                    <div class="question-header">
+                        <span class="question-counter" id="questionCounter">Вопрос 1 из 10</span>
+                        <span class="progress-badge" id="levelTitle">Уровень: С нуля</span>
+                    </div>
+                    
+                    <div class="question-text" id="questionText">Загрузка вопроса...</div>
+                    
+                    <div class="answers-list" id="answersList">
+                    </div>
+
+                    <div class="nav-buttons">
+                        <button class="nav-btn prev" onclick="prevQuestion()" id="prevBtn" disabled>← Назад</button>
+                        <button class="nav-btn next" onclick="nextQuestion()" id="nextBtn">Далее →</button>
+                        <button class="nav-btn submit" onclick="submitTest()" id="submitBtn" style="display: none;">✅ Завершить уровень</button>
+                    </div>
+
+                    <div id="resultMessage" class="result-message" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <a href="index.html">🏠 На главную страницу студии</a>
+        </div>
+    </div>
+
+    <script>
+        const questions = {
+            beginner: [
+                { text: "Сколько струн у классической гитары?", options: ["4", "5", "6", "7"], correct: 2 },
+                { text: "Как называется приспособление для изменения тональности?", options: ["Медиатор", "Каподастр", "Подставка", "Сурдина"], correct: 1 },
+                { text: "Какой строй у классической гитары?", options: ["EADGBe", "EADGCF", "DGCFAD", "EBGDAE"], correct: 0 },
+                { text: "Что обозначает буква 'C' в аккордах?", options: ["До", "Ре", "Ми", "Соль"], correct: 0 },
+                { text: "Как называется техника игры пальцами?", options: ["Бой", "Перебор", "Свип", "Тэппинг"], correct: 1 },
+                { text: "Какая струна самая тонкая?", options: ["Первая", "Третья", "Шестая", "Все одинаковые"], correct: 0 },
+                { text: "Что такое лад на гитаре?", options: ["Струна", "Промежуток между порожками", "Колок", "Дека"], correct: 1 },
+                { text: "Какой аккорд обозначается 'Am'?", options: ["Ля мажор", "Ля минор", "До мажор", "Ми минор"], correct: 1 },
+                { text: "Для чего нужен медиатор?", options: ["Зажимать струны", "Настраивать гитару", "Защипывать струны", "Держать ноты"], correct: 2 },
+                { text: "Сколько ладов обычно у классической гитары?", options: ["12", "19", "22", "24"], correct: 1 }
+            ],
+            intermediate: [
+                { text: "Какой аккорд является доминантсептаккордом в тональности C-dur?", options: ["C7", "D7", "G7", "F7"], correct: 2 },
+                { text: "Какие струны обычно делают из нейлона?", options: ["Первые три", "Все шесть", "Басовые", "Первые и шестую"], correct: 0 },
+                { text: "Что означает точка на 12-м ладу?", options: ["Октава", "Квинта", "Середина грифа", "Конец грифа"], correct: 0 },
+                { text: "Как называется приём, когда палец скользит по струне?", options: ["Легато", "Глиссандо", "Вибрато", "Стаккато"], correct: 1 },
+                { text: "Какой аккорд обозначается 'Dm'?", options: ["Ре мажор", "Ре минор", "Соль минор", "Ля минор"], correct: 1 },
+                { text: "Что такое баррэ?", options: ["Удар по струнам", "Зажимание нескольких струн одним пальцем", "Игра медиатором", "Настройка гитары"], correct: 1 },
+                { text: "Какой интервал между первой и второй струной в стандартном строе?", options: ["Кварта", "Квинта", "Терция", "Октава"], correct: 0 },
+                { text: "Что обозначает цифра '7' в аккорде C7?", options: ["Септима", "Седьмой лад", "Семь струн", "Седьмая ступень"], correct: 0 },
+                { text: "Как называется деталь гитары, которая передаёт вибрацию струн?", options: ["Гриф", "Колки", "Порожек", "Розетка"], correct: 2 },
+                { text: "Какой аккорд является тоникой в тональности G-dur?", options: ["G", "C", "D", "Em"], correct: 0 }
+            ],
+            expert: [
+                { text: "Какой лад является параллельным минором для C-dur?", options: ["Am", "Em", "Dm", "Gm"], correct: 0 },
+                { text: "Что такое квинтовый круг?", options: ["Расположение ладов", "Система тональностей", "Тип гитары", "Приём игры"], correct: 1 },
+                { text: "Какой аккорд состоит из нот: до, ми, соль?", options: ["C", "Cm", "C7", "Cmaj7"], correct: 0 },
+                { text: "Что означает обозначение 'sus4' в аккорде?", options: ["Задержанный аккорд", "Уменьшённый аккорд", "Увеличенный аккорд", "Септаккорд"], correct: 0 },
+                { text: "Какой лад используется в блюзовой гамме?", options: ["Ионийский", "Дорийский", "Миксолидийский", "Эолийский"], correct: 2 },
+                { text: "Что такое тритон?", options: ["Три ноты", "Увеличенная кварта", "Малая терция", "Большая секста"], correct: 1 },
+                { text: "Какой аккорд обозначается 'F#m'?", options: ["Фа-диез мажор", "Фа-диез минор", "Фа мажор", "Фа минор"], correct: 1 },
+                { text: "Что означает цифра 'maj7' в аккорде?", options: ["Малая септима", "Большая септима", "Септима", "Уменьшённая септима"], correct: 1 },
+                { text: "Какой строй у семиструнной гитары?", options: ["EBGDAE", "DGBDGBD", "EADGBE", "EADGBE с дополнительной струной"], correct: 1 },
+                { text: "Что такое флажолет?", options: ["Приём игры", "Тип гитары", "Название аккорда", "Струна"], correct: 0 }
+            ]
+        };
+
+        const studentLogin = "LeonidzasFire23457";
+        const studentName = "Леонид Зас";
+        
+        let currentLevel = 'beginner';
+        let currentQuestionIndex = 0;
+        let userAnswers = {
+            beginner: Array(10).fill(null),
+            intermediate: Array(10).fill(null),
+            expert: Array(10).fill(null)
+        };
+        
+        const savedAnswers = JSON.parse(localStorage.getItem(`answers_${studentLogin}`));
+        if (savedAnswers) {
+            userAnswers = savedAnswers;
+        }
+
+        let notes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+        
+        function updateNotifications() {
+            const studentNotes = notes.filter(n => n.studentLogin === studentLogin);
+            const unreadCount = studentNotes.filter(n => !n.read).length;
+            
+            const badge = document.getElementById('notificationBadge');
+            const countSpan = document.getElementById('notificationCount');
+            
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount;
+                countSpan.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+                countSpan.textContent = '0';
+            }
+        }
+
+        function openNotificationsModal() {
+            renderNotes();
+            document.getElementById('notificationsModal').classList.add('active');
+            
+            notes.forEach(note => {
+                if (note.studentLogin === studentLogin) {
+                    note.read = true;
+                }
+            });
+            localStorage.setItem('teacherNotes', JSON.stringify(notes));
+            updateNotifications();
+        }
+
+        function closeNotificationsModal() {
+            document.getElementById('notificationsModal').classList.remove('active');
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            const studentNotes = notes.filter(n => n.studentLogin === studentLogin);
+            
+            if (studentNotes.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">📭 У вас пока нет уведомлений</div>';
+                return;
+            }
+            
+            studentNotes.sort((a, b) => b.id - a.id);
+            
+            let html = '';
+            studentNotes.forEach(note => {
+                html += `
+                    <div class="note-item">
+                        <div class="note-title">${note.title}</div>
+                        <div class="note-date">${note.date}</div>
+                        <div class="note-text">${note.text}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function openTasksModal() {
+            document.getElementById('tasksModal').classList.add('active');
+            updateQuestionDisplay();
+            updateProgressBars();
+        }
+
+        function closeTasksModal() {
+            document.getElementById('tasksModal').classList.remove('active');
+        }
+
+        function switchLevel(level) {
+            currentLevel = level;
+            currentQuestionIndex = 0;
+            
+            document.querySelectorAll('#tasksModal .level-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`#tasksModal .level-btn.${level}`).classList.add('active');
+            
+            updateQuestionDisplay();
+            updateProgressBars();
+        }
+
+        function updateQuestionDisplay() {
+            const question = questions[currentLevel][currentQuestionIndex];
+            document.getElementById('questionText').textContent = question.text;
+            document.getElementById('questionCounter').textContent = `Вопрос ${currentQuestionIndex + 1} из 10`;
+            
+            const levelTitles = {
+                beginner: '🌱 С нуля',
+                intermediate: '🌿 Немного знающий',
+                expert: '🌳 Знаток'
+            };
+            document.getElementById('levelTitle').textContent = `Уровень: ${levelTitles[currentLevel]}`;
+            
+            const answersHtml = question.options.map((opt, idx) => {
+                const selected = userAnswers[currentLevel][currentQuestionIndex] === idx ? 'selected' : '';
+                return `
+                    <div class="answer-item ${selected}" onclick="selectAnswer(${idx})">
+                        <div class="answer-marker">${String.fromCharCode(65 + idx)}</div>
+                        <div class="answer-text">${opt}</div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('answersList').innerHTML = answersHtml;
+            
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').disabled = currentQuestionIndex === 9;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (currentQuestionIndex === 9) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+            }
+            
+            document.getElementById('resultMessage').style.display = 'none';
+        }
+
+        function selectAnswer(answerIndex) {
+            userAnswers[currentLevel][currentQuestionIndex] = answerIndex;
+            saveAnswers();
+            updateQuestionDisplay();
+            updateProgressBars();
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                updateQuestionDisplay();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < 9) {
+                currentQuestionIndex++;
+                updateQuestionDisplay();
+            }
+        }
+
+        function submitTest() {
+            let correctCount = 0;
+            questions[currentLevel].forEach((q, idx) => {
+                if (userAnswers[currentLevel][idx] === q.correct) {
+                    correctCount++;
+                }
+            });
+            
+            const progress = JSON.parse(localStorage.getItem(`progress_${studentLogin}`)) || {
+                beginner: 0,
+                intermediate: 0,
+                expert: 0
+            };
+            progress[currentLevel] = correctCount;
+            localStorage.setItem(`progress_${studentLogin}`, JSON.stringify(progress));
+            
+            const resultDiv = document.getElementById('resultMessage');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-message ' + (correctCount >= 7 ? 'success' : 'error');
+            resultDiv.textContent = `Вы ответили правильно на ${correctCount} из 10 вопросов! ${correctCount >= 7 ? '✅ Уровень пройден!' : '❌ Попробуйте ещё раз.'}`;
+            
+            updateProgressBars();
+        }
+
+        function saveAnswers() {
+            localStorage.setItem(`answers_${studentLogin}`, JSON.stringify(userAnswers));
+        }
+
+        function updateProgressBars() {
+            const beginnerAnswered = userAnswers.beginner.filter(a => a !== null).length;
+            const intermediateAnswered = userAnswers.intermediate.filter(a => a !== null).length;
+            const expertAnswered = userAnswers.expert.filter(a => a !== null).length;
+            
+            document.getElementById('beginnerProgress').textContent = `${beginnerAnswered}/10`;
+            document.getElementById('intermediateProgress').textContent = `${intermediateAnswered}/10`;
+            document.getElementById('expertProgress').textContent = `${expertAnswered}/10`;
+        }
+
+        function checkOnlineLesson() {
+            const lessonStatus = JSON.parse(localStorage.getItem('onlineLesson')) || { active: false };
+            const statusDiv = document.getElementById('onlineStatus');
+            if (lessonStatus.active) {
+                statusDiv.classList.add('active');
+            } else {
+                statusDiv.classList.remove('active');
+            }
+        }
+
+        updateNotifications();
+        setInterval(updateNotifications, 5000);
+        setInterval(checkOnlineLesson, 3000);
+        checkOnlineLesson();
+    </script>
+</body>
+</html>
