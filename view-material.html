@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр материала | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .user-name {
+            background: #3a3a55;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .back-btn:hover {
+            background: #5a6268;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .logout-btn:hover {
+            background: #b02a37;
+        }
+        .main-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .material-viewer {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .material-title {
+            font-size: 2em;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .material-meta {
+            color: #999;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeef2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .material-description {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .media-container {
+            width: 100%;
+            margin-bottom: 30px;
+            background: #1e1e2f;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        video, img {
+            width: 100%;
+            max-height: 600px;
+            object-fit: contain;
+            display: block;
+        }
+        .error-message {
+            text-align: center;
+            padding: 60px;
+            color: #dc3545;
+            font-size: 1.2em;
+        }
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .nav-link {
+            padding: 12px 25px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-link.primary {
+            background: #1e1e2f;
+            color: white;
+        }
+        .nav-link.secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .student-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="user-info">
+            <div class="user-name" id="userNameDisplay">Загрузка...</div>
+            <a href="login.html" class="logout-btn">Выйти</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div id="materialContainer" class="material-viewer">
+            <!-- Сюда загрузится материал -->
+        </div>
+    </div>
+
+    <script>
+        // Получаем параметры из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const materialId = urlParams.get('id');
+        const role = urlParams.get('role'); // 'teacher' или 'student'
+        
+        // Загружаем материалы
+        const materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+        const material = materials.find(m => m.id == materialId);
+
+        // Загружаем учеников для отображения имени
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        
+        // Определяем, что показывать
+        let userName = '';
+        let backUrl = '';
+        
+        if (role === 'teacher') {
+            userName = 'EvgenyaGuitara01543 (Учитель)';
+            backUrl = 'library-teacher.html';
+        } else {
+            userName = 'Леонид Зас (Ученик)';
+            backUrl = 'library-student.html';
+        }
+        
+        // Обновляем отображение имени
+        document.getElementById('userNameDisplay').textContent = userName;
+
+        const container = document.getElementById('materialContainer');
+
+        if (!material) {
+            container.innerHTML = '<div class="error-message">❌ Материал не найден</div>';
+        } else {
+            // Находим имя ученика, для которого загружен материал
+            const targetStudent = students.find(s => s.login === material.studentLogin);
+            const targetStudentName = targetStudent ? targetStudent.name : material.studentLogin;
+            
+            let mediaHtml = '';
+            
+            if (material.type === 'video') {
+                // Для видео
+                mediaHtml = `
+                    <video controls>
+                        <source src="${material.fileData}" type="${material.fileType}">
+                        Ваш браузер не поддерживает видео.
+                    </video>
+                `;
+            } else {
+                // Для фото
+                mediaHtml = `<img src="${material.fileData}" alt="${material.title}">`;
+            }
+
+            container.innerHTML = `
+                <h1 class="material-title">${material.title}</h1>
+                <div class="material-meta">
+                    <span>Загружено: ${material.date} • Тип: ${material.type === 'video' ? 'Видео' : 'Фото'}</span>
+                    <span class="student-badge">👤 Для: ${targetStudentName}</span>
+                </div>
+                <div class="material-description">${material.description}</div>
+                <div class="media-container">
+                    ${mediaHtml}
+                </div>
+                <div class="nav-links">
+                    <a href="${backUrl}" class="nav-link primary">← Вернуться в библиотеку</a>
+                    <a href="javascript:history.back()" class="nav-link secondary">← Назад</a>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
