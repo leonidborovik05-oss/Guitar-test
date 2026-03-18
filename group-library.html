@@ -1,50 +1,195 @@
-const urlParams = new URLSearchParams(window.location.search);
-const groupId = urlParams.get('groupId');
-
-// Константы для учителя
-const TEACHER_LOGIN = "EvgenyaGuitara01543";
-const TEACHER_NAME = "Евгения (Учитель)";
-
-// ОПРЕДЕЛЯЕМ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ
-let currentUser = {
-    login: '',
-    name: '',
-    role: 'student'
-};
-
-const savedUser = sessionStorage.getItem('currentUser');
-if (savedUser) {
-    currentUser = JSON.parse(savedUser);
-} else {
-    if (localStorage.getItem('teacherLoggedIn')) {
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('groupId');
+    
+    // Константы
+    const TEACHER_LOGIN = "EvgenyaGuitara01543";
+    const TEACHER_NAME = "Евгения (Учитель)";
+    
+    // ОПРЕДЕЛЯЕМ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ
+    let currentUser = {
+        login: '',
+        name: '',
+        role: 'student'
+    };
+    
+    // Проверяем, заходил ли учитель
+    const isTeacherLoggedIn = localStorage.getItem('teacherLoggedIn') === 'true';
+    
+    if (isTeacherLoggedIn) {
         currentUser = {
             login: TEACHER_LOGIN,
             name: TEACHER_NAME,
             role: 'teacher'
         };
     } else {
+        // Иначе ученик Леонид
         currentUser = {
             login: 'LeonidzasFire23457',
             name: 'Леонид Зас',
             role: 'student'
         };
     }
-}
-
-sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-
-// Загружаем группы
-let groups = JSON.parse(localStorage.getItem('groups')) || [];
-const currentGroup = groups.find(g => g.id == groupId);
-
-if (!currentGroup) {
-    alert('Группа не найдена');
-    window.location.href = currentUser.role === 'teacher' ? 'teacher-cabinet.html' : 'student-cabinet.html';
-}
-
-document.getElementById('groupName').textContent = currentGroup.name;
-
-// Показываем загрузку только учителю
-if (currentUser.role === 'teacher') {
-    document.getElementById('uploadSection').style.display = 'block';
-}
+    
+    // Сохраняем в sessionStorage для других страниц
+    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+    
+    // Загружаем группы
+    let groups = JSON.parse(localStorage.getItem('groups')) || [];
+    const currentGroup = groups.find(g => g.id == groupId);
+    
+    if (!currentGroup) {
+        alert('Группа не найдена');
+        window.location.href = currentUser.role === 'teacher' ? 'teacher-cabinet.html' : 'student-cabinet.html';
+    }
+    
+    document.getElementById('groupName').textContent = currentGroup.name;
+    document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`;
+    
+    // Показываем форму загрузки ТОЛЬКО ученикам
+    if (currentUser.role === 'student') {
+        document.getElementById('uploadSection').style.display = 'block';
+    }
+    
+    // Загружаем материалы группы
+    let materials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
+    
+    function renderMaterials() {
+        const grid = document.getElementById('materialsGrid');
+        
+        if (materials.length === 0) {
+            grid.innerHTML = '<div class="empty-state">📭 В библиотеке группы пока нет материалов</div>';
+            return;
+        }
+        
+        let html = '';
+        materials.sort((a, b) => b.id - a.id).forEach(m => {
+            let previewHtml = '';
+            if (m.type === 'video') {
+                previewHtml = '<div class="material-preview">🎥</div>';
+            } else if (m.fileData && m.fileData.startsWith('data:image')) {
+                previewHtml = `<div class="material-preview"><img src="${m.fileData}" alt="${m.title}"></div>`;
+            } else {
+                previewHtml = '<div class="material-preview">📸</div>';
+            }
+            
+            // Загружаем комментарии к материалу
+            const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${m.id}`)) || [];
+            
+            let commentsHtml = '';
+            comments.forEach(c => {
+                const isTeacher = c.sender === TEACHER_LOGIN;
+                commentsHtml += `
+                    <div class="comment ${isTeacher ? 'teacher' : ''}">
+                        <strong>${c.senderName}:</strong> ${c.text}
+                        <div style="color: #999; font-size: 0.8em;">${c.date}</div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <div class="material-card">
+                    ${previewHtml}
+                    <div class="material-info">
+                        <div class="material-title">${m.title}</div>
+                        <div>${m.description || ''}</div>
+                        <div class="material-meta">
+                            <span>👤 ${m.uploadedBy}</span>
+                            <span>📅 ${m.date}</span>
+                        </div>
+                        
+                        <!-- Комментарии -->
+                        <div class="comment-section">
+                            <div style="font-weight: 600; margin-bottom: 5px;">💬 Комментарии:</div>
+                            ${commentsHtml || '<div style="color: #999;">Пока нет комментариев</div>'}
+                            
+                            <!-- Форма комментария (только для учителя) -->
+                            ${currentUser.role === 'teacher' ? `
+                                <div class="comment-input">
+                                    <input type="text" id="comment_${m.id}" placeholder="Напишите комментарий..." onkeypress="checkCommentEnter(event, '${groupId}', ${m.id})">
+                                    <button class="comment-btn" onclick="addComment('${groupId}', ${m.id})">➤</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        grid.innerHTML = html;
+    }
+    
+    function uploadFile() {
+        const file = document.getElementById('fileInput').files[0];
+        const title = document.getElementById('fileTitle').value.trim();
+        const description = document.getElementById('fileDescription').value.trim();
+        
+        if (!file || !title) {
+            alert('Заполните название и выберите файл');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const material = {
+                id: Date.now(),
+                type: file.type.startsWith('video') ? 'video' : 'image',
+                title: title,
+                description: description,
+                fileData: e.target.result,
+                uploadedBy: currentUser.name,
+                uploadedByLogin: currentUser.login,
+                date: new Date().toLocaleString()
+            };
+            
+            materials.push(material);
+            localStorage.setItem(`group_library_${groupId}`, JSON.stringify(materials));
+            
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileTitle').value = '';
+            document.getElementById('fileDescription').value = '';
+            
+            renderMaterials();
+            alert('✅ Материал загружен!');
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function addComment(groupId, materialId) {
+        const input = document.getElementById(`comment_${materialId}`);
+        const text = input.value.trim();
+        
+        if (!text) return;
+        
+        const comment = {
+            id: Date.now(),
+            sender: currentUser.login,
+            senderName: currentUser.name,
+            text: text,
+            date: new Date().toLocaleString()
+        };
+        
+        const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${materialId}`)) || [];
+        comments.push(comment);
+        localStorage.setItem(`comments_${groupId}_${materialId}`, JSON.stringify(comments));
+        
+        input.value = '';
+        renderMaterials();
+    }
+    
+    function checkCommentEnter(e, groupId, materialId) {
+        if (e.key === 'Enter') {
+            addComment(groupId, materialId);
+        }
+    }
+    
+    renderMaterials();
+    
+    // Обновление каждые 3 секунды
+    setInterval(() => {
+        const newMaterials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
+        if (JSON.stringify(newMaterials) !== JSON.stringify(materials)) {
+            materials = newMaterials;
+            renderMaterials();
+        }
+    }, 3000);
+</script>
