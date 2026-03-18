@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Библиотека группы | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .group-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .group-name {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .main-container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .upload-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        .form-group input[type="file"] {
+            padding: 8px;
+        }
+        .btn-upload {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .material-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+        .material-preview {
+            height: 180px;
+            background: #1e1e2f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3em;
+        }
+        .material-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .material-info {
+            padding: 15px;
+        }
+        .material-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #1e1e2f;
+        }
+        .material-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-size: 1.2em;
+            background: white;
+            border-radius: 20px;
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="group-info">
+            <span class="group-name" id="groupName">Загрузка...</span>
+            <a href="group-chat.html" class="back-btn">← В чат</a>
+            <a href="javascript:history.back()" class="back-btn">Назад</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="upload-section" id="uploadSection" style="display: none;">
+            <h3 style="margin-bottom: 20px;">📤 Загрузить в библиотеку группы</h3>
+            <div class="upload-form">
+                <div class="form-group">
+                    <label>Файл</label>
+                    <input type="file" id="fileInput" accept="image/*,video/*">
+                </div>
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="fileTitle" placeholder="Название материала">
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="fileDescription" placeholder="Описание..."></textarea>
+                </div>
+                <button class="btn-upload" onclick="uploadFile()">Загрузить</button>
+            </div>
+        </div>
+
+        <div id="materialsGrid" class="materials-grid">
+            <!-- Материалы будут загружаться сюда -->
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupId = urlParams.get('groupId');
+        
+        // Определяем текущего пользователя
+        const currentUser = {
+            login: 'LeonidzasFire23457',
+            role: 'student'
+        };
+        
+        const teacherLogin = 'EvgenyaGuitara01543';
+        
+        // Загружаем группы
+        let groups = JSON.parse(localStorage.getItem('groups')) || [];
+        const currentGroup = groups.find(g => g.id == groupId);
+        
+        if (!currentGroup) {
+            alert('Группа не найдена');
+            window.location.href = 'student-cabinet.html';
+        }
+        
+        document.getElementById('groupName').textContent = currentGroup.name;
+        
+        // Показываем загрузку только учителю
+        if (currentUser.login === teacherLogin) {
+            document.getElementById('uploadSection').style.display = 'block';
+        }
+        
+        // Загружаем материалы группы
+        let materials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
+        
+        function renderMaterials() {
+            const grid = document.getElementById('materialsGrid');
+            
+            if (materials.length === 0) {
+                grid.innerHTML = '<div class="empty-state">📭 В библиотеке группы пока нет материалов</div>';
+                return;
+            }
+            
+            let html = '';
+            materials.sort((a, b) => b.id - a.id).forEach(m => {
+                let previewHtml = '';
+                if (m.type === 'video') {
+                    previewHtml = '<div class="material-preview">🎥</div>';
+                } else if (m.fileData && m.fileData.startsWith('data:image')) {
+                    previewHtml = `<div class="material-preview"><img src="${m.fileData}" alt="${m.title}"></div>`;
+                } else {
+                    previewHtml = '<div class="material-preview">📸</div>';
+                }
+                
+                html += `
+                    <div class="material-card">
+                        ${previewHtml}
+                        <div class="material-info">
+                            <div class="material-title">${m.title}</div>
+                            <div>${m.description || ''}</div>
+                            <div class="material-meta">
+                                <span>👤 ${m.uploadedBy}</span>
+                                <span>📅 ${m.date}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+        
+        function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            const title = document.getElementById('fileTitle').value.trim();
+            const description = document.getElementById('fileDescription').value.trim();
+            
+            if (!file || !title) {
+                alert('Заполните название и выберите файл');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const material = {
+                    id: Date.now(),
+                    type: file.type.startsWith('video') ? 'video' : 'image',
+                    title: title,
+                    description: description,
+                    fileData: e.target.result,
+                    uploadedBy: currentUser.login === teacherLogin ? 'Учитель' : 'Ученик',
+                    date: new Date().toLocaleString()
+                };
+                
+                materials.push(material);
+                localStorage.setItem(`group_library_${groupId}`, JSON.stringify(materials));
+                
+                document.getElementById('fileInput').value = '';
+                document.getElementById('fileTitle').value = '';
+                document.getElementById('fileDescription').value = '';
+                
+                renderMaterials();
+                alert('✅ Материал загружен!');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        renderMaterials();
+    </script>
+</body>
+</html>
