@@ -74,7 +74,6 @@
             font-size: 1.1em;
         }
         
-        /* Предпросмотр камеры */
         .preview-container {
             width: 100%;
             background: #1e1e2f;
@@ -105,7 +104,6 @@
             pointer-events: none;
         }
         
-        /* Настройки устройств */
         .device-settings {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -142,57 +140,25 @@
             color: #dc3545;
         }
         
-        /* Участники */
-        .participants-list {
-            background: #f8f9fc;
+        .room-info {
+            background: #e3f2fd;
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
+            text-align: center;
         }
-        .participants-title {
-            font-weight: 600;
-            color: #1e1e2f;
-            margin-bottom: 15px;
-        }
-        .participant-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 10px;
-            border-bottom: 1px solid #eaeef2;
-        }
-        .participant-item:last-child {
-            border-bottom: none;
-        }
-        .participant-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #1e1e2f;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .room-code {
+            font-size: 2em;
             font-weight: bold;
+            color: #1976d2;
+            margin: 10px 0;
+            letter-spacing: 5px;
         }
-        .participant-name {
-            flex: 1;
-            font-weight: 500;
-        }
-        .participant-status {
-            color: #28a745;
-            font-size: 0.9em;
-        }
-        .waiting-badge {
-            background: #ffc107;
-            color: #1e1e2f;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 500;
+        .room-hint {
+            color: #666;
+            font-size: 0.95em;
         }
         
-        /* Кнопки */
         .action-buttons {
             display: flex;
             gap: 15px;
@@ -227,26 +193,16 @@
             cursor: not-allowed;
         }
         
-        /* Индикатор ожидания */
-        .waiting-indicator {
-            text-align: center;
-            padding: 40px;
-            background: #f8f9fc;
+        .participants-hint {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff9e6;
             border-radius: 15px;
-            margin-top: 20px;
+            border-left: 5px solid #ffc107;
         }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #28a745;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .participants-hint p {
+            margin: 5px 0;
+            color: #1e1e2f;
         }
     </style>
 </head>
@@ -262,9 +218,8 @@
     <div class="main-container">
         <div class="ready-card">
             <h1>📹 Подготовка к онлайн-уроку</h1>
-            <p class="subtitle">Проверь камеру и микрофон. Учитель начнёт урок, когда все будут готовы.</p>
+            <p class="subtitle">Проверь камеру и микрофон. Все, кто зайдёт в урок, будут видеть и слышать друг друга.</p>
             
-            <!-- Предпросмотр камеры -->
             <div class="preview-container">
                 <video id="localVideo" autoplay playsinline muted></video>
                 <div id="previewPlaceholder" class="preview-placeholder">
@@ -272,7 +227,6 @@
                 </div>
             </div>
             
-            <!-- Настройки устройств -->
             <div class="device-settings">
                 <div class="device-group">
                     <label>📷 Камера</label>
@@ -289,30 +243,21 @@
                     </select>
                     <div id="microphoneStatus" class="device-status">✅ Микрофон работает</div>
                 </div>
-                
-                <div class="device-group">
-                    <label>🔊 Динамики</label>
-                    <select id="speakerSelect" class="device-select" onchange="switchSpeaker()">
-                        <option value="">Загрузка динамиков...</option>
-                    </select>
-                    <button class="btn-secondary" style="padding: 8px; margin-top: 10px;" onclick="testSpeaker()">🔊 Тест</button>
-                </div>
             </div>
             
-            <!-- Список участников -->
-            <div class="participants-list">
-                <div class="participants-title">👥 Участники урока</div>
-                <div id="participantsContainer">
-                    <!-- Будут добавляться участники -->
-                </div>
-                <div id="waitingMessage" class="waiting-indicator" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Ожидание начала урока...</p>
-                    <p style="color: #666; font-size: 0.9em; margin-top: 10px;">Учитель начнёт, когда все подключатся</p>
-                </div>
+            <div class="room-info">
+                <div style="font-size: 1.2em; color: #1e1e2f;">🔑 Код комнаты</div>
+                <div class="room-code" id="roomCode">GUITAR-STUDIO-2026</div>
+                <div class="room-hint">Все участники с этим кодом будут в одной комнате</div>
             </div>
             
-            <!-- Кнопки -->
+            <div class="participants-hint">
+                <p><strong>👥 Как это работает:</strong></p>
+                <p>• Все, кто сейчас зайдёт в урок, автоматически попадут в одну комнату</p>
+                <p>• Учитель может заглушать участников</p>
+                <p>• Можно включать/выключать камеру и микрофон</p>
+            </div>
+            
             <div class="action-buttons">
                 <button class="btn btn-secondary" onclick="window.location.href='javascript:history.back()'">Отмена</button>
                 <button class="btn btn-primary" id="joinBtn" onclick="joinLesson()" disabled>
@@ -323,11 +268,9 @@
     </div>
 
     <script>
-        // Получаем роль из URL
         const urlParams = new URLSearchParams(window.location.search);
-        const role = urlParams.get('role'); // 'teacher' или 'student'
+        const role = urlParams.get('role');
         
-        // Данные пользователя
         let userName = '';
         let userLogin = '';
         
@@ -341,21 +284,16 @@
         
         document.getElementById('userNameDisplay').textContent = userName;
         
-        // WebRTC переменные
         let localStream = null;
         let devices = {
             cameras: [],
-            microphones: [],
-            speakers: []
+            microphones: []
         };
         
-        // Загружаем учеников для отображения
-        let students = JSON.parse(localStorage.getItem('students')) || [];
+        const ROOM_ID = "GUITAR-STUDIO-2026"; // Одна комната для всех
         
-        // Инициализация
         async function initDevices() {
             try {
-                // Запрашиваем доступ к камере и микрофону
                 localStream = await navigator.mediaDevices.getUserMedia({ 
                     video: true, 
                     audio: true 
@@ -364,14 +302,11 @@
                 document.getElementById('localVideo').srcObject = localStream;
                 document.getElementById('previewPlaceholder').style.display = 'none';
                 
-                // Получаем список устройств
                 const devicesList = await navigator.mediaDevices.enumerateDevices();
                 
                 devices.cameras = devicesList.filter(d => d.kind === 'videoinput');
                 devices.microphones = devicesList.filter(d => d.kind === 'audioinput');
-                devices.speakers = devicesList.filter(d => d.kind === 'audiooutput');
                 
-                // Заполняем селекты
                 const cameraSelect = document.getElementById('cameraSelect');
                 cameraSelect.innerHTML = devices.cameras.map(c => 
                     `<option value="${c.deviceId}">${c.label || 'Камера'}</option>`
@@ -382,16 +317,7 @@
                     `<option value="${m.deviceId}">${m.label || 'Микрофон'}</option>`
                 ).join('');
                 
-                const speakerSelect = document.getElementById('speakerSelect');
-                speakerSelect.innerHTML = devices.speakers.map(s => 
-                    `<option value="${s.deviceId}">${s.label || 'Динамики'}</option>`
-                ).join('');
-                
-                // Активируем кнопку входа
                 document.getElementById('joinBtn').disabled = false;
-                
-                // Обновляем список участников
-                updateParticipantsList();
                 
             } catch (err) {
                 console.error('Ошибка доступа к устройствам:', err);
@@ -401,7 +327,6 @@
             }
         }
         
-        // Переключение камеры
         async function switchCamera() {
             const deviceId = document.getElementById('cameraSelect').value;
             if (!deviceId || !localStream) return;
@@ -420,7 +345,6 @@
             document.getElementById('localVideo').srcObject = localStream;
         }
         
-        // Переключение микрофона
         async function switchMicrophone() {
             const deviceId = document.getElementById('microphoneSelect').value;
             if (!deviceId || !localStream) return;
@@ -439,107 +363,19 @@
             document.getElementById('localVideo').srcObject = localStream;
         }
         
-        // Переключение динамиков
-        function switchSpeaker() {
-            const deviceId = document.getElementById('speakerSelect').value;
-            if (deviceId && localStream) {
-                // В реальном WebRTC это сложнее, для демо просто сохраняем выбор
-                localStorage.setItem('preferredSpeaker', deviceId);
-            }
-        }
-        
-        // Тест динамиков
-        function testSpeaker() {
-            const audio = new Audio();
-            audio.src = 'data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'; // Короткий звуковой сигнал
-            audio.play();
-        }
-        
-        // Обновление списка участников
-        function updateParticipantsList() {
-            const container = document.getElementById('participantsContainer');
-            const waitingMsg = document.getElementById('waitingMessage');
-            
-            // Получаем список участников из localStorage (в реальном проекте через сигнальный сервер)
-            let participants = JSON.parse(localStorage.getItem('lessonParticipants')) || [];
-            
-            // Добавляем себя, если ещё нет
-            if (!participants.some(p => p.login === userLogin)) {
-                participants.push({
-                    login: userLogin,
-                    name: userName,
-                    role: role,
-                    ready: true,
-                    joined: false
-                });
-                localStorage.setItem('lessonParticipants', JSON.stringify(participants));
-            }
-            
-            // Отображаем участников
-            let html = '';
-            participants.forEach(p => {
-                const isTeacher = p.role === 'teacher';
-                html += `
-                    <div class="participant-item">
-                        <div class="participant-avatar">${p.name.charAt(0)}</div>
-                        <div class="participant-name">
-                            ${p.name}
-                            ${isTeacher ? ' 👑' : ''}
-                        </div>
-                        <div class="participant-status">
-                            ${p.ready ? '✅ Готов' : '⏳ Подключается'}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-            
-            // Показываем сообщение ожидания, если учитель ещё не начал
-            const lessonStatus = JSON.parse(localStorage.getItem('onlineLesson')) || { active: false };
-            if (!lessonStatus.active) {
-                waitingMsg.style.display = 'block';
-            } else {
-                waitingMsg.style.display = 'none';
-            }
-        }
-        
-        // Вход в урок
         function joinLesson() {
-            // Обновляем статус урока
-            const lessonStatus = JSON.parse(localStorage.getItem('onlineLesson')) || { active: false };
-            
-            // Если учитель начинает урок
-            if (role === 'teacher') {
-                lessonStatus.active = true;
-                lessonStatus.startedBy = userLogin;
-                lessonStatus.startTime = new Date().toISOString();
-                localStorage.setItem('onlineLesson', JSON.stringify(lessonStatus));
-            }
+            // Сохраняем информацию о себе в sessionStorage (только для текущей вкладки)
+            sessionStorage.setItem('currentUser', JSON.stringify({
+                login: userLogin,
+                name: userName,
+                role: role
+            }));
             
             // Переходим на страницу урока
-            window.location.href = `online-lesson.html?role=${role}`;
+            window.location.href = `online-lesson.html?room=${ROOM_ID}&role=${role}`;
         }
         
-        // Проверяем, начал ли учитель урок
-        function checkLessonStart() {
-            const lessonStatus = JSON.parse(localStorage.getItem('onlineLesson')) || { active: false };
-            if (lessonStatus.active && role === 'student') {
-                // Если ученик и урок уже идёт, предлагаем присоединиться
-                if (confirm('Урок уже начался! Присоединиться?')) {
-                    window.location.href = `online-lesson.html?role=${role}`;
-                }
-            }
-        }
-        
-        // Запускаем инициализацию
         initDevices();
-        
-        // Обновляем список участников каждые 2 секунды
-        setInterval(updateParticipantsList, 2000);
-        
-        // Проверяем начало урока каждые 2 секунды
-        setInterval(checkLessonStart, 2000);
     </script>
 </body>
 </html>
