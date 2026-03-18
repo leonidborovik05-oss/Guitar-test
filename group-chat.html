@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат группы | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .group-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .group-name {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .member-count {
+            background: #3a3a55;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1000px;
+            margin: 20px auto;
+            width: 100%;
+            padding: 0 20px;
+        }
+        .messages-area {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: calc(100vh - 200px);
+        }
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+        }
+        .message.own {
+            align-self: flex-end;
+        }
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .message-sender {
+            font-weight: 600;
+            color: #1e1e2f;
+        }
+        .message-time {
+            color: #999;
+        }
+        .message-content {
+            background: #f0f2f5;
+            padding: 12px 15px;
+            border-radius: 18px;
+            color: #333;
+            line-height: 1.5;
+        }
+        .message.own .message-content {
+            background: #1e1e2f;
+            color: white;
+        }
+        .message.teacher .message-content {
+            background: #ffc107;
+            color: #1e1e2f;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .message-input {
+            flex: 1;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            outline: none;
+            background: #f0f2f5;
+            border-radius: 40px;
+        }
+        .send-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: transform 0.2s;
+        }
+        .send-btn:hover {
+            transform: scale(1.1);
+        }
+        .library-link {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            background: #17a2b8;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .library-link:hover {
+            transform: translateY(-5px);
+        }
+        .system-message {
+            text-align: center;
+            color: #999;
+            font-size: 0.9em;
+            padding: 10px;
+            background: #f8f9fc;
+            border-radius: 20px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="group-info">
+            <span class="group-name" id="groupName">Загрузка...</span>
+            <span class="member-count" id="memberCount">0 уч.</span>
+            <a href="javascript:history.back()" class="back-btn">← Назад</a>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages-area" id="messagesArea">
+            <!-- Сообщения будут загружаться сюда -->
+        </div>
+        
+        <div class="input-area">
+            <input type="text" class="message-input" id="messageInput" placeholder="Напишите сообщение..." onkeypress="checkEnter(event)">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+    
+    <a href="#" class="library-link" id="libraryLink">📁 Библиотека группы</a>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupId = urlParams.get('groupId');
+        
+        // Определяем текущего пользователя (упрощённо)
+        const currentUser = {
+            login: 'LeonidzasFire23457', // Для демо
+            name: 'Леонид Зас',
+            role: 'student'
+        };
+        
+        // Попробуем определить, учитель ли это (по наличию учителя в localStorage)
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        const teacherLogin = 'EvgenyaGuitara01543';
+        
+        // Загружаем группы
+        let groups = JSON.parse(localStorage.getItem('groups')) || [];
+        const currentGroup = groups.find(g => g.id == groupId);
+        
+        if (!currentGroup) {
+            alert('Группа не найдена');
+            window.location.href = 'student-cabinet.html';
+        }
+        
+        document.getElementById('groupName').textContent = currentGroup.name;
+        document.getElementById('memberCount').textContent = `${currentGroup.members.length} уч.`;
+        document.getElementById('libraryLink').href = `group-library.html?groupId=${groupId}`;
+        
+        // Загружаем сообщения
+        let messages = JSON.parse(localStorage.getItem(`group_messages_${groupId}`)) || [];
+        
+        // Добавляем системное сообщение о создании группы, если его нет
+        if (messages.length === 0) {
+            messages.push({
+                id: Date.now(),
+                type: 'system',
+                text: `Группа "${currentGroup.name}" создана`,
+                date: currentGroup.createdAt || new Date().toLocaleString()
+            });
+            localStorage.setItem(`group_messages_${groupId}`, JSON.stringify(messages));
+        }
+        
+        function renderMessages() {
+            const container = document.getElementById('messagesArea');
+            let html = '';
+            
+            messages.forEach(msg => {
+                if (msg.type === 'system') {
+                    html += `<div class="system-message">${msg.text} • ${msg.date}</div>`;
+                } else {
+                    const isOwn = msg.sender === currentUser.login;
+                    const isTeacher = msg.sender === teacherLogin;
+                    html += `
+                        <div class="message ${isOwn ? 'own' : ''} ${isTeacher ? 'teacher' : ''}">
+                            <div class="message-header">
+                                <span class="message-sender">${msg.senderName}</span>
+                                <span class="message-time">${msg.date}</span>
+                            </div>
+                            <div class="message-content">${msg.text}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            const message = {
+                id: Date.now(),
+                type: 'message',
+                sender: currentUser.login,
+                senderName: currentUser.name,
+                groupId: groupId,
+                groupName: currentGroup.name,
+                text: text,
+                date: new Date().toLocaleString(),
+                read: false
+            };
+            
+            messages.push(message);
+            localStorage.setItem(`group_messages_${groupId}`, JSON.stringify(messages));
+            
+            // Сохраняем также в общий список для уведомлений учителя
+            let allMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+            allMessages.push(message);
+            localStorage.setItem('groupMessages', JSON.stringify(allMessages));
+            
+            input.value = '';
+            renderMessages();
+        }
+        
+        function checkEnter(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        renderMessages();
+        setInterval(() => {
+            // Проверяем новые сообщения каждые 2 секунды
+            const newMessages = JSON.parse(localStorage.getItem(`group_messages_${groupId}`)) || [];
+            if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
+                messages = newMessages;
+                renderMessages();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
