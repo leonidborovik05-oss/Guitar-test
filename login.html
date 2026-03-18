@@ -159,9 +159,17 @@
             }
 
             if (username === teacherUsername && password === teacherPassword) {
+                // Сохраняем данные учителя
+                localStorage.setItem('userRole', 'teacher');
+                localStorage.setItem('userLogin', teacherUsername);
+                localStorage.setItem('userName', 'Евгения (Учитель)');
                 window.location.href = "teacher-cabinet.html"; 
             }
             else if (username === studentUsername && password === studentPassword) {
+                // Сохраняем данные ученика
+                localStorage.setItem('userRole', 'student');
+                localStorage.setItem('userLogin', studentUsername);
+                localStorage.setItem('userName', 'Леонид Зас');
                 window.location.href = "student-cabinet.html";
             }
             else {
