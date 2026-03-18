@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Библиотека группы | Студия гитары</title>
+    <title>Чат группы | Студия гитары</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,9 @@
         body {
             font-family: 'Segoe UI', Roboto, sans-serif;
             background: #f0f2f5;
-            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         .header {
             background: linear-gradient(90deg, #1e1e2f, #2a2a40);
@@ -40,6 +42,12 @@
             font-size: 1.2em;
             font-weight: 600;
         }
+        .member-count {
+            background: #3a3a55;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
         .back-btn {
             background: #6c757d;
             color: white;
@@ -48,158 +56,128 @@
             text-decoration: none;
             font-weight: 500;
         }
-        .main-container {
-            max-width: 1300px;
-            margin: 30px auto;
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1000px;
+            margin: 20px auto;
+            width: 100%;
             padding: 0 20px;
         }
-        
-        .upload-section {
+        .messages-area {
+            flex: 1;
             background: white;
             border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 30px;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: calc(100vh - 200px);
+        }
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+        }
+        .message.own {
+            align-self: flex-end;
+        }
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .message-sender {
+            font-weight: 600;
+            color: #1e1e2f;
+        }
+        .message-time {
+            color: #999;
+        }
+        .message-content {
+            background: #f0f2f5;
+            padding: 12px 15px;
+            border-radius: 18px;
+            color: #333;
+            line-height: 1.5;
+        }
+        .message.own .message-content {
+            background: #1e1e2f;
+            color: white;
+        }
+        .message.teacher .message-content {
+            background: #ffc107;
+            color: #1e1e2f;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 50px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-        .upload-form {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
-        .form-group {
+        .message-input {
             flex: 1;
-            min-width: 200px;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            outline: none;
+            background: #f0f2f5;
+            border-radius: 40px;
         }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #555;
-        }
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-        }
-        .form-group input[type="file"] {
-            padding: 8px;
-        }
-        .btn-upload {
+        .send-btn {
             background: #28a745;
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 10px;
-            font-weight: 600;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             cursor: pointer;
-        }
-        
-        .materials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .material-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            font-size: 1.2em;
             transition: transform 0.2s;
         }
-        .material-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        .send-btn:hover {
+            transform: scale(1.1);
         }
-        .material-preview {
-            height: 180px;
-            background: #1e1e2f;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .library-link {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            background: #17a2b8;
             color: white;
-            font-size: 3em;
-        }
-        .material-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .material-info {
-            padding: 15px;
-        }
-        .material-title {
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
             font-weight: 600;
-            font-size: 1.1em;
-            margin-bottom: 8px;
-            color: #1e1e2f;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
         }
-        .material-meta {
-            display: flex;
-            justify-content: space-between;
-            color: #999;
-            font-size: 0.85em;
-            margin-top: 10px;
+        .library-link:hover {
+            transform: translateY(-5px);
         }
-        .empty-state {
+        .system-message {
             text-align: center;
-            padding: 60px;
             color: #999;
-            font-size: 1.2em;
-            background: white;
+            font-size: 0.9em;
+            padding: 10px;
+            background: #f8f9fc;
             border-radius: 20px;
-            grid-column: 1 / -1;
+            margin: 10px 0;
         }
         .teacher-badge {
             background: #ffc107;
             color: #1e1e2f;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            margin-left: 5px;
-        }
-        .student-badge {
-            background: #17a2b8;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            margin-left: 5px;
-        }
-        .comment-section {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f8f9fc;
+            font-size: 0.7em;
+            padding: 2px 6px;
             border-radius: 10px;
-        }
-        .comment-input {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .comment-input input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-        }
-        .comment-btn {
-            background: #1e1e2f;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-        .comment {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-            font-size: 0.95em;
-        }
-        .comment.teacher {
-            background: #fff9e6;
-            border-left: 3px solid #ffc107;
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -208,45 +186,34 @@
         <div class="logo">🎸 Guitar<span>Studio</span></div>
         <div class="group-info">
             <span class="group-name" id="groupName">Загрузка...</span>
-            <a href="group-chat.html?groupId=" id="chatLink" class="back-btn">← В чат</a>
-            <a href="javascript:history.back()" class="back-btn">Назад</a>
+            <span class="member-count" id="memberCount">0 уч.</span>
+            <a href="javascript:history.back()" class="back-btn">← Назад</a>
         </div>
     </div>
 
-    <div class="main-container">
-        <!-- Форма загрузки - видна только УЧЕНИКАМ -->
-        <div class="upload-section" id="uploadSection" style="display: none;">
-            <h3 style="margin-bottom: 20px;">📤 Поделиться успехами</h3>
-            <div class="upload-form">
-                <div class="form-group">
-                    <label>Файл (фото или видео)</label>
-                    <input type="file" id="fileInput" accept="image/*,video/*">
-                </div>
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" id="fileTitle" placeholder="Например: Мой разбор песни">
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="fileDescription" placeholder="Что хочешь показать?"></textarea>
-                </div>
-                <button class="btn-upload" onclick="uploadFile()">Загрузить</button>
-            </div>
+    <div class="chat-container">
+        <div class="messages-area" id="messagesArea">
+            <!-- Сообщения будут загружаться сюда -->
         </div>
-
-        <!-- Сетка материалов -->
-        <div id="materialsGrid" class="materials-grid">
-            <!-- Материалы будут загружаться сюда -->
+        
+        <div class="input-area">
+            <input type="text" class="message-input" id="messageInput" placeholder="Напишите сообщение..." onkeypress="checkEnter(event)">
+            <button class="send-btn" onclick="sendMessage()">➤</button>
         </div>
     </div>
+    
+    <a href="#" class="library-link" id="libraryLink">📁 Библиотека группы</a>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const groupId = urlParams.get('groupId');
         
-        // Константы
+        // Константы для учителя
         const TEACHER_LOGIN = "EvgenyaGuitara01543";
         const TEACHER_NAME = "Евгения (Учитель)";
+        
+        // Загружаем список учеников
+        const students = JSON.parse(localStorage.getItem('students')) || [];
         
         // ОПРЕДЕЛЯЕМ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ
         let currentUser = {
@@ -255,29 +222,31 @@
             role: 'student' // по умолчанию ученик
         };
         
-        // Пробуем получить из sessionStorage
+        // Пробуем получить из sessionStorage (если там сохранили при входе)
         const savedUser = sessionStorage.getItem('currentUser');
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
         } else {
-            // Проверяем, не учитель ли это
+            // Если нет в sessionStorage, пытаемся определить по логину
+            // Проверяем, может быть мы учитель
             if (localStorage.getItem('teacherLoggedIn')) {
                 currentUser = {
                     login: TEACHER_LOGIN,
                     name: TEACHER_NAME,
                     role: 'teacher'
                 };
-                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             } else {
-                // Иначе ученик Леонид
+                // Иначе считаем, что это ученик Леонид (для демо)
                 currentUser = {
                     login: 'LeonidzasFire23457',
                     name: 'Леонид Зас',
                     role: 'student'
                 };
-                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
         }
+        
+        // Сохраняем в sessionStorage для других страниц
+        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
         
         // Загружаем группы
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
@@ -289,154 +258,97 @@
         }
         
         document.getElementById('groupName').textContent = currentGroup.name;
-        document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`;
+        document.getElementById('memberCount').textContent = `${currentGroup.members ? currentGroup.members.length : 0} уч.`;
+        document.getElementById('libraryLink').href = `group-library.html?groupId=${groupId}`;
         
-        // Показываем форму загрузки ТОЛЬКО ученикам
-        if (currentUser.role === 'student') {
-            document.getElementById('uploadSection').style.display = 'block';
+        // Загружаем сообщения
+        let messages = JSON.parse(localStorage.getItem(`group_messages_${groupId}`)) || [];
+        
+        // Добавляем системное сообщение о создании группы, если его нет
+        if (messages.length === 0) {
+            messages.push({
+                id: Date.now(),
+                type: 'system',
+                text: `Группа "${currentGroup.name}" создана`,
+                date: currentGroup.createdAt || new Date().toLocaleString()
+            });
+            localStorage.setItem(`group_messages_${groupId}`, JSON.stringify(messages));
         }
         
-        // Загружаем материалы группы
-        let materials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
-        
-        function renderMaterials() {
-            const grid = document.getElementById('materialsGrid');
-            
-            if (materials.length === 0) {
-                grid.innerHTML = '<div class="empty-state">📭 В библиотеке группы пока нет материалов</div>';
-                return;
-            }
-            
+        function renderMessages() {
+            const container = document.getElementById('messagesArea');
             let html = '';
-            materials.sort((a, b) => b.id - a.id).forEach(m => {
-                let previewHtml = '';
-                if (m.type === 'video') {
-                    previewHtml = '<div class="material-preview">🎥</div>';
-                } else if (m.fileData && m.fileData.startsWith('data:image')) {
-                    previewHtml = `<div class="material-preview"><img src="${m.fileData}" alt="${m.title}"></div>`;
+            
+            messages.forEach(msg => {
+                if (msg.type === 'system') {
+                    html += `<div class="system-message">${msg.text} • ${msg.date}</div>`;
                 } else {
-                    previewHtml = '<div class="material-preview">📸</div>';
-                }
-                
-                // Загружаем комментарии к материалу
-                const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${m.id}`)) || [];
-                
-                let commentsHtml = '';
-                comments.forEach(c => {
-                    const isTeacher = c.sender === TEACHER_LOGIN;
-                    commentsHtml += `
-                        <div class="comment ${isTeacher ? 'teacher' : ''}">
-                            <strong>${c.senderName}:</strong> ${c.text}
-                            <div style="color: #999; font-size: 0.8em;">${c.date}</div>
+                    const isOwn = msg.sender === currentUser.login;
+                    const isTeacher = msg.sender === TEACHER_LOGIN;
+                    html += `
+                        <div class="message ${isOwn ? 'own' : ''} ${isTeacher ? 'teacher' : ''}">
+                            <div class="message-header">
+                                <span class="message-sender">
+                                    ${msg.senderName}
+                                    ${isTeacher ? '<span class="teacher-badge">👑</span>' : ''}
+                                </span>
+                                <span class="message-time">${msg.date}</span>
+                            </div>
+                            <div class="message-content">${msg.text}</div>
                         </div>
                     `;
-                });
-                
-                html += `
-                    <div class="material-card">
-                        ${previewHtml}
-                        <div class="material-info">
-                            <div class="material-title">${m.title}</div>
-                            <div>${m.description || ''}</div>
-                            <div class="material-meta">
-                                <span>👤 ${m.uploadedBy} ${m.uploadedBy === 'Ученик' ? '<span class="student-badge">ученик</span>' : ''}</span>
-                                <span>📅 ${m.date}</span>
-                            </div>
-                            
-                            <!-- Комментарии -->
-                            <div class="comment-section">
-                                <div style="font-weight: 600; margin-bottom: 5px;">💬 Комментарии:</div>
-                                ${commentsHtml || '<div style="color: #999;">Пока нет комментариев</div>'}
-                                
-                                <!-- Форма комментария (только для учителя) -->
-                                ${currentUser.role === 'teacher' ? `
-                                    <div class="comment-input">
-                                        <input type="text" id="comment_${m.id}" placeholder="Напишите комментарий..." onkeypress="checkCommentEnter(event, '${groupId}', ${m.id})">
-                                        <button class="comment-btn" onclick="addComment('${groupId}', ${m.id})">➤</button>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                }
             });
-            grid.innerHTML = html;
+            
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
         }
         
-        function uploadFile() {
-            const file = document.getElementById('fileInput').files[0];
-            const title = document.getElementById('fileTitle').value.trim();
-            const description = document.getElementById('fileDescription').value.trim();
-            
-            if (!file || !title) {
-                alert('Заполните название и выберите файл');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const material = {
-                    id: Date.now(),
-                    type: file.type.startsWith('video') ? 'video' : 'image',
-                    title: title,
-                    description: description,
-                    fileData: e.target.result,
-                    uploadedBy: 'Ученик',
-                    uploadedByLogin: currentUser.login,
-                    date: new Date().toLocaleString()
-                };
-                
-                materials.push(material);
-                localStorage.setItem(`group_library_${groupId}`, JSON.stringify(materials));
-                
-                document.getElementById('fileInput').value = '';
-                document.getElementById('fileTitle').value = '';
-                document.getElementById('fileDescription').value = '';
-                
-                renderMaterials();
-                alert('✅ Материал загружен!');
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        function addComment(groupId, materialId) {
-            const input = document.getElementById(`comment_${materialId}`);
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
             const text = input.value.trim();
             
             if (!text) return;
             
-            const comment = {
+            const message = {
                 id: Date.now(),
+                type: 'message',
                 sender: currentUser.login,
                 senderName: currentUser.name,
+                groupId: groupId,
+                groupName: currentGroup.name,
                 text: text,
-                date: new Date().toLocaleString()
+                date: new Date().toLocaleString(),
+                read: false
             };
             
-            const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${materialId}`)) || [];
-            comments.push(comment);
-            localStorage.setItem(`comments_${groupId}_${materialId}`, JSON.stringify(comments));
+            messages.push(message);
+            localStorage.setItem(`group_messages_${groupId}`, JSON.stringify(messages));
+            
+            // Сохраняем также в общий список для уведомлений учителя
+            let allMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+            allMessages.push(message);
+            localStorage.setItem('groupMessages', JSON.stringify(allMessages));
             
             input.value = '';
-            renderMaterials();
+            renderMessages();
         }
         
-        function checkCommentEnter(e, groupId, materialId) {
+        function checkEnter(e) {
             if (e.key === 'Enter') {
-                addComment(groupId, materialId);
+                sendMessage();
             }
         }
         
-        renderMaterials();
-        
-        // Обновление каждые 3 секунды
+        renderMessages();
         setInterval(() => {
-            const newMaterials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
-            if (JSON.stringify(newMaterials) !== JSON.stringify(materials)) {
-                materials = newMaterials;
-                renderMaterials();
+            // Проверяем новые сообщения каждые 2 секунды
+            const newMessages = JSON.parse(localStorage.getItem(`group_messages_${groupId}`)) || [];
+            if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
+                messages = newMessages;
+                renderMessages();
             }
-        }, 3000);
+        }, 2000);
     </script>
 </body>
 </html>
