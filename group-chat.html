@@ -76,7 +76,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            max-height: calc(100vh - 200px);
+            min-height: 400px;
         }
         .message {
             display: flex;
@@ -211,19 +211,13 @@
         
         // Константы
         const TEACHER_LOGIN = "EvgenyaGuitara01543";
-        const TEACHER_NAME = "Евгения (Учитель)";
         
         // Получаем информацию о текущем пользователе из localStorage
-        const isTeacher = localStorage.getItem('teacherLoggedIn') === 'true';
-        const currentUserLogin = localStorage.getItem('currentUserLogin') || (isTeacher ? TEACHER_LOGIN : 'LeonidzasFire23457');
-        const currentUserName = localStorage.getItem('currentUserName') || (isTeacher ? TEACHER_NAME : 'Леонид Зас');
+        const userRole = localStorage.getItem('userRole') || 'student';
+        const userLogin = localStorage.getItem('userLogin') || (userRole === 'teacher' ? TEACHER_LOGIN : 'LeonidzasFire23457');
+        const userName = localStorage.getItem('userName') || (userRole === 'teacher' ? 'Евгения (Учитель)' : 'Леонид Зас');
         
-        // Создаём объект текущего пользователя
-        const currentUser = {
-            login: currentUserLogin,
-            name: currentUserName,
-            role: isTeacher ? 'teacher' : 'student'
-        };
+        console.log('Текущий пользователь:', { userRole, userLogin, userName });
         
         // Загружаем группы из localStorage
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
@@ -232,7 +226,7 @@
         // Если группа не найдена, возвращаемся в кабинет
         if (!currentGroup) {
             alert('Группа не найдена');
-            window.location.href = isTeacher ? 'teacher-cabinet.html' : 'student-cabinet.html';
+            window.location.href = userRole === 'teacher' ? 'teacher-cabinet.html' : 'student-cabinet.html';
         }
         
         // Обновляем информацию на странице
@@ -245,12 +239,13 @@
         
         // Если сообщений нет, добавляем приветственное
         if (messages.length === 0) {
-            messages.push({
+            const welcomeMsg = {
                 id: Date.now(),
                 type: 'system',
                 text: `Добро пожаловать в группу "${currentGroup.name}"!`,
                 date: new Date().toLocaleString()
-            });
+            };
+            messages.push(welcomeMsg);
             localStorage.setItem(`group_messages_${groupId}`, JSON.stringify(messages));
         }
         
@@ -259,11 +254,16 @@
             const container = document.getElementById('messagesArea');
             let html = '';
             
+            if (!messages || messages.length === 0) {
+                container.innerHTML = '<div class="system-message">Нет сообщений</div>';
+                return;
+            }
+            
             messages.forEach(msg => {
                 if (msg.type === 'system') {
                     html += `<div class="system-message">${msg.text} • ${msg.date}</div>`;
                 } else {
-                    const isOwn = msg.sender === currentUser.login;
+                    const isOwn = msg.sender === userLogin;
                     const isTeacherMsg = msg.sender === TEACHER_LOGIN;
                     html += `
                         <div class="message ${isOwn ? 'own' : ''} ${isTeacherMsg ? 'teacher' : ''}">
@@ -294,8 +294,8 @@
             const message = {
                 id: Date.now(),
                 type: 'message',
-                sender: currentUser.login,
-                senderName: currentUser.name,
+                sender: userLogin,
+                senderName: userName,
                 groupId: groupId,
                 groupName: currentGroup.name,
                 text: text,
