@@ -1,195 +1,424 @@
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const groupId = urlParams.get('groupId');
-    
-    // Константы
-    const TEACHER_LOGIN = "EvgenyaGuitara01543";
-    const TEACHER_NAME = "Евгения (Учитель)";
-    
-    // ОПРЕДЕЛЯЕМ ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ
-    let currentUser = {
-        login: '',
-        name: '',
-        role: 'student'
-    };
-    
-    // Проверяем, заходил ли учитель
-    const isTeacherLoggedIn = localStorage.getItem('teacherLoggedIn') === 'true';
-    
-    if (isTeacherLoggedIn) {
-        currentUser = {
-            login: TEACHER_LOGIN,
-            name: TEACHER_NAME,
-            role: 'teacher'
-        };
-    } else {
-        // Иначе ученик Леонид
-        currentUser = {
-            login: 'LeonidzasFire23457',
-            name: 'Леонид Зас',
-            role: 'student'
-        };
-    }
-    
-    // Сохраняем в sessionStorage для других страниц
-    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-    
-    // Загружаем группы
-    let groups = JSON.parse(localStorage.getItem('groups')) || [];
-    const currentGroup = groups.find(g => g.id == groupId);
-    
-    if (!currentGroup) {
-        alert('Группа не найдена');
-        window.location.href = currentUser.role === 'teacher' ? 'teacher-cabinet.html' : 'student-cabinet.html';
-    }
-    
-    document.getElementById('groupName').textContent = currentGroup.name;
-    document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`;
-    
-    // Показываем форму загрузки ТОЛЬКО ученикам
-    if (currentUser.role === 'student') {
-        document.getElementById('uploadSection').style.display = 'block';
-    }
-    
-    // Загружаем материалы группы
-    let materials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
-    
-    function renderMaterials() {
-        const grid = document.getElementById('materialsGrid');
-        
-        if (materials.length === 0) {
-            grid.innerHTML = '<div class="empty-state">📭 В библиотеке группы пока нет материалов</div>';
-            return;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Библиотека группы | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .group-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .group-name {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .main-container {
+            max-width: 1300px;
+            margin: 30px auto;
+            padding: 0 20px;
         }
         
-        let html = '';
-        materials.sort((a, b) => b.id - a.id).forEach(m => {
-            let previewHtml = '';
-            if (m.type === 'video') {
-                previewHtml = '<div class="material-preview">🎥</div>';
-            } else if (m.fileData && m.fileData.startsWith('data:image')) {
-                previewHtml = `<div class="material-preview"><img src="${m.fileData}" alt="${m.title}"></div>`;
-            } else {
-                previewHtml = '<div class="material-preview">📸</div>';
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .upload-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        .form-group input[type="file"] {
+            padding: 8px;
+        }
+        .btn-upload {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .material-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .material-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+        .material-preview {
+            height: 180px;
+            background: #1e1e2f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3em;
+        }
+        .material-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .material-info {
+            padding: 15px;
+        }
+        .material-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #1e1e2f;
+        }
+        .material-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            font-size: 1.2em;
+            background: white;
+            border-radius: 20px;
+            grid-column: 1 / -1;
+        }
+        .teacher-badge {
+            background: #ffc107;
+            color: #1e1e2f;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: 5px;
+        }
+        .student-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: 5px;
+        }
+        .comment-section {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fc;
+            border-radius: 10px;
+        }
+        .comment-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .comment-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+        }
+        .comment-btn {
+            background: #1e1e2f;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .comment {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95em;
+        }
+        .comment.teacher {
+            background: #fff9e6;
+            border-left: 3px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="group-info">
+            <span class="group-name" id="groupName">Загрузка...</span>
+            <a href="group-chat.html?groupId=" id="chatLink" class="back-btn">← В чат</a>
+            <a href="javascript:history.back()" class="back-btn">Назад</a>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- Форма загрузки - видна только УЧЕНИКАМ -->
+        <div class="upload-section" id="uploadSection" style="display: none;">
+            <h3 style="margin-bottom: 20px;">📤 Поделиться успехами</h3>
+            <div class="upload-form">
+                <div class="form-group">
+                    <label>Файл (фото или видео)</label>
+                    <input type="file" id="fileInput" accept="image/*,video/*">
+                </div>
+                <div class="form-group">
+                    <label>Название</label>
+                    <input type="text" id="fileTitle" placeholder="Например: Мой разбор песни">
+                </div>
+                <div class="form-group">
+                    <label>Описание</label>
+                    <textarea id="fileDescription" placeholder="Что хочешь показать?"></textarea>
+                </div>
+                <button class="btn-upload" onclick="uploadFile()">Загрузить</button>
+            </div>
+        </div>
+
+        <!-- Сетка материалов -->
+        <div id="materialsGrid" class="materials-grid">
+            <!-- Материалы будут загружаться сюда -->
+        </div>
+    </div>
+
+    <script>
+        // Получаем ID группы из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupId = urlParams.get('groupId');
+        
+        // Константы
+        const TEACHER_LOGIN = "EvgenyaGuitara01543";
+        const TEACHER_NAME = "Евгения (Учитель)";
+        
+        // Получаем информацию о текущем пользователе из localStorage
+        const isTeacher = localStorage.getItem('teacherLoggedIn') === 'true';
+        const currentUserLogin = localStorage.getItem('currentUserLogin') || (isTeacher ? TEACHER_LOGIN : 'LeonidzasFire23457');
+        const currentUserName = localStorage.getItem('currentUserName') || (isTeacher ? TEACHER_NAME : 'Леонид Зас');
+        
+        // Создаём объект текущего пользователя
+        const currentUser = {
+            login: currentUserLogin,
+            name: currentUserName,
+            role: isTeacher ? 'teacher' : 'student'
+        };
+        
+        // Загружаем группы
+        let groups = JSON.parse(localStorage.getItem('groups')) || [];
+        const currentGroup = groups.find(g => g.id == groupId);
+        
+        if (!currentGroup) {
+            alert('Группа не найдена');
+            window.location.href = isTeacher ? 'teacher-cabinet.html' : 'student-cabinet.html';
+        }
+        
+        document.getElementById('groupName').textContent = currentGroup.name;
+        document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`;
+        
+        // Показываем форму загрузки ТОЛЬКО ученикам
+        if (!isTeacher) {
+            document.getElementById('uploadSection').style.display = 'block';
+        }
+        
+        // Загружаем материалы группы
+        let materials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
+        
+        function renderMaterials() {
+            const grid = document.getElementById('materialsGrid');
+            
+            if (materials.length === 0) {
+                grid.innerHTML = '<div class="empty-state">📭 В библиотеке группы пока нет материалов</div>';
+                return;
             }
             
-            // Загружаем комментарии к материалу
-            const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${m.id}`)) || [];
-            
-            let commentsHtml = '';
-            comments.forEach(c => {
-                const isTeacher = c.sender === TEACHER_LOGIN;
-                commentsHtml += `
-                    <div class="comment ${isTeacher ? 'teacher' : ''}">
-                        <strong>${c.senderName}:</strong> ${c.text}
-                        <div style="color: #999; font-size: 0.8em;">${c.date}</div>
+            let html = '';
+            materials.sort((a, b) => b.id - a.id).forEach(m => {
+                let previewHtml = '';
+                if (m.type === 'video') {
+                    previewHtml = '<div class="material-preview">🎥</div>';
+                } else if (m.fileData && m.fileData.startsWith('data:image')) {
+                    previewHtml = `<div class="material-preview"><img src="${m.fileData}" alt="${m.title}"></div>`;
+                } else {
+                    previewHtml = '<div class="material-preview">📸</div>';
+                }
+                
+                // Загружаем комментарии к материалу
+                const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${m.id}`)) || [];
+                
+                let commentsHtml = '';
+                comments.forEach(c => {
+                    const isTeacherComment = c.sender === TEACHER_LOGIN;
+                    commentsHtml += `
+                        <div class="comment ${isTeacherComment ? 'teacher' : ''}">
+                            <strong>${c.senderName}:</strong> ${c.text}
+                            <div style="color: #999; font-size: 0.8em;">${c.date}</div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    <div class="material-card">
+                        ${previewHtml}
+                        <div class="material-info">
+                            <div class="material-title">${m.title}</div>
+                            <div>${m.description || ''}</div>
+                            <div class="material-meta">
+                                <span>👤 ${m.uploadedBy}</span>
+                                <span>📅 ${m.date}</span>
+                            </div>
+                            
+                            <!-- Комментарии -->
+                            <div class="comment-section">
+                                <div style="font-weight: 600; margin-bottom: 5px;">💬 Комментарии:</div>
+                                ${commentsHtml || '<div style="color: #999;">Пока нет комментариев</div>'}
+                                
+                                <!-- Форма комментария (только для учителя) -->
+                                ${isTeacher ? `
+                                    <div class="comment-input">
+                                        <input type="text" id="comment_${m.id}" placeholder="Напишите комментарий..." onkeypress="checkCommentEnter(event, '${groupId}', ${m.id})">
+                                        <button class="comment-btn" onclick="addComment('${groupId}', ${m.id})">➤</button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
                     </div>
                 `;
             });
-            
-            html += `
-                <div class="material-card">
-                    ${previewHtml}
-                    <div class="material-info">
-                        <div class="material-title">${m.title}</div>
-                        <div>${m.description || ''}</div>
-                        <div class="material-meta">
-                            <span>👤 ${m.uploadedBy}</span>
-                            <span>📅 ${m.date}</span>
-                        </div>
-                        
-                        <!-- Комментарии -->
-                        <div class="comment-section">
-                            <div style="font-weight: 600; margin-bottom: 5px;">💬 Комментарии:</div>
-                            ${commentsHtml || '<div style="color: #999;">Пока нет комментариев</div>'}
-                            
-                            <!-- Форма комментария (только для учителя) -->
-                            ${currentUser.role === 'teacher' ? `
-                                <div class="comment-input">
-                                    <input type="text" id="comment_${m.id}" placeholder="Напишите комментарий..." onkeypress="checkCommentEnter(event, '${groupId}', ${m.id})">
-                                    <button class="comment-btn" onclick="addComment('${groupId}', ${m.id})">➤</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        grid.innerHTML = html;
-    }
-    
-    function uploadFile() {
-        const file = document.getElementById('fileInput').files[0];
-        const title = document.getElementById('fileTitle').value.trim();
-        const description = document.getElementById('fileDescription').value.trim();
-        
-        if (!file || !title) {
-            alert('Заполните название и выберите файл');
-            return;
+            grid.innerHTML = html;
         }
         
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const material = {
+        function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            const title = document.getElementById('fileTitle').value.trim();
+            const description = document.getElementById('fileDescription').value.trim();
+            
+            if (!file || !title) {
+                alert('Заполните название и выберите файл');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const material = {
+                    id: Date.now(),
+                    type: file.type.startsWith('video') ? 'video' : 'image',
+                    title: title,
+                    description: description,
+                    fileData: e.target.result,
+                    uploadedBy: currentUser.name,
+                    uploadedByLogin: currentUser.login,
+                    date: new Date().toLocaleString()
+                };
+                
+                materials.push(material);
+                localStorage.setItem(`group_library_${groupId}`, JSON.stringify(materials));
+                
+                document.getElementById('fileInput').value = '';
+                document.getElementById('fileTitle').value = '';
+                document.getElementById('fileDescription').value = '';
+                
+                renderMaterials();
+                alert('✅ Материал загружен!');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function addComment(groupId, materialId) {
+            const input = document.getElementById(`comment_${materialId}`);
+            const text = input.value.trim();
+            
+            if (!text) return;
+            
+            const comment = {
                 id: Date.now(),
-                type: file.type.startsWith('video') ? 'video' : 'image',
-                title: title,
-                description: description,
-                fileData: e.target.result,
-                uploadedBy: currentUser.name,
-                uploadedByLogin: currentUser.login,
+                sender: currentUser.login,
+                senderName: currentUser.name,
+                text: text,
                 date: new Date().toLocaleString()
             };
             
-            materials.push(material);
-            localStorage.setItem(`group_library_${groupId}`, JSON.stringify(materials));
+            const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${materialId}`)) || [];
+            comments.push(comment);
+            localStorage.setItem(`comments_${groupId}_${materialId}`, JSON.stringify(comments));
             
-            document.getElementById('fileInput').value = '';
-            document.getElementById('fileTitle').value = '';
-            document.getElementById('fileDescription').value = '';
-            
+            input.value = '';
             renderMaterials();
-            alert('✅ Материал загружен!');
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    function addComment(groupId, materialId) {
-        const input = document.getElementById(`comment_${materialId}`);
-        const text = input.value.trim();
+        }
         
-        if (!text) return;
+        function checkCommentEnter(e, groupId, materialId) {
+            if (e.key === 'Enter') {
+                addComment(groupId, materialId);
+            }
+        }
         
-        const comment = {
-            id: Date.now(),
-            sender: currentUser.login,
-            senderName: currentUser.name,
-            text: text,
-            date: new Date().toLocaleString()
-        };
-        
-        const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${materialId}`)) || [];
-        comments.push(comment);
-        localStorage.setItem(`comments_${groupId}_${materialId}`, JSON.stringify(comments));
-        
-        input.value = '';
         renderMaterials();
-    }
-    
-    function checkCommentEnter(e, groupId, materialId) {
-        if (e.key === 'Enter') {
-            addComment(groupId, materialId);
-        }
-    }
-    
-    renderMaterials();
-    
-    // Обновление каждые 3 секунды
-    setInterval(() => {
-        const newMaterials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
-        if (JSON.stringify(newMaterials) !== JSON.stringify(materials)) {
-            materials = newMaterials;
-            renderMaterials();
-        }
-    }, 3000);
-</script>
+        
+        // Обновление каждые 3 секунды
+        setInterval(() => {
+            const newMaterials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
+            if (JSON.stringify(newMaterials) !== JSON.stringify(materials)) {
+                materials = newMaterials;
+                renderMaterials();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
