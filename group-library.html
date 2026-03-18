@@ -151,22 +151,6 @@
             border-radius: 20px;
             grid-column: 1 / -1;
         }
-        .teacher-badge {
-            background: #ffc107;
-            color: #1e1e2f;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            margin-left: 5px;
-        }
-        .student-badge {
-            background: #17a2b8;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
-            margin-left: 5px;
-        }
         .comment-section {
             margin-top: 10px;
             padding: 10px;
@@ -247,19 +231,13 @@
         
         // Константы
         const TEACHER_LOGIN = "EvgenyaGuitara01543";
-        const TEACHER_NAME = "Евгения (Учитель)";
         
         // Получаем информацию о текущем пользователе из localStorage
-        const isTeacher = localStorage.getItem('teacherLoggedIn') === 'true';
-        const currentUserLogin = localStorage.getItem('currentUserLogin') || (isTeacher ? TEACHER_LOGIN : 'LeonidzasFire23457');
-        const currentUserName = localStorage.getItem('currentUserName') || (isTeacher ? TEACHER_NAME : 'Леонид Зас');
+        const userRole = localStorage.getItem('userRole') || 'student';
+        const userLogin = localStorage.getItem('userLogin') || (userRole === 'teacher' ? TEACHER_LOGIN : 'LeonidzasFire23457');
+        const userName = localStorage.getItem('userName') || (userRole === 'teacher' ? 'Евгения (Учитель)' : 'Леонид Зас');
         
-        // Создаём объект текущего пользователя
-        const currentUser = {
-            login: currentUserLogin,
-            name: currentUserName,
-            role: isTeacher ? 'teacher' : 'student'
-        };
+        console.log('Библиотека - текущий пользователь:', { userRole, userLogin, userName });
         
         // Загружаем группы
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
@@ -267,15 +245,18 @@
         
         if (!currentGroup) {
             alert('Группа не найдена');
-            window.location.href = isTeacher ? 'teacher-cabinet.html' : 'student-cabinet.html';
+            window.location.href = userRole === 'teacher' ? 'teacher-cabinet.html' : 'student-cabinet.html';
         }
         
         document.getElementById('groupName').textContent = currentGroup.name;
         document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`;
         
         // Показываем форму загрузки ТОЛЬКО ученикам
-        if (!isTeacher) {
+        if (userRole === 'student') {
             document.getElementById('uploadSection').style.display = 'block';
+            console.log('Показываем форму загрузки для ученика');
+        } else {
+            console.log('Учитель - форма загрузки скрыта');
         }
         
         // Загружаем материалы группы
@@ -331,7 +312,7 @@
                                 ${commentsHtml || '<div style="color: #999;">Пока нет комментариев</div>'}
                                 
                                 <!-- Форма комментария (только для учителя) -->
-                                ${isTeacher ? `
+                                ${userRole === 'teacher' ? `
                                     <div class="comment-input">
                                         <input type="text" id="comment_${m.id}" placeholder="Напишите комментарий..." onkeypress="checkCommentEnter(event, '${groupId}', ${m.id})">
                                         <button class="comment-btn" onclick="addComment('${groupId}', ${m.id})">➤</button>
@@ -363,8 +344,8 @@
                     title: title,
                     description: description,
                     fileData: e.target.result,
-                    uploadedBy: currentUser.name,
-                    uploadedByLogin: currentUser.login,
+                    uploadedBy: userName,
+                    uploadedByLogin: userLogin,
                     date: new Date().toLocaleString()
                 };
                 
@@ -389,8 +370,8 @@
             
             const comment = {
                 id: Date.now(),
-                sender: currentUser.login,
-                senderName: currentUser.name,
+                sender: userLogin,
+                senderName: userName,
                 text: text,
                 date: new Date().toLocaleString()
             };
