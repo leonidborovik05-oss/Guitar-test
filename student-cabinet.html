@@ -29,51 +29,9 @@
             font-size: 1.8em;
             font-weight: bold;
             letter-spacing: 1px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
         }
         .logo span {
             color: #f0b90b;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.1); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        .online-status {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            background: #28a745;
-            padding: 5px 15px;
-            border-radius: 40px;
-            font-size: 0.9em;
-        }
-        .online-status.active {
-            display: flex;
-        }
-        .online-status .pulse {
-            width: 10px;
-            height: 10px;
-            background: #fff;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-        .online-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-            text-decoration: none;
-            font-size: 0.9em;
-        }
-        .online-btn:hover {
-            background: #b02a37;
         }
         .user-info {
             display: flex;
@@ -121,7 +79,7 @@
             background: #b02a37;
         }
         .main-container {
-            max-width: 1000px;
+            max-width: 1300px;
             margin: 30px auto;
             padding: 0 20px;
         }
@@ -185,8 +143,8 @@
             background: #ffc107;
             color: #1e1e2f;
         }
-        .action-btn.library {
-            background: #17a2b8;
+        .action-btn.groups {
+            background: #6f42c1;
         }
         
         .modal {
@@ -269,6 +227,43 @@
             font-size: 0.75em;
             display: inline-block;
             margin-bottom: 10px;
+        }
+        
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .group-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid #6f42c1;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .group-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
+        }
+        .group-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .group-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+        .group-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #999;
+            font-size: 0.85em;
         }
         
         .level-tabs {
@@ -434,6 +429,15 @@
             color: #721c24;
         }
         
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.1em;
+            background: white;
+            border-radius: 15px;
+        }
+        
         .footer-links {
             margin-top: 30px;
             text-align: right;
@@ -447,14 +451,7 @@
 </head>
 <body>
     <header class="header">
-        <div class="logo">
-            🎸 Guitar<span>Studio</span>
-            <div id="onlineStatus" class="online-status">
-                <span class="pulse"></span>
-                <span>Идёт урок</span>
-            </div>
-            <a href="online-ready.html?role=student" class="online-btn">📹 Онлайн-урок</a>
-        </div>
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
         <div class="user-info">
             <div class="notification-bell" onclick="openNotificationsModal()">
                 🔔
@@ -479,23 +476,39 @@
                     🔔 Уведомления
                     <span id="notificationCount" style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.8em;">0</span>
                 </button>
-                <a href="library-student.html" class="action-btn library">
-                    📹 Библиотека
-                </a>
+                <button class="action-btn groups" onclick="openGroupsModal()">
+                    👥 Мои группы
+                </button>
             </div>
         </div>
 
+        <!-- Модальное окно уведомлений -->
         <div id="notificationsModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>🔔 Уведомления от учителя</h3>
+                    <h3>🔔 Уведомления</h3>
                     <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
                 </div>
                 <div id="notesContainer" class="notes-list">
+                    <!-- Заметки будут загружаться сюда -->
                 </div>
             </div>
         </div>
 
+        <!-- Модальное окно групп -->
+        <div id="groupsModal" class="modal">
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h3>👥 Мои группы</h3>
+                    <button class="close-btn" onclick="closeGroupsModal()">&times;</button>
+                </div>
+                <div id="groupsContainer" class="groups-grid">
+                    <!-- Группы будут загружаться сюда -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно заданий -->
         <div id="tasksModal" class="modal">
             <div class="modal-content" style="max-width: 800px;">
                 <div class="modal-header">
@@ -546,6 +559,7 @@
     </div>
 
     <script>
+        // Вопросы для разных уровней
         const questions = {
             beginner: [
                 { text: "Сколько струн у классической гитары?", options: ["4", "5", "6", "7"], correct: 2 },
@@ -601,8 +615,11 @@
             userAnswers = savedAnswers;
         }
 
+        // Загружаем заметки и группы
         let notes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+        let groups = JSON.parse(localStorage.getItem('groups')) || [];
         
+        // Функция обновления уведомлений
         function updateNotifications() {
             const studentNotes = notes.filter(n => n.studentLogin === studentLogin);
             const unreadCount = studentNotes.filter(n => !n.read).length;
@@ -620,6 +637,7 @@
             }
         }
 
+        // Открыть модальное окно уведомлений
         function openNotificationsModal() {
             renderNotes();
             document.getElementById('notificationsModal').classList.add('active');
@@ -637,6 +655,7 @@
             document.getElementById('notificationsModal').classList.remove('active');
         }
 
+        // Отобразить заметки
         function renderNotes() {
             const container = document.getElementById('notesContainer');
             const studentNotes = notes.filter(n => n.studentLogin === studentLogin);
@@ -650,17 +669,58 @@
             
             let html = '';
             studentNotes.forEach(note => {
+                const isGroupInvite = note.type === 'group_invite';
                 html += `
-                    <div class="note-item">
+                    <div class="note-item" style="${isGroupInvite ? 'border-left-color: #6f42c1;' : ''}">
                         <div class="note-title">${note.title}</div>
                         <div class="note-date">${note.date}</div>
                         <div class="note-text">${note.text}</div>
+                        ${isGroupInvite ? `<button class="action-btn groups" style="margin-top: 10px; padding: 8px 15px;" onclick="window.location.href='group-chat.html?groupId=${note.groupId}'">👥 Перейти в группу</button>` : ''}
                     </div>
                 `;
             });
             container.innerHTML = html;
         }
 
+        // Открыть модальное окно групп
+        function openGroupsModal() {
+            renderGroups();
+            document.getElementById('groupsModal').classList.add('active');
+        }
+
+        function closeGroupsModal() {
+            document.getElementById('groupsModal').classList.remove('active');
+        }
+
+        // Отобразить группы ученика
+        function renderGroups() {
+            const container = document.getElementById('groupsContainer');
+            
+            // Находим группы, в которые входит ученик
+            const myGroups = groups.filter(g => g.members && g.members.includes(studentLogin));
+            
+            if (myGroups.length === 0) {
+                container.innerHTML = '<div class="empty-state">👥 Вы пока не состоите в группах</div>';
+                return;
+            }
+
+            let html = '';
+            myGroups.forEach(group => {
+                html += `
+                    <div class="group-card" onclick="window.location.href='group-chat.html?groupId=${group.id}'">
+                        <div class="group-name">${group.name}</div>
+                        <div class="group-description">${group.description || 'Нет описания'}</div>
+                        <div class="group-meta">
+                            <span>Участников: ${group.members.length}</span>
+                            <span>Создана: ${group.createdAt || 'недавно'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Функции для заданий
         function openTasksModal() {
             document.getElementById('tasksModal').classList.add('active');
             updateQuestionDisplay();
@@ -783,20 +843,9 @@
             document.getElementById('expertProgress').textContent = `${expertAnswered}/10`;
         }
 
-        function checkOnlineLesson() {
-            const lessonStatus = JSON.parse(localStorage.getItem('onlineLesson')) || { active: false };
-            const statusDiv = document.getElementById('onlineStatus');
-            if (lessonStatus.active) {
-                statusDiv.classList.add('active');
-            } else {
-                statusDiv.classList.remove('active');
-            }
-        }
-
+        // Инициализация
         updateNotifications();
         setInterval(updateNotifications, 5000);
-        setInterval(checkOnlineLesson, 3000);
-        checkOnlineLesson();
     </script>
 </body>
 </html>
