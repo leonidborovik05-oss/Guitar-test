@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+\<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -107,6 +107,15 @@
             padding: 10px;
             border-radius: 8px;
             text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .hint strong {
+            color: #191654;
+        }
+        .hint p {
+            margin: 5px 0;
+            font-family: monospace;
         }
     </style>
 </head>
@@ -133,48 +142,95 @@
         <a href="index.html" class="back-link">← Вернуться на главную</a>
         
         <div class="hint">
-            <strong>Тестовые данные:</strong><br>
-            👩‍🏫 Учитель: EvgenyaGuitara01543 / 0019234509<br>
-            👨‍🎓 Ученик: LeonidzasFire23457 / 11265497
+            <strong>👩‍🏫 Учитель:</strong>
+            <p>Логин: EvgenyaGuitara01543 / Пароль: 0019234509</p>
+            <strong>👨‍🎓 Ученики:</strong>
+            <p>Никита: NikitaWind456732 / 0011020571</p>
+            <p>Соня: SonyaIce035142 / 1235476450</p>
+            <p>Данил: DanilStone055622 / 4591223719</p>
+            <p>Илья: IlyaTree921308 / 0215224785</p>
+            <p>Тамерлан: TamerlaneSand453671 / 0293528921</p>
+            <p>Рамазан: RamazanSun225140 / 6007204910</p>
         </div>
     </div>
 
     <script>
+        // База данных пользователей
+        const users = {
+            // Учитель
+            "EvgenyaGuitara01543": {
+                password: "0019234509",
+                name: "Евгения",
+                display: "👩‍🏫 Евгения (Учитель)",
+                role: "teacher"
+            },
+            // Ученики
+            "NikitaWind456732": {
+                password: "0011020571",
+                name: "Никита",
+                display: "👨‍🎓 Никита (Ученик)",
+                role: "student"
+            },
+            "SonyaIce035142": {
+                password: "1235476450",
+                name: "Соня",
+                display: "👩‍🎓 Соня (Ученица)",
+                role: "student"
+            },
+            "DanilStone055622": {
+                password: "4591223719",
+                name: "Данил",
+                display: "👨‍🎓 Данил (Ученик)",
+                role: "student"
+            },
+            "IlyaTree921308": {
+                password: "0215224785",
+                name: "Илья",
+                display: "👨‍🎓 Илья (Ученик)",
+                role: "student"
+            },
+            "TamerlaneSand453671": {
+                password: "0293528921",
+                name: "Тамерлан",
+                display: "👨‍🎓 Тамерлан (Ученик)",
+                role: "student"
+            },
+            "RamazanSun225140": {
+                password: "6007204910",
+                name: "Рамазан",
+                display: "👨‍🎓 Рамазан (Ученик)",
+                role: "student"
+            }
+        };
+
         function checkLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            const teacherUsername = "EvgenyaGuitara01543";
-            const teacherPassword = "0019234509";
-            
-            const studentUsername = "LeonidzasFire23457";
-            const studentPassword = "11265497";
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
 
             const errorDiv = document.getElementById('errorMessage');
 
-            if (username.trim() === "" || password.trim() === "") {
+            if (username === "" || password === "") {
                 errorDiv.style.display = 'block';
                 errorDiv.innerText = '❌ Поля не могут быть пустыми.';
                 return;
             }
 
-            if (username === teacherUsername && password === teacherPassword) {
-                // Единые ключи для всех страниц
-                localStorage.setItem('currentUserRole', 'teacher');
-                localStorage.setItem('currentUserLogin', teacherUsername);
-                localStorage.setItem('currentUserName', 'Евгения (Учитель)');
-                localStorage.setItem('currentUserDisplay', '👩‍🏫 Евгения (Учитель)');
-                window.location.href = "teacher-cabinet.html"; 
-            }
-            else if (username === studentUsername && password === studentPassword) {
-                // Единые ключи для всех страниц
-                localStorage.setItem('currentUserRole', 'student');
-                localStorage.setItem('currentUserLogin', studentUsername);
-                localStorage.setItem('currentUserName', 'Леонид Зас');
-                localStorage.setItem('currentUserDisplay', '👨‍🎓 Леонид Зас (Ученик)');
-                window.location.href = "student-cabinet.html";
-            }
-            else {
+            const user = users[username];
+            
+            if (user && user.password === password) {
+                // Сохраняем данные пользователя
+                localStorage.setItem('currentUserRole', user.role);
+                localStorage.setItem('currentUserLogin', username);
+                localStorage.setItem('currentUserName', user.name);
+                localStorage.setItem('currentUserDisplay', user.display);
+                
+                // Перенаправляем в зависимости от роли
+                if (user.role === 'teacher') {
+                    window.location.href = "teacher-cabinet.html";
+                } else {
+                    window.location.href = "student-cabinet.html";
+                }
+            } else {
                 errorDiv.style.display = 'block';
                 errorDiv.innerText = '❌ Неверный логин или пароль. Попробуйте снова.';
             }
