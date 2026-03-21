@@ -542,121 +542,162 @@
             filterSelect.innerHTML = filterOptions;
         }
 
-        function uploadMaterial() {
-            const errorDiv = document.getElementById('uploadError');
-            errorDiv.style.display = 'none';
-            errorDiv.innerHTML = '';
-            
-            const type = document.getElementById('materialType').value;
-            const fileInput = document.getElementById('materialFile');
-            const file = fileInput.files[0];
-            const title = document.getElementById('materialTitle').value.trim();
-            const description = document.getElementById('materialDescription').value.trim();
-            const targetStudent = document.getElementById('materialStudent').value;
+function uploadMaterial() {
+    const errorDiv = document.getElementById('uploadError');
+    errorDiv.style.display = 'none';
+    errorDiv.innerHTML = '';
+    
+    // Получаем значения из полей
+    const type = document.getElementById('materialType').value;
+    const fileInput = document.getElementById('materialFile');
+    const file = fileInput.files[0];
+    const title = document.getElementById('materialTitle').value.trim();
+    const description = document.getElementById('materialDescription').value.trim();
+    const targetStudent = document.getElementById('materialStudent').value;
 
-            if (!file) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
-                return;
-            }
-            
-            if (!title) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Введите название материала!';
-                return;
-            }
-            
-            if (!description) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Введите описание материала!';
-                return;
-            }
-            
-            if (!targetStudent) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!';
-                return;
-            }
+    console.log('=== ЗАГРУЗКА МАТЕРИАЛА ===');
+    console.log('Тип:', type);
+    console.log('Файл:', file ? file.name : 'НЕ ВЫБРАН');
+    console.log('Название:', title);
+    console.log('Описание:', description);
+    console.log('Для кого:', targetStudent);
+    console.log('===========================');
 
-            const uploadBtn = document.querySelector('.btn-upload');
-            const originalText = uploadBtn.innerHTML;
-            uploadBtn.innerHTML = '⏳ Загрузка...';
-            uploadBtn.disabled = true;
+    // Проверка на файл
+    if (!file) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
+        console.error('Ошибка: файл не выбран');
+        return;
+    }
+    
+    // Проверка на название
+    if (!title) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML = '❌ Введите название материала!';
+        console.error('Ошибка: название не введено');
+        return;
+    }
+    
+    // Проверка на описание
+    if (!description) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML = '❌ Введите описание материала!';
+        console.error('Ошибка: описание не введено');
+        return;
+    }
+    
+    // Проверка на получателя
+    if (!targetStudent) {
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML = '❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!';
+        console.error('Ошибка: получатель не выбран');
+        return;
+    }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const material = {
-                    id: Date.now(),
-                    type: type,
-                    title: title,
-                    description: description,
-                    studentLogin: targetStudent,
-                    studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
+    // Меняем кнопку на "Загрузка..."
+    const uploadBtn = document.querySelector('.btn-upload');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.innerHTML = '⏳ Загрузка...';
+    uploadBtn.disabled = true;
+
+    console.log('Начинаем чтение файла...');
+
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        console.log('Файл прочитан успешно, размер:', file.size, 'байт');
+        
+        const material = {
+            id: Date.now(),
+            type: type,
+            title: title,
+            description: description,
+            studentLogin: targetStudent,
+            studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
+            date: new Date().toLocaleString(),
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            fileData: e.target.result
+        };
+        
+        // Сохраняем материал
+        materials.push(material);
+        localStorage.setItem('libraryMaterials', JSON.stringify(materials));
+        console.log('Материал сохранён в localStorage, всего материалов:', materials.length);
+        
+        // Создаём уведомления
+        if (targetStudent === "ALL") {
+            students.forEach(student => {
+                const notification = {
+                    id: Date.now() + Math.random(),
+                    type: 'new_material',
+                    studentLogin: student.login,
+                    title: '📹 Новый материал в библиотеке',
+                    text: `Учитель добавил новый материал: "${title}"`,
                     date: new Date().toLocaleString(),
-                    fileName: file.name,
-                    fileType: file.type,
-                    fileSize: file.size,
-                    fileData: e.target.result
+                    read: false
                 };
-                
-                materials.push(material);
-                localStorage.setItem('libraryMaterials', JSON.stringify(materials));
-                
-                if (targetStudent === "ALL") {
-                    students.forEach(student => {
-                        const notification = {
-                            id: Date.now() + Math.random(),
-                            type: 'new_material',
-                            studentLogin: student.login,
-                            title: '📹 Новый материал в библиотеке',
-                            text: `Учитель добавил новый материал: "${title}"`,
-                            date: new Date().toLocaleString(),
-                            read: false
-                        };
-                        let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                        allNotes.push(notification);
-                        localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-                    });
-                    alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
-                } else {
-                    const student = students.find(s => s.login === targetStudent);
-                    const notification = {
-                        id: Date.now() + Math.random(),
-                        type: 'new_material',
-                        studentLogin: targetStudent,
-                        title: '📹 Новый материал в библиотеке',
-                        text: `Учитель добавил новый материал специально для вас: "${title}"`,
-                        date: new Date().toLocaleString(),
-                        read: false
-                    };
-                    let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                    allNotes.push(notification);
-                    localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-                    alert(`✅ Материал загружен для ученика ${student?.name}`);
-                }
-                
-                fileInput.value = '';
-                document.getElementById('materialTitle').value = '';
-                document.getElementById('materialDescription').value = '';
-                document.getElementById('materialStudent').value = '';
-                
-                renderMaterials();
-                updateNotificationBadge();
-                
-                uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = false;
+                let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+                allNotes.push(notification);
+                localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+            });
+            alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
+        } else {
+            const student = students.find(s => s.login === targetStudent);
+            const notification = {
+                id: Date.now() + Math.random(),
+                type: 'new_material',
+                studentLogin: targetStudent,
+                title: '📹 Новый материал в библиотеке',
+                text: `Учитель добавил новый материал специально для вас: "${title}"`,
+                date: new Date().toLocaleString(),
+                read: false
             };
-            
-            reader.onerror = function() {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Ошибка при чтении файла!';
-                uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = false;
-            };
-            
-            reader.readAsDataURL(file);
+            let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+            allNotes.push(notification);
+            localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+            alert(`✅ Материал загружен для ученика ${student?.name}`);
         }
-
+        
+        // Очищаем форму
+        fileInput.value = '';
+        document.getElementById('materialTitle').value = '';
+        document.getElementById('materialDescription').value = '';
+        document.getElementById('materialStudent').value = '';
+        
+        // Обновляем отображение
+        renderMaterials();
+        updateNotificationBadge();
+        
+        // Восстанавливаем кнопку
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+        
+        console.log('=== ЗАГРУЗКА УСПЕШНО ЗАВЕРШЕНА ===');
+    };
+    
+    reader.onerror = function(e) {
+        console.error('ОШИБКА ЧТЕНИЯ ФАЙЛА:', e);
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML = '❌ Ошибка при чтении файла! Попробуйте другой файл.';
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+    };
+    
+    // Запускаем чтение файла
+    try {
+        reader.readAsDataURL(file);
+        console.log('Чтение файла запущено...');
+    } catch (err) {
+        console.error('ОШИБКА ЗАПУСКА ЧТЕНИЯ:', err);
+        errorDiv.style.display = 'block';
+        errorDiv.innerHTML = '❌ Ошибка: ' + err.message;
+        uploadBtn.innerHTML = originalText;
+        uploadBtn.disabled = false;
+    }
+}
         function applyFilters() {
             renderMaterials();
         }
