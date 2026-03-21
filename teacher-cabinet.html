@@ -404,19 +404,19 @@
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo">
-            🎸 Guitar<span>Studio</span>
+<header class="header">
+    <div class="logo">
+        🎸 Guitar<span>Studio</span>
+    </div>
+    <div class="user-info">
+        <div class="notification-bell" onclick="openNotificationsModal()">
+            🔔
+            <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
         </div>
-        <div class="user-info">
-            <div class="notification-bell" onclick="window.location.href='library-teacher.html'">
-                🔔
-                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
-            </div>
-            <div class="user-name" id="currentUserDisplay">Загрузка...</div>
-            <a href="login.html" class="logout-btn">Выйти</a>
-        </div>
-    </header>
+        <div class="user-name" id="currentUserDisplay">Загрузка...</div>
+        <a href="login.html" class="logout-btn">Выйти</a>
+    </div>
+</header>
 
     <div class="main-container">
         <div class="greeting-card">
@@ -887,5 +887,15 @@
             updateNotificationBadge();
         }, 3000);
     </script>
+    <!-- Модальное окно уведомлений -->
+<div id="notificationsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🔔 Уведомления</h3>
+            <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
+        </div>
+        <div id="notificationsContainer" class="notes-list"></div>
+    </div>
+</div>
 </body>
 </html>
