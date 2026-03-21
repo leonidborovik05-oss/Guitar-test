@@ -79,7 +79,7 @@
             background: #b02a37;
         }
         .main-container {
-            max-width: 1300px;
+            max-width: 1000px;
             margin: 30px auto;
             padding: 0 20px;
         }
@@ -200,10 +200,6 @@
             padding: 20px;
             border-left: 5px solid #ffc107;
         }
-        .note-item.unread {
-            background: #fff9e6;
-            border-left-color: #dc3545;
-        }
         .note-title {
             font-size: 1.2em;
             font-weight: 600;
@@ -218,15 +214,6 @@
         .note-text {
             color: #555;
             line-height: 1.5;
-        }
-        .unread-badge {
-            background: #dc3545;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75em;
-            display: inline-block;
-            margin-bottom: 10px;
         }
         
         .groups-grid {
@@ -409,10 +396,6 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        .nav-btn:not(:disabled):hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
         .result-message {
             margin-top: 20px;
             padding: 15px;
@@ -464,9 +447,9 @@
 
     <div class="main-container">
         <div class="greeting-card">
-            <h2>Привет, Леонид!</h2>
+            <h2 id="greetingTitle">Привет!</h2>
             <p>Продолжай заниматься. Выбери, чем хочешь заняться сейчас.</p>
-            <span class="role-badge">Ученик</span>
+            <span class="role-badge" id="roleBadge">Ученик</span>
             
             <div class="action-buttons">
                 <button class="action-btn tasks" onclick="openTasksModal()">
@@ -482,33 +465,27 @@
             </div>
         </div>
 
-        <!-- Модальное окно уведомлений -->
+        <!-- Модальные окна -->
         <div id="notificationsModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>🔔 Уведомления</h3>
                     <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
                 </div>
-                <div id="notesContainer" class="notes-list">
-                    <!-- Заметки будут загружаться сюда -->
-                </div>
+                <div id="notesContainer" class="notes-list"></div>
             </div>
         </div>
 
-        <!-- Модальное окно групп -->
         <div id="groupsModal" class="modal">
             <div class="modal-content" style="max-width: 900px;">
                 <div class="modal-header">
                     <h3>👥 Мои группы</h3>
                     <button class="close-btn" onclick="closeGroupsModal()">&times;</button>
                 </div>
-                <div id="groupsContainer" class="groups-grid">
-                    <!-- Группы будут загружаться сюда -->
-                </div>
+                <div id="groupsContainer" class="groups-grid"></div>
             </div>
         </div>
 
-        <!-- Модальное окно заданий -->
         <div id="tasksModal" class="modal">
             <div class="modal-content" style="max-width: 800px;">
                 <div class="modal-header">
@@ -539,8 +516,7 @@
                     
                     <div class="question-text" id="questionText">Загрузка вопроса...</div>
                     
-                    <div class="answers-list" id="answersList">
-                    </div>
+                    <div class="answers-list" id="answersList"></div>
 
                     <div class="nav-buttons">
                         <button class="nav-btn prev" onclick="prevQuestion()" id="prevBtn" disabled>← Назад</button>
@@ -599,8 +575,15 @@
             ]
         };
 
-        const studentLogin = "LeonidzasFire23457";
-        const studentName = "Леонид Зас";
+        // ПОЛУЧАЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ИЗ localStorage
+        const userRole = localStorage.getItem('currentUserRole') || 'student';
+        const userLogin = localStorage.getItem('currentUserLogin') || 'unknown';
+        const userName = localStorage.getItem('currentUserName') || 'Ученик';
+        const userDisplay = localStorage.getItem('currentUserDisplay') || '👨‍🎓 Ученик';
+        
+        // Обновляем интерфейс с именем пользователя
+        document.getElementById('currentUserDisplay').textContent = userDisplay;
+        document.getElementById('greetingTitle').textContent = `Привет, ${userName}!`;
         
         let currentLevel = 'beginner';
         let currentQuestionIndex = 0;
@@ -610,18 +593,16 @@
             expert: Array(10).fill(null)
         };
         
-        const savedAnswers = JSON.parse(localStorage.getItem(`answers_${studentLogin}`));
+        const savedAnswers = JSON.parse(localStorage.getItem(`answers_${userLogin}`));
         if (savedAnswers) {
             userAnswers = savedAnswers;
         }
 
-        // Загружаем заметки и группы
         let notes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
         
-        // Функция обновления уведомлений
         function updateNotifications() {
-            const studentNotes = notes.filter(n => n.studentLogin === studentLogin);
+            const studentNotes = notes.filter(n => n.studentLogin === userLogin);
             const unreadCount = studentNotes.filter(n => !n.read).length;
             
             const badge = document.getElementById('notificationBadge');
@@ -637,13 +618,12 @@
             }
         }
 
-        // Открыть модальное окно уведомлений
         function openNotificationsModal() {
             renderNotes();
             document.getElementById('notificationsModal').classList.add('active');
             
             notes.forEach(note => {
-                if (note.studentLogin === studentLogin) {
+                if (note.studentLogin === userLogin) {
                     note.read = true;
                 }
             });
@@ -655,10 +635,9 @@
             document.getElementById('notificationsModal').classList.remove('active');
         }
 
-        // Отобразить заметки
         function renderNotes() {
             const container = document.getElementById('notesContainer');
-            const studentNotes = notes.filter(n => n.studentLogin === studentLogin);
+            const studentNotes = notes.filter(n => n.studentLogin === userLogin);
             
             if (studentNotes.length === 0) {
                 container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">📭 У вас пока нет уведомлений</div>';
@@ -682,7 +661,6 @@
             container.innerHTML = html;
         }
 
-        // Открыть модальное окно групп
         function openGroupsModal() {
             renderGroups();
             document.getElementById('groupsModal').classList.add('active');
@@ -692,12 +670,10 @@
             document.getElementById('groupsModal').classList.remove('active');
         }
 
-        // Отобразить группы ученика
         function renderGroups() {
             const container = document.getElementById('groupsContainer');
             
-            // Находим группы, в которые входит ученик
-            const myGroups = groups.filter(g => g.members && g.members.includes(studentLogin));
+            const myGroups = groups.filter(g => g.members && g.members.includes(userLogin));
             
             if (myGroups.length === 0) {
                 container.innerHTML = '<div class="empty-state">👥 Вы пока не состоите в группах</div>';
@@ -720,7 +696,6 @@
             container.innerHTML = html;
         }
 
-        // Функции для заданий
         function openTasksModal() {
             document.getElementById('tasksModal').classList.add('active');
             updateQuestionDisplay();
@@ -813,13 +788,13 @@
                 }
             });
             
-            const progress = JSON.parse(localStorage.getItem(`progress_${studentLogin}`)) || {
+            const progress = JSON.parse(localStorage.getItem(`progress_${userLogin}`)) || {
                 beginner: 0,
                 intermediate: 0,
                 expert: 0
             };
             progress[currentLevel] = correctCount;
-            localStorage.setItem(`progress_${studentLogin}`, JSON.stringify(progress));
+            localStorage.setItem(`progress_${userLogin}`, JSON.stringify(progress));
             
             const resultDiv = document.getElementById('resultMessage');
             resultDiv.style.display = 'block';
@@ -830,7 +805,7 @@
         }
 
         function saveAnswers() {
-            localStorage.setItem(`answers_${studentLogin}`, JSON.stringify(userAnswers));
+            localStorage.setItem(`answers_${userLogin}`, JSON.stringify(userAnswers));
         }
 
         function updateProgressBars() {
@@ -843,12 +818,8 @@
             document.getElementById('expertProgress').textContent = `${expertAnswered}/10`;
         }
 
-        // Инициализация
         updateNotifications();
         setInterval(updateNotifications, 5000);
-
-        const userDisplay = localStorage.getItem('currentUserDisplay') || '👨‍🎓 Ученик';
-document.getElementById('currentUserDisplay').textContent = userDisplay;
     </script>
 </body>
 </html>
