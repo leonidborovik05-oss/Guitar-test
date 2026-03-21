@@ -160,6 +160,20 @@
             color: #666;
             font-size: 1.2em;
         }
+        .debug-info {
+            background: #f8f9fc;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 0.85em;
+            color: #333;
+            display: none;
+        }
+        .debug-info.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -183,6 +197,11 @@
         const materialId = urlParams.get('id');
         const role = urlParams.get('role'); // 'teacher' или 'student'
         
+        console.log('========== ПРОСМОТР МАТЕРИАЛА ==========');
+        console.log('ID из URL:', materialId);
+        console.log('Роль:', role);
+        console.log('Тип ID:', typeof materialId);
+        
         // Данные пользователя
         const userRole = localStorage.getItem('currentUserRole') || (role === 'teacher' ? 'teacher' : 'student');
         const userName = localStorage.getItem('currentUserName') || (role === 'teacher' ? 'Евгения' : 'Ученик');
@@ -204,18 +223,46 @@
                     return;
                 }
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onerror = () => reject('Ошибка открытия базы данных');
+                request.onerror = (event) => {
+                    console.error('Ошибка открытия БД:', event);
+                    reject('Ошибка открытия базы данных');
+                };
                 request.onsuccess = (event) => {
                     db = event.target.result;
+                    console.log('База данных открыта успешно');
                     resolve(db);
                 };
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        console.log('Хранилище материалов создано');
                     }
                 };
             });
+        }
+        
+        async function getAllMaterials() {
+            try {
+                const database = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => {
+                        console.log(`Найдено материалов в БД: ${request.result.length}`);
+                        resolve(request.result || []);
+                    };
+                    request.onerror = () => {
+                        console.error('Ошибка получения всех материалов');
+                        reject('Ошибка получения');
+                    };
+                });
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return [];
+            }
         }
         
         async function getMaterialById(id) {
@@ -224,12 +271,23 @@
                 return new Promise((resolve, reject) => {
                     const transaction = database.transaction([STORE_NAME], 'readonly');
                     const store = transaction.objectStore(STORE_NAME);
-                    const request = store.get(parseInt(id));
+                    // Преобразуем ID в число, так как в БД ключи хранятся как числа
+                    const numericId = parseInt(id);
+                    console.log(`Ищем материал с ID: ${numericId} (из строки "${id}")`);
+                    
+                    const request = store.get(numericId);
                     
                     request.onsuccess = () => {
-                        resolve(request.result);
+                        const material = request.result;
+                        if (material) {
+                            console.log('Материал найден:', material.title);
+                        } else {
+                            console.log('Материал с ID', numericId, 'не найден');
+                        }
+                        resolve(material);
                     };
                     request.onerror = () => {
+                        console.error('Ошибка получения материала');
                         reject('Ошибка получения материала');
                     };
                 });
@@ -259,6 +317,10 @@
                 return;
             }
             
+            // Для отладки: показываем все материалы
+            const allMaterials = await getAllMaterials();
+            console.log('Все материалы в БД:', allMaterials.map(m => ({ id: m.id, title: m.title })));
+            
             const material = await getMaterialById(materialId);
             
             if (!material) {
@@ -266,6 +328,13 @@
                     <div class="error-message">
                         ❌ Материал не найден<br>
                         <small>ID: ${materialId}</small><br><br>
+                        <div style="background: #f8f9fc; padding: 15px; border-radius: 10px; text-align: left; margin-top: 20px;">
+                            <strong>📋 Доступные материалы в библиотеке:</strong><br>
+                            ${allMaterials.length > 0 ? 
+                                allMaterials.map(m => `• ID: ${m.id} - ${m.title} (для: ${m.studentLogin === 'ALL' ? 'всех' : m.studentDisplay})`).join('<br>') 
+                                : 'Нет материалов'}
+                        </div>
+                        <br>
                         <a href="${backUrl}" class="nav-link primary" style="display: inline-block;">← Вернуться в библиотеку</a>
                     </div>
                 `;
