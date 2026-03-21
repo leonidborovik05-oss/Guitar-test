@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Моя библиотека | Ученик</title>
     <style>
+        /* стили такие же как в teacher версии, можно скопировать из предыдущего файла */
         * {
             margin: 0;
             padding: 0;
@@ -88,7 +89,6 @@
             margin: 30px auto;
             padding: 0 20px;
         }
-        
         .greeting-card {
             background: white;
             border-radius: 20px;
@@ -106,7 +106,6 @@
             color: #555;
             font-size: 1.1em;
         }
-        
         .filters {
             display: flex;
             gap: 15px;
@@ -129,7 +128,6 @@
             font-size: 1em;
             min-width: 250px;
         }
-        
         .materials-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -224,7 +222,6 @@
             text-decoration: none;
             border-bottom: 1px dashed #aaa;
         }
-        
         .modal {
             display: none;
             position: fixed;
@@ -292,6 +289,11 @@
             color: #555;
             line-height: 1.5;
         }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -317,20 +319,21 @@
         <div class="filters">
             <select class="filter-select" id="filterType" onchange="applyFilters()">
                 <option value="">Все типы</option>
-                <option value="video">🎥 Видео</option>
                 <option value="photo">📸 Фото</option>
+                <option value="video">🎥 Видео</option>
             </select>
             <input type="text" class="search-input" id="searchInput" placeholder="🔍 Поиск по названию..." oninput="applyFilters()">
         </div>
 
-        <div id="materialsGrid" class="materials-grid"></div>
+        <div id="materialsGrid" class="materials-grid">
+            <div class="loading">⏳ Загрузка материалов...</div>
+        </div>
 
         <div class="footer-links">
             <a href="student-cabinet.html">← Назад в кабинет</a>
         </div>
     </div>
 
-    <!-- Модальное окно уведомлений -->
     <div id="notificationsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -343,20 +346,59 @@
 
     <script>
         // Данные ученика
-        const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
+        const userLogin = localStorage.getItem('currentUserLogin') || 'unknown';
         const userName = localStorage.getItem('currentUserName') || 'Ученик';
         const userDisplay = localStorage.getItem('currentUserDisplay') || '👨‍🎓 Ученик';
         
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         document.getElementById('greetingTitle').textContent = `📹 Моя библиотека, ${userName}`;
         
-        // Загружаем материалы
-        let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+        // ========== INDEXEDDB ДЛЯ ЧТЕНИЯ ФАЙЛОВ ==========
+        const DB_NAME = 'GuitarStudioDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'materials';
         
-        // Загружаем заметки/уведомления
+        let db = null;
+        let allMaterials = [];
+        
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (db) {
+                    resolve(db);
+                    return;
+                }
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject('Ошибка открытия БД');
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+        
+        async function getAllMaterials() {
+            try {
+                const database = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = () => reject('Ошибка получения');
+                });
+            } catch (error) {
+                return [];
+            }
+        }
+        
         let teacherNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
         
-        // Функция обновления бейджа уведомлений
         function updateNotificationBadge() {
             const myNotes = teacherNotes.filter(n => n.studentLogin === userLogin && !n.read);
             const badge = document.getElementById('notificationBadge');
@@ -368,16 +410,11 @@
             }
         }
         
-        // Открыть модальное окно уведомлений
         function openNotificationsModal() {
             renderNotifications();
             document.getElementById('notificationsModal').classList.add('active');
-            
-            // Помечаем как прочитанные
             teacherNotes.forEach(note => {
-                if (note.studentLogin === userLogin) {
-                    note.read = true;
-                }
+                if (note.studentLogin === userLogin) note.read = true;
             });
             localStorage.setItem('teacherNotes', JSON.stringify(teacherNotes));
             updateNotificationBadge();
@@ -421,12 +458,15 @@
             renderMaterials();
         }
         
-        function renderMaterials() {
+        async function renderMaterials() {
             const grid = document.getElementById('materialsGrid');
             const filterType = document.getElementById('filterType').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-
-            // Фильтруем материалы: для конкретного ученика ИЛИ для всех (ALL)
+            
+            grid.innerHTML = '<div class="loading">⏳ Загрузка материалов...</div>';
+            
+            const materials = await getAllMaterials();
+            
             let filteredMaterials = materials.filter(m => 
                 m.studentLogin === userLogin || m.studentLogin === "ALL"
             );
@@ -441,14 +481,14 @@
                     m.description.toLowerCase().includes(searchTerm)
                 );
             }
-
+            
             filteredMaterials.sort((a, b) => b.id - a.id);
-
+            
             if (filteredMaterials.length === 0) {
                 grid.innerHTML = '<div class="empty-state">📭 Учитель ещё не загрузил для тебя материалы</div>';
                 return;
             }
-
+            
             let html = '';
             filteredMaterials.forEach(material => {
                 let previewHtml = '';
@@ -461,13 +501,22 @@
                         previewHtml = `<div class="material-preview">📸</div>`;
                     }
                 }
-
+                
+                let fileSizeText = '';
+                if (material.fileSize) {
+                    if (material.fileSize < 1024 * 1024) {
+                        fileSizeText = `${(material.fileSize / 1024).toFixed(1)} КБ`;
+                    } else {
+                        fileSizeText = `${(material.fileSize / 1024 / 1024).toFixed(1)} МБ`;
+                    }
+                }
+                
                 html += `
                     <div class="material-card" onclick="viewMaterial(${material.id})">
                         ${previewHtml}
                         <div class="material-info">
                             <span class="material-type ${material.type === 'video' ? 'type-video' : 'type-photo'}">
-                                ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'}
+                                ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'} (${fileSizeText})
                             </span>
                             <div class="material-title">${material.title}</div>
                             <div class="material-description">${material.description}</div>
@@ -492,11 +541,6 @@
         setInterval(() => {
             teacherNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
             updateNotificationBadge();
-            const newMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
-            if (JSON.stringify(newMaterials) !== JSON.stringify(materials)) {
-                materials = newMaterials;
-                renderMaterials();
-            }
         }, 3000);
     </script>
 </body>
