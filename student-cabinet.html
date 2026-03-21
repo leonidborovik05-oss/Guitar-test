@@ -146,6 +146,9 @@
         .action-btn.groups {
             background: #6f42c1;
         }
+        .action-btn.library {
+            background: #17a2b8;
+        }
         
         .modal {
             display: none;
@@ -449,7 +452,7 @@
         <div class="greeting-card">
             <h2 id="greetingTitle">Привет!</h2>
             <p>Продолжай заниматься. Выбери, чем хочешь заняться сейчас.</p>
-            <span class="role-badge" id="roleBadge">Ученик</span>
+            <span class="role-badge">Ученик</span>
             
             <div class="action-buttons">
                 <button class="action-btn tasks" onclick="openTasksModal()">
@@ -462,6 +465,9 @@
                 <button class="action-btn groups" onclick="openGroupsModal()">
                     👥 Мои группы
                 </button>
+                <a href="library-student.html" class="action-btn library">
+                    📹 Библиотека
+                </a>
             </div>
         </div>
 
@@ -649,12 +655,17 @@
             let html = '';
             studentNotes.forEach(note => {
                 const isGroupInvite = note.type === 'group_invite';
+                const isMaterial = note.type === 'new_material';
+                let borderColor = '';
+                if (isGroupInvite) borderColor = 'border-left-color: #6f42c1;';
+                if (isMaterial) borderColor = 'border-left-color: #17a2b8;';
                 html += `
-                    <div class="note-item" style="${isGroupInvite ? 'border-left-color: #6f42c1;' : ''}">
+                    <div class="note-item" style="${borderColor}">
                         <div class="note-title">${note.title}</div>
                         <div class="note-date">${note.date}</div>
                         <div class="note-text">${note.text}</div>
                         ${isGroupInvite ? `<button class="action-btn groups" style="margin-top: 10px; padding: 8px 15px;" onclick="window.location.href='group-chat.html?groupId=${note.groupId}'">👥 Перейти в группу</button>` : ''}
+                        ${isMaterial ? `<button class="action-btn library" style="margin-top: 10px; padding: 8px 15px;" onclick="window.location.href='library-student.html'">📹 Перейти в библиотеку</button>` : ''}
                     </div>
                 `;
             });
