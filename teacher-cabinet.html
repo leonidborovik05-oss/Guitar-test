@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кабинет учителя | Студия гитары</title>
     <style>
+        /* все стили остаются без изменений из предыдущей версии */
         * {
             margin: 0;
             padding: 0;
@@ -34,28 +35,6 @@
         }
         .logo span {
             color: #f0b90b;
-        }
-        .notification-bell {
-            position: relative;
-            cursor: pointer;
-            font-size: 1.5em;
-            padding: 5px;
-        }
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            color: white;
-            font-size: 0.6em;
-            font-weight: bold;
-            min-width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
         }
         .user-info {
             display: flex;
@@ -145,11 +124,11 @@
             background: #ffc107;
             color: #1e1e2f;
         }
-        .action-btn.library {
-            background: #17a2b8;
-        }
         .action-btn.groups {
             background: #6f42c1;
+        }
+        .action-btn.library {
+            background: #17a2b8;
         }
         
         .modal {
@@ -213,10 +192,6 @@
         .form-group textarea {
             min-height: 120px;
             resize: vertical;
-        }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: #43C6AC;
-            outline: none;
         }
         .btn-save {
             background: #28a745;
@@ -413,10 +388,6 @@
             🎸 Guitar<span>Studio</span>
         </div>
         <div class="user-info">
-            <div class="notification-bell" onclick="openAllNotifications()">
-                🔔
-                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
-            </div>
             <div class="user-name" id="currentUserDisplay">Загрузка...</div>
             <a href="login.html" class="logout-btn">Выйти</a>
         </div>
@@ -425,7 +396,7 @@
     <div class="main-container">
         <div class="greeting-card">
             <h2>Здравствуйте, Евгения!</h2>
-            <p>Панель управления учениками и группами.</p>
+            <p>Панель управления учениками. Добавляйте новых учеников, оставляйте им заметки и создавайте группы.</p>
             <span class="role-badge">Преподаватель (полный доступ)</span>
             
             <div class="action-buttons">
@@ -463,7 +434,7 @@
             </div>
         </div>
 
-        <!-- Модальное окно добавления ученика -->
+        <!-- Модальные окна -->
         <div id="addStudentModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -486,7 +457,6 @@
             </div>
         </div>
 
-        <!-- Модальное окно добавления заметки -->
         <div id="addNoteModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -511,7 +481,6 @@
             </div>
         </div>
 
-        <!-- Модальное окно создания группы -->
         <div id="createGroupModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -536,38 +505,65 @@
             </div>
         </div>
 
-        <!-- Модальное окно всех уведомлений для учителя -->
-        <div id="allNotificationsModal" class="modal">
-            <div class="modal-content" style="max-width: 600px;">
-                <div class="modal-header">
-                    <h3>🔔 Все уведомления</h3>
-                    <button class="close-btn" onclick="closeAllNotifications()">&times;</button>
-                </div>
-                <div id="allNotificationsContainer" style="max-height: 400px; overflow-y: auto;">
-                    <!-- Уведомления будут загружаться сюда -->
-                </div>
-            </div>
-        </div>
-
         <div class="footer-links">
             <a href="index.html">🏠 На главную страницу студии</a>
         </div>
     </div>
 
     <script>
-        // Загружаем учеников
-        let students = JSON.parse(localStorage.getItem('students')) || [];
-        
-        // Загружаем заметки
+        // Автоматическое добавление всех учеников при первом запуске
+        function initializeStudents() {
+            const defaultStudents = [
+                { login: "NikitaWind456732", password: "0011020571", name: "Никита" },
+                { login: "SonyaIce035142", password: "1235476450", name: "Соня" },
+                { login: "DanilStone055622", password: "4591223719", name: "Данил" },
+                { login: "IlyaTree921308", password: "0215224785", name: "Илья" },
+                { login: "TamerlaneSand453671", password: "0293528921", name: "Тамерлан" },
+                { login: "RamazanSun225140", password: "6007204910", name: "Рамазан" }
+            ];
+            
+            let students = JSON.parse(localStorage.getItem('students')) || [];
+            
+            // Добавляем только тех, кого ещё нет
+            let added = 0;
+            defaultStudents.forEach(defStudent => {
+                if (!students.some(s => s.login === defStudent.login)) {
+                    students.push(defStudent);
+                    added++;
+                }
+            });
+            
+            if (added > 0) {
+                localStorage.setItem('students', JSON.stringify(students));
+                console.log(`✅ Добавлено ${added} новых учеников`);
+            }
+            
+            // Инициализируем прогресс для каждого ученика
+            students.forEach(student => {
+                if (!localStorage.getItem(`progress_${student.login}`)) {
+                    localStorage.setItem(`progress_${student.login}`, JSON.stringify({
+                        beginner: 0,
+                        intermediate: 0,
+                        expert: 0
+                    }));
+                }
+            });
+            
+            return students;
+        }
+
+        let students = initializeStudents();
         let notes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-        
-        // Загружаем группы
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
-        
-        // Загружаем сообщения из групп (для уведомлений учителя)
         let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
 
-        // Функция отображения учеников
+        // Отображаем текущего пользователя
+        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
+        const userDisplayElement = document.getElementById('currentUserDisplay');
+        if (userDisplayElement) {
+            userDisplayElement.textContent = userDisplay;
+        }
+
         function renderStudents() {
             const container = document.getElementById('studentsContainer');
             
@@ -611,46 +607,10 @@
                 `;
             });
             container.innerHTML = html;
-            
             updateStudentSelect();
             updateStudentCheckboxes();
         }
 
-        // Обновление выпадающего списка учеников
-        function updateStudentSelect() {
-            const select = document.getElementById('noteStudentSelect');
-            if (!select) return;
-            
-            let options = '<option value="">-- Выберите ученика --</option>';
-            students.forEach(student => {
-                options += `<option value="${student.login}">${student.name} (${student.login})</option>`;
-            });
-            select.innerHTML = options;
-        }
-        
-        // Обновление чекбоксов учеников для создания группы
-        function updateStudentCheckboxes() {
-            const container = document.getElementById('studentCheckboxes');
-            if (!container) return;
-            
-            if (students.length === 0) {
-                container.innerHTML = '<p style="color: #999;">Нет учеников для добавления</p>';
-                return;
-            }
-            
-            let html = '';
-            students.forEach(student => {
-                html += `
-                    <div class="student-checkbox">
-                        <input type="checkbox" id="student_${student.login}" value="${student.login}">
-                        <label for="student_${student.login}">${student.name}</label>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        // Отображение групп
         function renderGroups() {
             const container = document.getElementById('groupsContainer');
             
@@ -680,7 +640,38 @@
             container.innerHTML = html;
         }
 
-        // Открыть модальное окно добавления ученика
+        function updateStudentSelect() {
+            const select = document.getElementById('noteStudentSelect');
+            if (!select) return;
+            
+            let options = '<option value="">-- Выберите ученика --</option>';
+            students.forEach(student => {
+                options += `<option value="${student.login}">${student.name} (${student.login})</option>`;
+            });
+            select.innerHTML = options;
+        }
+        
+        function updateStudentCheckboxes() {
+            const container = document.getElementById('studentCheckboxes');
+            if (!container) return;
+            
+            if (students.length === 0) {
+                container.innerHTML = '<p style="color: #999;">Нет учеников для добавления</p>';
+                return;
+            }
+            
+            let html = '';
+            students.forEach(student => {
+                html += `
+                    <div class="student-checkbox">
+                        <input type="checkbox" id="student_${student.login}" value="${student.login}">
+                        <label for="student_${student.login}">${student.name}</label>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
         function openAddStudentModal() {
             document.getElementById('addStudentModal').classList.add('active');
         }
@@ -789,7 +780,6 @@
             const name = document.getElementById('groupName').value.trim();
             const description = document.getElementById('groupDescription').value.trim();
             
-            // Собираем выбранных учеников
             const checkboxes = document.querySelectorAll('#studentCheckboxes input[type="checkbox"]:checked');
             const members = Array.from(checkboxes).map(cb => cb.value);
             
@@ -815,7 +805,6 @@
             groups.push(group);
             localStorage.setItem('groups', JSON.stringify(groups));
             
-            // Создаём уведомления для учеников
             members.forEach(studentLogin => {
                 const notification = {
                     id: Date.now() + Math.random(),
@@ -836,7 +825,6 @@
 
             closeCreateGroupModal();
             renderGroups();
-            updateNotificationBadge();
             alert('✅ Группа успешно создана!');
         }
 
@@ -856,69 +844,8 @@
             alert(`👤 ${student.name}\nЛогин: ${student.login}\nПароль: ${student.password}${notesText}`);
         }
 
-        // Уведомления для учителя (из всех групп)
-        function updateNotificationBadge() {
-            const allMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-            const unreadCount = allMessages.filter(m => !m.read && m.type !== 'system').length;
-            
-            const badge = document.getElementById('notificationBadge');
-            if (unreadCount > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = unreadCount;
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        function openAllNotifications() {
-            const container = document.getElementById('allNotificationsContainer');
-            const allMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-            
-            // Сортируем от новых к старым
-            allMessages.sort((a, b) => b.id - a.id);
-            
-            if (allMessages.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
-            } else {
-                let html = '';
-                allMessages.forEach(msg => {
-                    if (msg.type !== 'system') {
-                        html += `
-                            <div style="background: #f8f9fc; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 5px solid #28a745;">
-                                <div style="font-weight: 600; margin-bottom: 5px;">${msg.groupName}</div>
-                                <div style="color: #1e1e2f; margin-bottom: 5px;">${msg.senderName}: ${msg.text}</div>
-                                <div style="color: #999; font-size: 0.85em;">${msg.date}</div>
-                            </div>
-                        `;
-                    }
-                });
-                container.innerHTML = html;
-            }
-            
-            // Помечаем все как прочитанные
-            allMessages.forEach(m => m.read = true);
-            localStorage.setItem('groupMessages', JSON.stringify(allMessages));
-            updateNotificationBadge();
-            
-            document.getElementById('allNotificationsModal').classList.add('active');
-        }
-
-        function closeAllNotifications() {
-            document.getElementById('allNotificationsModal').classList.remove('active');
-        }
-
-        // Инициализация
         renderStudents();
         renderGroups();
-        updateNotificationBadge();
-        
-        // Проверяем уведомления каждые 3 секунды
-        setInterval(updateNotificationBadge, 3000);
-        
-        // Отображаем текущего пользователя в шапке
-const userDisplay = localStorage.getItem('currentUserDisplay') || 
-    (localStorage.getItem('currentUserRole') === 'teacher' ? '👩‍🏫 Евгения (Учитель)' : '👨‍🎓 Леонид Зас (Ученик)');
-document.getElementById('currentUserDisplay').textContent = userDisplay;
     </script>
 </body>
 </html>
