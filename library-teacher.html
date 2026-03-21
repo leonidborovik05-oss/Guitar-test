@@ -160,6 +160,7 @@
             gap: 15px;
             margin-bottom: 25px;
             flex-wrap: wrap;
+            align-items: center;
         }
         .filter-select {
             padding: 10px 20px;
@@ -168,6 +169,19 @@
             font-size: 1em;
             background: white;
             min-width: 200px;
+        }
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .clear-btn:hover {
+            background: #b02a37;
         }
         
         .materials-grid {
@@ -382,6 +396,11 @@
             margin-bottom: 15px;
             display: none;
         }
+        .size-hint {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -408,14 +427,15 @@
             <div class="upload-form">
                 <div class="form-group">
                     <label>Тип материала</label>
-                    <select id="materialType">
-                        <option value="video">🎥 Видео</option>
+                    <select id="materialType" onchange="updateSizeHint()">
                         <option value="photo">📸 Фото</option>
+                        <option value="video">🎥 Видео</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Выберите файл</label>
-                    <input type="file" id="materialFile" accept="video/*,image/*">
+                    <input type="file" id="materialFile" accept="image/*,video/*" onchange="checkFileSize()">
+                    <div id="sizeHint" class="size-hint">Максимальный размер: 3 МБ</div>
                 </div>
                 <div class="form-group">
                     <label>Название</label>
@@ -445,9 +465,10 @@
             </select>
             <select class="filter-select" id="filterType" onchange="applyFilters()">
                 <option value="">Все типы</option>
-                <option value="video">🎥 Видео</option>
                 <option value="photo">📸 Фото</option>
+                <option value="video">🎥 Видео</option>
             </select>
+            <button class="clear-btn" onclick="clearAllMaterials()">🗑️ Очистить все</button>
         </div>
 
         <div id="materialsGrid" class="materials-grid"></div>
@@ -468,13 +489,44 @@
     </div>
 
     <script>
+        // Данные пользователя
         const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         
+        // Загружаем данные
         let students = JSON.parse(localStorage.getItem('students')) || [];
         let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
         let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
 
+        // Обновление подсказки о размере
+        function updateSizeHint() {
+            const type = document.getElementById('materialType').value;
+            const hint = document.getElementById('sizeHint');
+            if (type === 'photo') {
+                hint.innerHTML = '📸 Максимальный размер: 3 МБ (для фото)';
+            } else {
+                hint.innerHTML = '🎥 Максимальный размер: 5 МБ (для видео)';
+            }
+        }
+
+        // Проверка размера выбранного файла
+        function checkFileSize() {
+            const fileInput = document.getElementById('materialFile');
+            const file = fileInput.files[0];
+            const type = document.getElementById('materialType').value;
+            const maxSize = type === 'video' ? 5 * 1024 * 1024 : 3 * 1024 * 1024;
+            const errorDiv = document.getElementById('uploadError');
+            
+            if (file && file.size > maxSize) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `⚠️ Файл слишком большой! Максимум: ${type === 'video' ? '5 МБ' : '3 МБ'}. Ваш файл: ${(file.size / 1024 / 1024).toFixed(2)} МБ`;
+                fileInput.value = '';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        // Уведомления
         function updateNotificationBadge() {
             const unreadCount = groupMessages.filter(m => !m.read).length;
             const badge = document.getElementById('notificationBadge');
@@ -521,6 +573,7 @@
             container.innerHTML = html;
         }
 
+        // Обновление списков учеников
         function updateStudentSelects() {
             const studentSelect = document.getElementById('materialStudent');
             const filterSelect = document.getElementById('filterStudent');
@@ -542,166 +595,147 @@
             filterSelect.innerHTML = filterOptions;
         }
 
-function uploadMaterial() {
-    const errorDiv = document.getElementById('uploadError');
-    errorDiv.style.display = 'none';
-    errorDiv.innerHTML = '';
-    
-    // Получаем значения из полей
-    const type = document.getElementById('materialType').value;
-    const fileInput = document.getElementById('materialFile');
-    const file = fileInput.files[0];
-    const title = document.getElementById('materialTitle').value.trim();
-    const description = document.getElementById('materialDescription').value.trim();
-    const targetStudent = document.getElementById('materialStudent').value;
+        // Загрузка материала
+        function uploadMaterial() {
+            const errorDiv = document.getElementById('uploadError');
+            errorDiv.style.display = 'none';
+            errorDiv.innerHTML = '';
+            
+            const type = document.getElementById('materialType').value;
+            const fileInput = document.getElementById('materialFile');
+            const file = fileInput.files[0];
+            const title = document.getElementById('materialTitle').value.trim();
+            const description = document.getElementById('materialDescription').value.trim();
+            const targetStudent = document.getElementById('materialStudent').value;
 
-    console.log('=== ЗАГРУЗКА МАТЕРИАЛА ===');
-    console.log('Тип:', type);
-    console.log('Файл:', file ? file.name : 'НЕ ВЫБРАН');
-    console.log('Название:', title);
-    console.log('Описание:', description);
-    console.log('Для кого:', targetStudent);
-    console.log('===========================');
+            // Проверки
+            if (!file) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
+                return;
+            }
+            
+            const maxSize = type === 'video' ? 5 * 1024 * 1024 : 3 * 1024 * 1024;
+            if (file.size > maxSize) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `❌ Файл слишком большой! Максимум: ${type === 'video' ? '5 МБ' : '3 МБ'}. Ваш файл: ${(file.size / 1024 / 1024).toFixed(2)} МБ`;
+                return;
+            }
+            
+            if (!title) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Введите название материала!';
+                return;
+            }
+            
+            if (!description) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Введите описание материала!';
+                return;
+            }
+            
+            if (!targetStudent) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!';
+                return;
+            }
 
-    // Проверка на файл
-    if (!file) {
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
-        console.error('Ошибка: файл не выбран');
-        return;
-    }
-    
-    // Проверка на название
-    if (!title) {
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = '❌ Введите название материала!';
-        console.error('Ошибка: название не введено');
-        return;
-    }
-    
-    // Проверка на описание
-    if (!description) {
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = '❌ Введите описание материала!';
-        console.error('Ошибка: описание не введено');
-        return;
-    }
-    
-    // Проверка на получателя
-    if (!targetStudent) {
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = '❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!';
-        console.error('Ошибка: получатель не выбран');
-        return;
-    }
+            const uploadBtn = document.querySelector('.btn-upload');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '⏳ Загрузка...';
+            uploadBtn.disabled = true;
 
-    // Меняем кнопку на "Загрузка..."
-    const uploadBtn = document.querySelector('.btn-upload');
-    const originalText = uploadBtn.innerHTML;
-    uploadBtn.innerHTML = '⏳ Загрузка...';
-    uploadBtn.disabled = true;
-
-    console.log('Начинаем чтение файла...');
-
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        console.log('Файл прочитан успешно, размер:', file.size, 'байт');
-        
-        const material = {
-            id: Date.now(),
-            type: type,
-            title: title,
-            description: description,
-            studentLogin: targetStudent,
-            studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
-            date: new Date().toLocaleString(),
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size,
-            fileData: e.target.result
-        };
-        
-        // Сохраняем материал
-        materials.push(material);
-        localStorage.setItem('libraryMaterials', JSON.stringify(materials));
-        console.log('Материал сохранён в localStorage, всего материалов:', materials.length);
-        
-        // Создаём уведомления
-        if (targetStudent === "ALL") {
-            students.forEach(student => {
-                const notification = {
-                    id: Date.now() + Math.random(),
-                    type: 'new_material',
-                    studentLogin: student.login,
-                    title: '📹 Новый материал в библиотеке',
-                    text: `Учитель добавил новый материал: "${title}"`,
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const material = {
+                    id: Date.now(),
+                    type: type,
+                    title: title,
+                    description: description,
+                    studentLogin: targetStudent,
+                    studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
                     date: new Date().toLocaleString(),
-                    read: false
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileSize: file.size,
+                    fileData: e.target.result
                 };
-                let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                allNotes.push(notification);
-                localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-            });
-            alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
-        } else {
-            const student = students.find(s => s.login === targetStudent);
-            const notification = {
-                id: Date.now() + Math.random(),
-                type: 'new_material',
-                studentLogin: targetStudent,
-                title: '📹 Новый материал в библиотеке',
-                text: `Учитель добавил новый материал специально для вас: "${title}"`,
-                date: new Date().toLocaleString(),
-                read: false
+                
+                try {
+                    materials.push(material);
+                    localStorage.setItem('libraryMaterials', JSON.stringify(materials));
+                } catch (storageError) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerHTML = '❌ Слишком много материалов! Нажмите "Очистить все" и попробуйте снова.';
+                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.disabled = false;
+                    return;
+                }
+                
+                // Создаём уведомления
+                if (targetStudent === "ALL") {
+                    students.forEach(student => {
+                        const notification = {
+                            id: Date.now() + Math.random(),
+                            type: 'new_material',
+                            studentLogin: student.login,
+                            title: '📹 Новый материал в библиотеке',
+                            text: `Учитель добавил новый материал: "${title}"`,
+                            date: new Date().toLocaleString(),
+                            read: false
+                        };
+                        let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+                        allNotes.push(notification);
+                        localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+                    });
+                    alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
+                } else {
+                    const student = students.find(s => s.login === targetStudent);
+                    const notification = {
+                        id: Date.now() + Math.random(),
+                        type: 'new_material',
+                        studentLogin: targetStudent,
+                        title: '📹 Новый материал в библиотеке',
+                        text: `Учитель добавил новый материал специально для вас: "${title}"`,
+                        date: new Date().toLocaleString(),
+                        read: false
+                    };
+                    let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+                    allNotes.push(notification);
+                    localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+                    alert(`✅ Материал загружен для ученика ${student?.name}`);
+                }
+                
+                // Очищаем форму
+                fileInput.value = '';
+                document.getElementById('materialTitle').value = '';
+                document.getElementById('materialDescription').value = '';
+                document.getElementById('materialStudent').value = '';
+                
+                renderMaterials();
+                updateNotificationBadge();
+                
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
             };
-            let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-            allNotes.push(notification);
-            localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-            alert(`✅ Материал загружен для ученика ${student?.name}`);
+            
+            reader.onerror = function() {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Ошибка при чтении файла! Попробуйте другой файл.';
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+            };
+            
+            reader.readAsDataURL(file);
         }
-        
-        // Очищаем форму
-        fileInput.value = '';
-        document.getElementById('materialTitle').value = '';
-        document.getElementById('materialDescription').value = '';
-        document.getElementById('materialStudent').value = '';
-        
-        // Обновляем отображение
-        renderMaterials();
-        updateNotificationBadge();
-        
-        // Восстанавливаем кнопку
-        uploadBtn.innerHTML = originalText;
-        uploadBtn.disabled = false;
-        
-        console.log('=== ЗАГРУЗКА УСПЕШНО ЗАВЕРШЕНА ===');
-    };
-    
-    reader.onerror = function(e) {
-        console.error('ОШИБКА ЧТЕНИЯ ФАЙЛА:', e);
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = '❌ Ошибка при чтении файла! Попробуйте другой файл.';
-        uploadBtn.innerHTML = originalText;
-        uploadBtn.disabled = false;
-    };
-    
-    // Запускаем чтение файла
-    try {
-        reader.readAsDataURL(file);
-        console.log('Чтение файла запущено...');
-    } catch (err) {
-        console.error('ОШИБКА ЗАПУСКА ЧТЕНИЯ:', err);
-        errorDiv.style.display = 'block';
-        errorDiv.innerHTML = '❌ Ошибка: ' + err.message;
-        uploadBtn.innerHTML = originalText;
-        uploadBtn.disabled = false;
-    }
-}
+
+        // Применение фильтров
         function applyFilters() {
             renderMaterials();
         }
 
+        // Отображение материалов
         function renderMaterials() {
             const grid = document.getElementById('materialsGrid');
             const filterStudent = document.getElementById('filterStudent').value;
@@ -763,6 +797,7 @@ function uploadMaterial() {
             grid.innerHTML = html;
         }
 
+        // Удаление одного материала
         function deleteMaterial(id) {
             if (confirm('Удалить этот материал?')) {
                 materials = materials.filter(m => m.id !== id);
@@ -771,6 +806,17 @@ function uploadMaterial() {
             }
         }
 
+        // Очистка всех материалов
+        function clearAllMaterials() {
+            if (confirm('ВНИМАНИЕ! Это удалит ВСЕ материалы из библиотеки. Продолжить?')) {
+                materials = [];
+                localStorage.setItem('libraryMaterials', JSON.stringify(materials));
+                renderMaterials();
+                alert('✅ Все материалы удалены');
+            }
+        }
+
+        // Инициализация
         updateStudentSelects();
         renderMaterials();
         updateNotificationBadge();
