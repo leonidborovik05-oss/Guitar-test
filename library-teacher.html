@@ -401,6 +401,11 @@
             color: #666;
             margin-top: 5px;
         }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -434,8 +439,8 @@
                 </div>
                 <div class="form-group">
                     <label>Выберите файл</label>
-                    <input type="file" id="materialFile" accept="image/*,video/*" onchange="checkFileSize()">
-                    <div id="sizeHint" class="size-hint">Максимальный размер: 3 МБ</div>
+                    <input type="file" id="materialFile" accept="image/*,video/*">
+                    <div id="sizeHint" class="size-hint">Максимальный размер: 50 МБ (IndexedDB позволяет хранить большие файлы)</div>
                 </div>
                 <div class="form-group">
                     <label>Название</label>
@@ -471,7 +476,9 @@
             <button class="clear-btn" onclick="clearAllMaterials()">🗑️ Очистить все</button>
         </div>
 
-        <div id="materialsGrid" class="materials-grid"></div>
+        <div id="materialsGrid" class="materials-grid">
+            <div class="loading">⏳ Загрузка материалов...</div>
+        </div>
 
         <div class="footer-links">
             <a href="teacher-cabinet.html">← Назад в кабинет</a>
@@ -493,39 +500,140 @@
         const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         
-        // Загружаем данные
+        // Загружаем учеников
         let students = JSON.parse(localStorage.getItem('students')) || [];
-        let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
         let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-
+        
+        // ========== INDEXEDDB ДЛЯ ХРАНЕНИЯ ФАЙЛОВ ==========
+        const DB_NAME = 'GuitarStudioDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'materials';
+        
+        let db = null;
+        let allMaterials = [];
+        
+        // Открытие базы данных
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (db) {
+                    resolve(db);
+                    return;
+                }
+                
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = function(event) {
+                    console.error('Ошибка открытия БД:', event);
+                    reject('Ошибка открытия базы данных');
+                };
+                
+                request.onsuccess = function(event) {
+                    db = event.target.result;
+                    console.log('База данных открыта');
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('studentLogin', 'studentLogin', { unique: false });
+                        store.createIndex('type', 'type', { unique: false });
+                        store.createIndex('date', 'date', { unique: false });
+                        console.log('Хранилище создано');
+                    }
+                };
+            });
+        }
+        
+        // Получение всех материалов
+        async function getAllMaterials() {
+            try {
+                const database = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = function() {
+                        allMaterials = request.result || [];
+                        resolve(allMaterials);
+                    };
+                    
+                    request.onerror = function() {
+                        reject('Ошибка получения материалов');
+                    };
+                });
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return [];
+            }
+        }
+        
+        // Добавление материала
+        async function addMaterial(material) {
+            const database = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(material);
+                
+                request.onsuccess = function() {
+                    allMaterials.push(material);
+                    resolve();
+                };
+                
+                request.onerror = function(event) {
+                    console.error('Ошибка добавления:', event);
+                    reject('Ошибка сохранения материала');
+                };
+            });
+        }
+        
+        // Удаление материала
+        async function deleteMaterialFromDB(id) {
+            const database = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                
+                request.onsuccess = function() {
+                    allMaterials = allMaterials.filter(m => m.id !== id);
+                    resolve();
+                };
+                
+                request.onerror = function() {
+                    reject('Ошибка удаления');
+                };
+            });
+        }
+        
+        // Очистка всех материалов
+        async function clearAllMaterialsFromDB() {
+            const database = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.clear();
+                
+                request.onsuccess = function() {
+                    allMaterials = [];
+                    resolve();
+                };
+                
+                request.onerror = function() {
+                    reject('Ошибка очистки');
+                };
+            });
+        }
+        
         // Обновление подсказки о размере
         function updateSizeHint() {
-            const type = document.getElementById('materialType').value;
             const hint = document.getElementById('sizeHint');
-            if (type === 'photo') {
-                hint.innerHTML = '📸 Максимальный размер: 3 МБ (для фото)';
-            } else {
-                hint.innerHTML = '🎥 Максимальный размер: 5 МБ (для видео)';
-            }
+            hint.innerHTML = '📦 IndexedDB позволяет хранить файлы до 50-100 МБ (практически без ограничений)';
         }
-
-        // Проверка размера выбранного файла
-        function checkFileSize() {
-            const fileInput = document.getElementById('materialFile');
-            const file = fileInput.files[0];
-            const type = document.getElementById('materialType').value;
-            const maxSize = type === 'video' ? 5 * 1024 * 1024 : 3 * 1024 * 1024;
-            const errorDiv = document.getElementById('uploadError');
-            
-            if (file && file.size > maxSize) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `⚠️ Файл слишком большой! Максимум: ${type === 'video' ? '5 МБ' : '3 МБ'}. Ваш файл: ${(file.size / 1024 / 1024).toFixed(2)} МБ`;
-                fileInput.value = '';
-            } else {
-                errorDiv.style.display = 'none';
-            }
-        }
-
+        
         // Уведомления
         function updateNotificationBadge() {
             const unreadCount = groupMessages.filter(m => !m.read).length;
@@ -537,7 +645,7 @@
                 badge.style.display = 'none';
             }
         }
-
+        
         function openNotificationsModal() {
             renderNotifications();
             document.getElementById('notificationsModal').classList.add('active');
@@ -545,11 +653,11 @@
             localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
             updateNotificationBadge();
         }
-
+        
         function closeNotificationsModal() {
             document.getElementById('notificationsModal').classList.remove('active');
         }
-
+        
         function renderNotifications() {
             const container = document.getElementById('notificationsContainer');
             const allNotifications = [...groupMessages];
@@ -572,7 +680,7 @@
             });
             container.innerHTML = html;
         }
-
+        
         // Обновление списков учеников
         function updateStudentSelects() {
             const studentSelect = document.getElementById('materialStudent');
@@ -594,9 +702,9 @@
             });
             filterSelect.innerHTML = filterOptions;
         }
-
+        
         // Загрузка материала
-        function uploadMaterial() {
+        async function uploadMaterial() {
             const errorDiv = document.getElementById('uploadError');
             errorDiv.style.display = 'none';
             errorDiv.innerHTML = '';
@@ -607,18 +715,11 @@
             const title = document.getElementById('materialTitle').value.trim();
             const description = document.getElementById('materialDescription').value.trim();
             const targetStudent = document.getElementById('materialStudent').value;
-
+            
             // Проверки
             if (!file) {
                 errorDiv.style.display = 'block';
                 errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
-                return;
-            }
-            
-            const maxSize = type === 'video' ? 5 * 1024 * 1024 : 3 * 1024 * 1024;
-            if (file.size > maxSize) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `❌ Файл слишком большой! Максимум: ${type === 'video' ? '5 МБ' : '3 МБ'}. Ваш файл: ${(file.size / 1024 / 1024).toFixed(2)} МБ`;
                 return;
             }
             
@@ -639,108 +740,124 @@
                 errorDiv.innerHTML = '❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!';
                 return;
             }
-
+            
             const uploadBtn = document.querySelector('.btn-upload');
             const originalText = uploadBtn.innerHTML;
             uploadBtn.innerHTML = '⏳ Загрузка...';
             uploadBtn.disabled = true;
-
-            const reader = new FileReader();
             
-            reader.onload = function(e) {
-                const material = {
-                    id: Date.now(),
-                    type: type,
-                    title: title,
-                    description: description,
-                    studentLogin: targetStudent,
-                    studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
-                    date: new Date().toLocaleString(),
-                    fileName: file.name,
-                    fileType: file.type,
-                    fileSize: file.size,
-                    fileData: e.target.result
+            try {
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    const material = {
+                        id: Date.now(),
+                        type: type,
+                        title: title,
+                        description: description,
+                        studentLogin: targetStudent,
+                        studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
+                        date: new Date().toLocaleString(),
+                        fileName: file.name,
+                        fileType: file.type,
+                        fileSize: file.size,
+                        fileData: e.target.result
+                    };
+                    
+                    try {
+                        await addMaterial(material);
+                        console.log('Материал сохранён в IndexedDB');
+                        
+                        // Создаём уведомления
+                        if (targetStudent === "ALL") {
+                            students.forEach(student => {
+                                const notification = {
+                                    id: Date.now() + Math.random(),
+                                    type: 'new_material',
+                                    studentLogin: student.login,
+                                    title: '📹 Новый материал в библиотеке',
+                                    text: `Учитель добавил новый материал: "${title}"`,
+                                    date: new Date().toLocaleString(),
+                                    read: false
+                                };
+                                let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+                                allNotes.push(notification);
+                                localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+                            });
+                            alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
+                        } else {
+                            const student = students.find(s => s.login === targetStudent);
+                            const notification = {
+                                id: Date.now() + Math.random(),
+                                type: 'new_material',
+                                studentLogin: targetStudent,
+                                title: '📹 Новый материал в библиотеке',
+                                text: `Учитель добавил новый материал специально для вас: "${title}"`,
+                                date: new Date().toLocaleString(),
+                                read: false
+                            };
+                            let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+                            allNotes.push(notification);
+                            localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+                            alert(`✅ Материал загружен для ученика ${student?.name}`);
+                        }
+                        
+                        // Очищаем форму
+                        fileInput.value = '';
+                        document.getElementById('materialTitle').value = '';
+                        document.getElementById('materialDescription').value = '';
+                        document.getElementById('materialStudent').value = '';
+                        
+                        await renderMaterials();
+                        updateNotificationBadge();
+                        
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+                        
+                    } catch (saveError) {
+                        console.error('Ошибка сохранения:', saveError);
+                        errorDiv.style.display = 'block';
+                        errorDiv.innerHTML = '❌ Ошибка сохранения материала!';
+                        uploadBtn.innerHTML = originalText;
+                        uploadBtn.disabled = false;
+                    }
                 };
                 
-                try {
-                    materials.push(material);
-                    localStorage.setItem('libraryMaterials', JSON.stringify(materials));
-                } catch (storageError) {
+                reader.onerror = function() {
                     errorDiv.style.display = 'block';
-                    errorDiv.innerHTML = '❌ Слишком много материалов! Нажмите "Очистить все" и попробуйте снова.';
+                    errorDiv.innerHTML = '❌ Ошибка при чтении файла!';
                     uploadBtn.innerHTML = originalText;
                     uploadBtn.disabled = false;
-                    return;
-                }
+                };
                 
-                // Создаём уведомления
-                if (targetStudent === "ALL") {
-                    students.forEach(student => {
-                        const notification = {
-                            id: Date.now() + Math.random(),
-                            type: 'new_material',
-                            studentLogin: student.login,
-                            title: '📹 Новый материал в библиотеке',
-                            text: `Учитель добавил новый материал: "${title}"`,
-                            date: new Date().toLocaleString(),
-                            read: false
-                        };
-                        let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                        allNotes.push(notification);
-                        localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-                    });
-                    alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
-                } else {
-                    const student = students.find(s => s.login === targetStudent);
-                    const notification = {
-                        id: Date.now() + Math.random(),
-                        type: 'new_material',
-                        studentLogin: targetStudent,
-                        title: '📹 Новый материал в библиотеке',
-                        text: `Учитель добавил новый материал специально для вас: "${title}"`,
-                        date: new Date().toLocaleString(),
-                        read: false
-                    };
-                    let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                    allNotes.push(notification);
-                    localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-                    alert(`✅ Материал загружен для ученика ${student?.name}`);
-                }
+                reader.readAsDataURL(file);
                 
-                // Очищаем форму
-                fileInput.value = '';
-                document.getElementById('materialTitle').value = '';
-                document.getElementById('materialDescription').value = '';
-                document.getElementById('materialStudent').value = '';
-                
-                renderMaterials();
-                updateNotificationBadge();
-                
-                uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = false;
-            };
-            
-            reader.onerror = function() {
+            } catch (err) {
+                console.error('Ошибка:', err);
                 errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Ошибка при чтении файла! Попробуйте другой файл.';
+                errorDiv.innerHTML = '❌ Ошибка: ' + err.message;
                 uploadBtn.innerHTML = originalText;
                 uploadBtn.disabled = false;
-            };
-            
-            reader.readAsDataURL(file);
+            }
         }
-
+        
         // Применение фильтров
         function applyFilters() {
             renderMaterials();
         }
-
+        
         // Отображение материалов
-        function renderMaterials() {
+        async function renderMaterials() {
             const grid = document.getElementById('materialsGrid');
             const filterStudent = document.getElementById('filterStudent').value;
             const filterType = document.getElementById('filterType').value;
-
+            
+            // Показываем загрузку
+            grid.innerHTML = '<div class="loading">⏳ Загрузка материалов...</div>';
+            
+            // Получаем материалы из БД
+            const materials = await getAllMaterials();
+            
             let filteredMaterials = [...materials];
             
             if (filterStudent) {
@@ -750,14 +867,14 @@
             if (filterType) {
                 filteredMaterials = filteredMaterials.filter(m => m.type === filterType);
             }
-
+            
             filteredMaterials.sort((a, b) => b.id - a.id);
-
+            
             if (filteredMaterials.length === 0) {
                 grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет. Загрузите первый!</div>';
                 return;
             }
-
+            
             let html = '';
             filteredMaterials.forEach(material => {
                 let previewHtml = '';
@@ -770,13 +887,23 @@
                         previewHtml = `<div class="material-preview">📸</div>`;
                     }
                 }
-
+                
+                // Форматируем размер файла
+                let fileSizeText = '';
+                if (material.fileSize) {
+                    if (material.fileSize < 1024 * 1024) {
+                        fileSizeText = `${(material.fileSize / 1024).toFixed(1)} КБ`;
+                    } else {
+                        fileSizeText = `${(material.fileSize / 1024 / 1024).toFixed(1)} МБ`;
+                    }
+                }
+                
                 html += `
                     <div class="material-card">
                         ${previewHtml}
                         <div class="material-info">
                             <span class="material-type ${material.type === 'video' ? 'type-video' : 'type-photo'}">
-                                ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'}
+                                ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'} (${fileSizeText})
                             </span>
                             <div class="material-title">${material.title}</div>
                             <div class="material-description">${material.description}</div>
@@ -796,30 +923,33 @@
             });
             grid.innerHTML = html;
         }
-
+        
         // Удаление одного материала
-        function deleteMaterial(id) {
+        async function deleteMaterial(id) {
             if (confirm('Удалить этот материал?')) {
-                materials = materials.filter(m => m.id !== id);
-                localStorage.setItem('libraryMaterials', JSON.stringify(materials));
-                renderMaterials();
+                await deleteMaterialFromDB(id);
+                await renderMaterials();
+                alert('✅ Материал удалён');
             }
         }
-
+        
         // Очистка всех материалов
-        function clearAllMaterials() {
+        async function clearAllMaterials() {
             if (confirm('ВНИМАНИЕ! Это удалит ВСЕ материалы из библиотеки. Продолжить?')) {
-                materials = [];
-                localStorage.setItem('libraryMaterials', JSON.stringify(materials));
-                renderMaterials();
+                await clearAllMaterialsFromDB();
+                await renderMaterials();
                 alert('✅ Все материалы удалены');
             }
         }
-
+        
         // Инициализация
-        updateStudentSelects();
-        renderMaterials();
-        updateNotificationBadge();
+        async function init() {
+            updateStudentSelects();
+            await renderMaterials();
+            updateNotificationBadge();
+        }
+        
+        init();
         
         setInterval(() => {
             groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
