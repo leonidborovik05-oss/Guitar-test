@@ -846,6 +846,11 @@
         // Инициализация
         updateNotifications();
         setInterval(updateNotifications, 5000);
+
+        // Отображаем текущего пользователя в шапке
+const userDisplay = localStorage.getItem('currentUserDisplay') || 
+    (localStorage.getItem('currentUserRole') === 'teacher' ? '👩‍🏫 Евгения (Учитель)' : '👨‍🎓 Леонид Зас (Ученик)');
+document.getElementById('currentUserDisplay').textContent = userDisplay;
     </script>
 </body>
 </html>
