@@ -1,4 +1,4 @@
-\<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -107,7 +107,7 @@
             padding: 10px;
             border-radius: 8px;
             text-align: left;
-            max-height: 200px;
+            max-height: 250px;
             overflow-y: auto;
         }
         .hint strong {
@@ -145,6 +145,7 @@
             <strong>👩‍🏫 Учитель:</strong>
             <p>Логин: EvgenyaGuitara01543 / Пароль: 0019234509</p>
             <strong>👨‍🎓 Ученики:</strong>
+            <p>Леонид Зас: LeonidzasFire23457 / 11265497</p>
             <p>Никита: NikitaWind456732 / 0011020571</p>
             <p>Соня: SonyaIce035142 / 1235476450</p>
             <p>Данил: DanilStone055622 / 4591223719</p>
@@ -164,7 +165,14 @@
                 display: "👩‍🏫 Евгения (Учитель)",
                 role: "teacher"
             },
-            // Ученики
+            // Тестовый ученик Леонид Зас
+            "LeonidzasFire23457": {
+                password: "11265497",
+                name: "Леонид Зас",
+                display: "👨‍🎓 Леонид Зас (Ученик)",
+                role: "student"
+            },
+            // Остальные ученики
             "NikitaWind456732": {
                 password: "0011020571",
                 name: "Никита",
@@ -223,6 +231,8 @@
                 localStorage.setItem('currentUserLogin', username);
                 localStorage.setItem('currentUserName', user.name);
                 localStorage.setItem('currentUserDisplay', user.display);
+                
+                console.log('Вход выполнен:', { role: user.role, name: user.name, login: username });
                 
                 // Перенаправляем в зависимости от роли
                 if (user.role === 'teacher') {
