@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кабинет учителя | Студия гитары</title>
     <style>
-        /* все стили остаются без изменений из предыдущей версии */
         * {
             margin: 0;
             padding: 0;
@@ -35,6 +34,28 @@
         }
         .logo span {
             color: #f0b90b;
+        }
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.5em;
+            padding: 5px;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.6em;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
         }
         .user-info {
             display: flex;
@@ -388,6 +409,10 @@
             🎸 Guitar<span>Studio</span>
         </div>
         <div class="user-info">
+            <div class="notification-bell" onclick="window.location.href='library-teacher.html'">
+                🔔
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </div>
             <div class="user-name" id="currentUserDisplay">Загрузка...</div>
             <a href="login.html" class="logout-btn">Выйти</a>
         </div>
@@ -395,7 +420,7 @@
 
     <div class="main-container">
         <div class="greeting-card">
-            <h2>Здравствуйте, Евгения!</h2>
+            <h2 id="greetingTitle">Здравствуйте!</h2>
             <p>Панель управления учениками. Добавляйте новых учеников, оставляйте им заметки и создавайте группы.</p>
             <span class="role-badge">Преподаватель (полный доступ)</span>
             
@@ -511,6 +536,12 @@
     </div>
 
     <script>
+        // Получаем данные пользователя
+        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
+        const userName = localStorage.getItem('currentUserName') || 'Евгения';
+        document.getElementById('currentUserDisplay').textContent = userDisplay;
+        document.getElementById('greetingTitle').textContent = `Здравствуйте, ${userName}!`;
+
         // Автоматическое добавление всех учеников при первом запуске
         function initializeStudents() {
             const defaultStudents = [
@@ -524,7 +555,6 @@
             
             let students = JSON.parse(localStorage.getItem('students')) || [];
             
-            // Добавляем только тех, кого ещё нет
             let added = 0;
             defaultStudents.forEach(defStudent => {
                 if (!students.some(s => s.login === defStudent.login)) {
@@ -538,7 +568,6 @@
                 console.log(`✅ Добавлено ${added} новых учеников`);
             }
             
-            // Инициализируем прогресс для каждого ученика
             students.forEach(student => {
                 if (!localStorage.getItem(`progress_${student.login}`)) {
                     localStorage.setItem(`progress_${student.login}`, JSON.stringify({
@@ -557,11 +586,16 @@
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
         let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
 
-        // Отображаем текущего пользователя
-        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
-        const userDisplayElement = document.getElementById('currentUserDisplay');
-        if (userDisplayElement) {
-            userDisplayElement.textContent = userDisplay;
+        // Функция обновления бейджа уведомлений
+        function updateNotificationBadge() {
+            const unreadCount = groupMessages.filter(m => !m.read).length;
+            const badge = document.getElementById('notificationBadge');
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
         function renderStudents() {
@@ -846,6 +880,12 @@
 
         renderStudents();
         renderGroups();
+        updateNotificationBadge();
+        
+        setInterval(() => {
+            groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+            updateNotificationBadge();
+        }, 3000);
     </script>
 </body>
 </html>
