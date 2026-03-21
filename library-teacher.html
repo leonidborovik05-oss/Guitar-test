@@ -33,6 +33,29 @@
         .logo span {
             color: #f0b90b;
         }
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.5em;
+            padding: 5px;
+            margin-right: 15px;
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.6em;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
         .user-info {
             display: flex;
             align-items: center;
@@ -217,6 +240,8 @@
             align-items: center;
             margin-bottom: 15px;
             font-size: 0.9em;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .material-student {
             background: #e3f2fd;
@@ -224,6 +249,10 @@
             padding: 4px 12px;
             border-radius: 20px;
             font-weight: 500;
+        }
+        .material-student.all {
+            background: #28a745;
+            color: white;
         }
         .material-date {
             color: #999;
@@ -288,20 +317,92 @@
             text-decoration: none;
             border-bottom: 1px dashed #aaa;
         }
+        
+        /* Модальное окно уведомлений */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 {
+            font-size: 1.5em;
+            color: #1e1e2f;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .note-item {
+            background: #f8f9fc;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 5px solid #ffc107;
+        }
+        .note-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .note-date {
+            color: #999;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+        .note-text {
+            color: #555;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="logo">🎸 Guitar<span>Studio</span></div>
         <div class="user-info">
-            <div class="user-name">EvgenyaGuitara01543 (Учитель)</div>
+            <div class="notification-bell" onclick="openNotificationsModal()">
+                🔔
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </div>
+            <div class="user-name" id="currentUserDisplay">Загрузка...</div>
             <a href="teacher-cabinet.html" class="back-btn">← В кабинет</a>
             <a href="login.html" class="logout-btn">Выйти</a>
         </div>
     </header>
 
     <div class="main-container">
-        <!-- Заголовок -->
         <h1 style="margin-bottom: 20px; color: #1e1e2f;">📹 Библиотека материалов</h1>
         
         <!-- Форма загрузки -->
@@ -328,9 +429,10 @@
                     <textarea id="materialDescription" placeholder="Краткое описание материала..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Для ученика</label>
+                    <label>👥 Для кого</label>
                     <select id="materialStudent">
                         <option value="">-- Выберите ученика --</option>
+                        <option value="ALL">🌟 ДЛЯ ВСЕХ УЧЕНИКОВ</option>
                     </select>
                 </div>
                 <button class="btn-upload" onclick="uploadMaterial()">
@@ -343,6 +445,7 @@
         <div class="filters">
             <select class="filter-select" id="filterStudent" onchange="applyFilters()">
                 <option value="">Все ученики</option>
+                <option value="ALL">🌟 Все ученики</option>
             </select>
             <select class="filter-select" id="filterType" onchange="applyFilters()">
                 <option value="">Все типы</option>
@@ -352,45 +455,61 @@
         </div>
 
         <!-- Сетка материалов -->
-        <div id="materialsGrid" class="materials-grid">
-            <!-- Сюда будут загружаться материалы -->
-        </div>
+        <div id="materialsGrid" class="materials-grid"></div>
 
         <div class="footer-links">
             <a href="teacher-cabinet.html">← Назад в кабинет</a>
         </div>
     </div>
 
+    <!-- Модальное окно уведомлений -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 Уведомления</h3>
+                <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
+            </div>
+            <div id="notificationsContainer" class="notes-list">
+                <!-- Уведомления будут загружаться сюда -->
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Данные пользователя
+        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
+        document.getElementById('currentUserDisplay').textContent = userDisplay;
+        
         // Загружаем учеников
         let students = JSON.parse(localStorage.getItem('students')) || [];
         
         // Загружаем материалы
         let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+        
+        // Загружаем уведомления для учителя (из групп и заметок)
+        let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+        let teacherNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
 
         // Обновляем выпадающие списки учеников
         function updateStudentSelects() {
-            const studentSelects = ['materialStudent', 'filterStudent'];
+            const studentSelect = document.getElementById('materialStudent');
+            const filterSelect = document.getElementById('filterStudent');
             
-            studentSelects.forEach(selectId => {
-                const select = document.getElementById(selectId);
-                if (!select) return;
-                
-                let options = selectId === 'materialStudent' 
-                    ? '<option value="">-- Выберите ученика --</option>'
-                    : '<option value="">Все ученики</option>';
-                    
-                students.forEach(student => {
-                    options += `<option value="${student.login}">${student.name}</option>`;
-                });
-                
-                // Сохраняем выбранное значение, если оно было
-                const currentValue = select.value;
-                select.innerHTML = options;
-                if (currentValue && Array.from(select.options).some(opt => opt.value === currentValue)) {
-                    select.value = currentValue;
-                }
+            if (!studentSelect) return;
+            
+            let options = '<option value="">-- Выберите ученика --</option>';
+            options += '<option value="ALL">🌟 ДЛЯ ВСЕХ УЧЕНИКОВ</option>';
+            students.forEach(student => {
+                options += `<option value="${student.login}">👤 ${student.name}</option>`;
             });
+            studentSelect.innerHTML = options;
+            
+            let filterOptions = '<option value="">Все ученики</option>';
+            filterOptions += '<option value="ALL">🌟 Для всех учеников</option>';
+            students.forEach(student => {
+                filterOptions += `<option value="${student.login}">👤 ${student.name}</option>`;
+            });
+            filterSelect.innerHTML = filterOptions;
         }
 
         // Загрузка материала
@@ -399,41 +518,80 @@
             const file = document.getElementById('materialFile').files[0];
             const title = document.getElementById('materialTitle').value.trim();
             const description = document.getElementById('materialDescription').value.trim();
-            const studentLogin = document.getElementById('materialStudent').value;
+            const targetStudent = document.getElementById('materialStudent').value;
 
-            if (!file || !title || !description || !studentLogin) {
+            if (!file || !title || !description) {
                 alert('❌ Заполните все поля и выберите файл!');
                 return;
             }
+            
+            if (!targetStudent) {
+                alert('❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!');
+                return;
+            }
 
-            // Создаём объект материала
-            const material = {
-                id: Date.now(),
-                type: type,
-                title: title,
-                description: description,
-                studentLogin: studentLogin,
-                date: new Date().toLocaleString(),
-                fileName: file.name,
-                fileType: file.type,
-                fileSize: file.size
-            };
-
-            // Сохраняем файл в localStorage
             const reader = new FileReader();
             reader.onload = function(e) {
-                material.fileData = e.target.result; // base64 данные файла
+                const material = {
+                    id: Date.now(),
+                    type: type,
+                    title: title,
+                    description: description,
+                    studentLogin: targetStudent, // "ALL" означает для всех
+                    studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
+                    date: new Date().toLocaleString(),
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileSize: file.size,
+                    fileData: e.target.result
+                };
+                
                 materials.push(material);
                 localStorage.setItem('libraryMaterials', JSON.stringify(materials));
+                
+                // Если материал для всех, создаём уведомления для каждого ученика
+                if (targetStudent === "ALL") {
+                    students.forEach(student => {
+                        const notification = {
+                            id: Date.now() + Math.random(),
+                            type: 'new_material',
+                            studentLogin: student.login,
+                            title: '📹 Новый материал в библиотеке',
+                            text: `Учитель добавил новый материал: "${title}"`,
+                            date: new Date().toLocaleString(),
+                            read: false
+                        };
+                        let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+                        allNotes.push(notification);
+                        localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+                    });
+                    alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
+                } else {
+                    const student = students.find(s => s.login === targetStudent);
+                    // Создаём уведомление для конкретного ученика
+                    const notification = {
+                        id: Date.now() + Math.random(),
+                        type: 'new_material',
+                        studentLogin: targetStudent,
+                        title: '📹 Новый материал в библиотеке',
+                        text: `Учитель добавил новый материал специально для вас: "${title}"`,
+                        date: new Date().toLocaleString(),
+                        read: false
+                    };
+                    let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+                    allNotes.push(notification);
+                    localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
+                    alert(`✅ Материал загружен для ученика ${student?.name}`);
+                }
                 
                 // Очищаем форму
                 document.getElementById('materialFile').value = '';
                 document.getElementById('materialTitle').value = '';
                 document.getElementById('materialDescription').value = '';
+                document.getElementById('materialStudent').value = '';
                 
-                // Обновляем отображение
                 renderMaterials();
-                alert('✅ Материал успешно загружен!');
+                updateNotificationBadge();
             };
             reader.readAsDataURL(file);
         }
@@ -449,7 +607,6 @@
             const filterStudent = document.getElementById('filterStudent').value;
             const filterType = document.getElementById('filterType').value;
 
-            // Фильтруем материалы
             let filteredMaterials = [...materials];
             
             if (filterStudent) {
@@ -460,7 +617,6 @@
                 filteredMaterials = filteredMaterials.filter(m => m.type === filterType);
             }
 
-            // Сортируем по дате (сначала новые)
             filteredMaterials.sort((a, b) => b.id - a.id);
 
             if (filteredMaterials.length === 0) {
@@ -470,11 +626,6 @@
 
             let html = '';
             filteredMaterials.forEach(material => {
-                // Находим имя ученика
-                const student = students.find(s => s.login === material.studentLogin);
-                const studentName = student ? student.name : material.studentLogin;
-
-                // Превью
                 let previewHtml = '';
                 if (material.type === 'video') {
                     previewHtml = `<div class="material-preview video">🎥</div>`;
@@ -496,8 +647,10 @@
                             <div class="material-title">${material.title}</div>
                             <div class="material-description">${material.description}</div>
                             <div class="material-meta">
-                                <span class="material-student">👤 ${studentName}</span>
-                                <span class="material-date">${material.date}</span>
+                                <span class="material-student ${material.studentLogin === 'ALL' ? 'all' : ''}">
+                                    ${material.studentLogin === 'ALL' ? '🌟 Для всех учеников' : `👤 ${material.studentDisplay}`}
+                                </span>
+                                <span class="material-date">📅 ${material.date}</span>
                             </div>
                             <div class="material-actions">
                                 <a href="view-material.html?id=${material.id}&role=teacher" class="btn-view" target="_blank">👁️ Просмотр</a>
@@ -518,10 +671,71 @@
                 renderMaterials();
             }
         }
+        
+        // Обновление бейджа уведомлений для учителя
+        function updateNotificationBadge() {
+            // Уведомления для учителя — это сообщения из групп + заметки от учеников? 
+            // Для простоты показываем количество непрочитанных сообщений из групп
+            const unreadCount = groupMessages.filter(m => !m.read).length;
+            const badge = document.getElementById('notificationBadge');
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        // Открыть модальное окно уведомлений
+        function openNotificationsModal() {
+            renderNotifications();
+            document.getElementById('notificationsModal').classList.add('active');
+            
+            // Помечаем все как прочитанные
+            groupMessages.forEach(m => m.read = true);
+            localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
+            updateNotificationBadge();
+        }
+        
+        function closeNotificationsModal() {
+            document.getElementById('notificationsModal').classList.remove('active');
+        }
+        
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            
+            // Собираем все уведомления для учителя (сообщения из групп)
+            const allNotifications = [...groupMessages];
+            allNotifications.sort((a, b) => b.id - a.id);
+            
+            if (allNotifications.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
+                return;
+            }
+            
+            let html = '';
+            allNotifications.forEach(n => {
+                html += `
+                    <div class="note-item">
+                        <div class="note-title">${n.groupName || 'Сообщение'}</div>
+                        <div class="note-date">${n.date}</div>
+                        <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
 
         // Инициализация
         updateStudentSelects();
         renderMaterials();
+        updateNotificationBadge();
+        
+        // Проверяем новые уведомления каждые 3 секунды
+        setInterval(() => {
+            groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+            updateNotificationBadge();
+        }, 3000);
     </script>
 </body>
 </html>
