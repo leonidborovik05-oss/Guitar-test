@@ -28,7 +28,6 @@
         .logo {
             font-size: 1.8em;
             font-weight: bold;
-            letter-spacing: 1px;
         }
         .logo span {
             color: #f0b90b;
@@ -93,6 +92,7 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 10px;
         }
         .material-description {
             font-size: 1.1em;
@@ -123,6 +123,7 @@
             display: flex;
             gap: 15px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         .nav-link {
             padding: 12px 25px;
@@ -146,12 +147,18 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .student-badge {
-            background: #17a2b8;
+        .all-badge {
+            background: #28a745;
             color: white;
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.9em;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+            font-size: 1.2em;
         }
     </style>
 </head>
@@ -166,7 +173,7 @@
 
     <div class="main-container">
         <div id="materialContainer" class="material-viewer">
-            <!-- Сюда загрузится материал -->
+            <div class="loading">⏳ Загрузка материала...</div>
         </div>
     </div>
 
@@ -176,41 +183,115 @@
         const materialId = urlParams.get('id');
         const role = urlParams.get('role'); // 'teacher' или 'student'
         
-        // Загружаем материалы
-        const materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
-        const material = materials.find(m => m.id == materialId);
-
+        // Данные пользователя
+        const userRole = localStorage.getItem('currentUserRole') || (role === 'teacher' ? 'teacher' : 'student');
+        const userName = localStorage.getItem('currentUserName') || (role === 'teacher' ? 'Евгения' : 'Ученик');
+        const userDisplay = localStorage.getItem('currentUserDisplay') || (role === 'teacher' ? '👩‍🏫 Евгения (Учитель)' : '👨‍🎓 Ученик');
+        
+        document.getElementById('userNameDisplay').textContent = userDisplay;
+        
+        // ========== INDEXEDDB ДЛЯ ПОЛУЧЕНИЯ МАТЕРИАЛА ==========
+        const DB_NAME = 'GuitarStudioDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'materials';
+        
+        let db = null;
+        
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (db) {
+                    resolve(db);
+                    return;
+                }
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject('Ошибка открытия базы данных');
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+        
+        async function getMaterialById(id) {
+            try {
+                const database = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get(parseInt(id));
+                    
+                    request.onsuccess = () => {
+                        resolve(request.result);
+                    };
+                    request.onerror = () => {
+                        reject('Ошибка получения материала');
+                    };
+                });
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return null;
+            }
+        }
+        
         // Загружаем учеников для отображения имени
-        const students = JSON.parse(localStorage.getItem('students')) || [];
+        let students = JSON.parse(localStorage.getItem('students')) || [];
         
-        // Определяем, что показывать
-        let userName = '';
+        // Определяем, куда возвращаться
         let backUrl = '';
-        
         if (role === 'teacher') {
-            userName = 'EvgenyaGuitara01543 (Учитель)';
             backUrl = 'library-teacher.html';
         } else {
-            userName = 'Леонид Зас (Ученик)';
             backUrl = 'library-student.html';
         }
         
-        // Обновляем отображение имени
-        document.getElementById('userNameDisplay').textContent = userName;
-
-        const container = document.getElementById('materialContainer');
-
-        if (!material) {
-            container.innerHTML = '<div class="error-message">❌ Материал не найден</div>';
-        } else {
+        // Загрузка и отображение материала
+        async function loadMaterial() {
+            const container = document.getElementById('materialContainer');
+            
+            if (!materialId) {
+                container.innerHTML = '<div class="error-message">❌ ID материала не указан</div>';
+                return;
+            }
+            
+            const material = await getMaterialById(materialId);
+            
+            if (!material) {
+                container.innerHTML = `
+                    <div class="error-message">
+                        ❌ Материал не найден<br>
+                        <small>ID: ${materialId}</small><br><br>
+                        <a href="${backUrl}" class="nav-link primary" style="display: inline-block;">← Вернуться в библиотеку</a>
+                    </div>
+                `;
+                return;
+            }
+            
             // Находим имя ученика, для которого загружен материал
-            const targetStudent = students.find(s => s.login === material.studentLogin);
-            const targetStudentName = targetStudent ? targetStudent.name : material.studentLogin;
+            let targetStudentName = '';
+            if (material.studentLogin === 'ALL') {
+                targetStudentName = '🌟 Для всех учеников';
+            } else {
+                const targetStudent = students.find(s => s.login === material.studentLogin);
+                targetStudentName = targetStudent ? targetStudent.name : material.studentLogin;
+            }
             
             let mediaHtml = '';
+            let fileSizeText = '';
+            if (material.fileSize) {
+                if (material.fileSize < 1024 * 1024) {
+                    fileSizeText = `${(material.fileSize / 1024).toFixed(1)} КБ`;
+                } else {
+                    fileSizeText = `${(material.fileSize / 1024 / 1024).toFixed(1)} МБ`;
+                }
+            }
             
             if (material.type === 'video') {
-                // Для видео
                 mediaHtml = `
                     <video controls>
                         <source src="${material.fileData}" type="${material.fileType}">
@@ -218,15 +299,20 @@
                     </video>
                 `;
             } else {
-                // Для фото
                 mediaHtml = `<img src="${material.fileData}" alt="${material.title}">`;
             }
-
+            
             container.innerHTML = `
                 <h1 class="material-title">${material.title}</h1>
                 <div class="material-meta">
-                    <span>Загружено: ${material.date} • Тип: ${material.type === 'video' ? 'Видео' : 'Фото'}</span>
-                    <span class="student-badge">👤 Для: ${targetStudentName}</span>
+                    <span>
+                        📅 ${material.date} • 
+                        ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'} 
+                        (${fileSizeText})
+                    </span>
+                    <span class="all-badge" style="${material.studentLogin === 'ALL' ? 'background: #28a745;' : 'background: #1976d2;'}">
+                        ${material.studentLogin === 'ALL' ? '🌟 Для всех учеников' : `👤 Для: ${targetStudentName}`}
+                    </span>
                 </div>
                 <div class="material-description">${material.description}</div>
                 <div class="media-container">
@@ -238,6 +324,8 @@
                 </div>
             `;
         }
+        
+        loadMaterial();
     </script>
 </body>
 </html>
