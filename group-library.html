@@ -103,10 +103,39 @@
             font-weight: 600;
             cursor: pointer;
         }
+        .btn-upload:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-select {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 40px;
+            font-size: 1em;
+            background: white;
+            min-width: 150px;
+        }
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 1em;
+            cursor: pointer;
+        }
         
         .materials-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
         }
         .material-card {
@@ -193,6 +222,32 @@
             background: #fff9e6;
             border-left: 3px solid #ffc107;
         }
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .size-hint {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .student-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -207,12 +262,15 @@
     </div>
 
     <div class="main-container">
+        <div id="uploadError" class="error-message"></div>
+        
         <div class="upload-section" id="uploadSection" style="display: none;">
             <h3 style="margin-bottom: 20px;">📤 Поделиться успехами</h3>
             <div class="upload-form">
                 <div class="form-group">
                     <label>Файл (фото или видео)</label>
                     <input type="file" id="fileInput" accept="image/*,video/*">
+                    <div id="sizeHint" class="size-hint">📦 IndexedDB позволяет хранить большие файлы</div>
                 </div>
                 <div class="form-group">
                     <label>Название</label>
@@ -226,30 +284,43 @@
             </div>
         </div>
 
-        <div id="materialsGrid" class="materials-grid"></div>
+        <div class="filters">
+            <select class="filter-select" id="filterType" onchange="applyFilters()">
+                <option value="">Все типы</option>
+                <option value="photo">📸 Фото</option>
+                <option value="video">🎥 Видео</option>
+            </select>
+            <button class="clear-btn" id="clearBtn" onclick="clearAllMaterials()" style="display: none;">🗑️ Очистить все</button>
+        </div>
+
+        <div id="materialsGrid" class="materials-grid">
+            <div class="loading">⏳ Загрузка материалов...</div>
+        </div>
     </div>
 
     <script>
+        // Получаем ID группы из URL
         const urlParams = new URLSearchParams(window.location.search);
         const groupId = urlParams.get('groupId');
         
+        // Константы
         const TEACHER_LOGIN = "EvgenyaGuitara01543";
         
-        // Единые ключи из localStorage
+        // Получаем информацию о текущем пользователе из localStorage
         const userRole = localStorage.getItem('currentUserRole') || 'student';
-        const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
-        const userName = localStorage.getItem('currentUserName') || 'Леонид Зас';
-        const userDisplay = localStorage.getItem('currentUserDisplay') || (userRole === 'teacher' ? '👩‍🏫 Евгения (Учитель)' : '👨‍🎓 Леонид Зас (Ученик)');
+        const userLogin = localStorage.getItem('currentUserLogin') || (userRole === 'teacher' ? TEACHER_LOGIN : 'LeonidzasFire23457');
+        const userName = localStorage.getItem('currentUserName') || (userRole === 'teacher' ? 'Евгения' : 'Ученик');
+        const userDisplay = localStorage.getItem('currentUserDisplay') || (userRole === 'teacher' ? '👩‍🏫 Евгения (Учитель)' : '👨‍🎓 Ученик');
         
         console.log('========== БИБЛИОТЕКА ГРУППЫ ==========');
         console.log('Роль:', userRole);
         console.log('Логин:', userLogin);
         console.log('Имя:', userName);
-        console.log('Отображение:', userDisplay);
-        console.log('======================================');
+        console.log('ID группы:', groupId);
         
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         
+        // Загружаем группы
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
         const currentGroup = groups.find(g => g.id == groupId);
         
@@ -261,26 +332,170 @@
         document.getElementById('groupName').textContent = currentGroup.name;
         document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`;
         
-        // Форма загрузки ТОЛЬКО для учеников
+        // Показываем форму загрузки ТОЛЬКО ученикам
         if (userRole === 'student') {
             document.getElementById('uploadSection').style.display = 'block';
             console.log('✅ Ученик - форма загрузки ПОКАЗАНА');
         } else {
             console.log('❌ Учитель - форма загрузки СКРЫТА');
+            // Учителю показываем кнопку очистки
+            document.getElementById('clearBtn').style.display = 'inline-block';
         }
         
-        let materials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
+        // ========== INDEXEDDB ДЛЯ ХРАНЕНИЯ МАТЕРИАЛОВ ГРУППЫ ==========
+        const DB_NAME = 'GuitarStudioDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = `group_library_${groupId}`;
         
-        function renderMaterials() {
+        let db = null;
+        let allMaterials = [];
+        
+        // Открытие базы данных
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (db) {
+                    resolve(db);
+                    return;
+                }
+                
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = function(event) {
+                    console.error('Ошибка открытия БД:', event);
+                    reject('Ошибка открытия базы данных');
+                };
+                
+                request.onsuccess = function(event) {
+                    db = event.target.result;
+                    console.log('База данных открыта');
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('type', 'type', { unique: false });
+                        store.createIndex('uploadedBy', 'uploadedBy', { unique: false });
+                        console.log(`Хранилище ${STORE_NAME} создано`);
+                    }
+                };
+            });
+        }
+        
+        // Получение всех материалов
+        async function getAllMaterials() {
+            try {
+                const database = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = database.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = function() {
+                        allMaterials = request.result || [];
+                        console.log(`Загружено материалов: ${allMaterials.length}`);
+                        resolve(allMaterials);
+                    };
+                    
+                    request.onerror = function() {
+                        reject('Ошибка получения материалов');
+                    };
+                });
+            } catch (error) {
+                console.error('Ошибка:', error);
+                return [];
+            }
+        }
+        
+        // Добавление материала
+        async function addMaterial(material) {
+            const database = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(material);
+                
+                request.onsuccess = function() {
+                    allMaterials.push(material);
+                    console.log('Материал добавлен');
+                    resolve();
+                };
+                
+                request.onerror = function(event) {
+                    console.error('Ошибка добавления:', event);
+                    reject('Ошибка сохранения материала');
+                };
+            });
+        }
+        
+        // Удаление материала
+        async function deleteMaterialFromDB(id) {
+            const database = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                
+                request.onsuccess = function() {
+                    allMaterials = allMaterials.filter(m => m.id !== id);
+                    resolve();
+                };
+                
+                request.onerror = function() {
+                    reject('Ошибка удаления');
+                };
+            });
+        }
+        
+        // Очистка всех материалов
+        async function clearAllMaterialsFromDB() {
+            const database = await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.clear();
+                
+                request.onsuccess = function() {
+                    allMaterials = [];
+                    resolve();
+                };
+                
+                request.onerror = function() {
+                    reject('Ошибка очистки');
+                };
+            });
+        }
+        
+        // Применение фильтров
+        function applyFilters() {
+            renderMaterials();
+        }
+        
+        // Отображение материалов
+        async function renderMaterials() {
             const grid = document.getElementById('materialsGrid');
+            const filterType = document.getElementById('filterType').value;
             
-            if (materials.length === 0) {
+            grid.innerHTML = '<div class="loading">⏳ Загрузка материалов...</div>';
+            
+            const materials = await getAllMaterials();
+            
+            let filteredMaterials = [...materials];
+            
+            if (filterType) {
+                filteredMaterials = filteredMaterials.filter(m => m.type === filterType);
+            }
+            
+            filteredMaterials.sort((a, b) => b.id - a.id);
+            
+            if (filteredMaterials.length === 0) {
                 grid.innerHTML = '<div class="empty-state">📭 В библиотеке группы пока нет материалов</div>';
                 return;
             }
             
             let html = '';
-            materials.sort((a, b) => b.id - a.id).forEach(m => {
+            filteredMaterials.forEach(m => {
                 let previewHtml = '';
                 if (m.type === 'video') {
                     previewHtml = '<div class="material-preview">🎥</div>';
@@ -290,7 +505,18 @@
                     previewHtml = '<div class="material-preview">📸</div>';
                 }
                 
+                let fileSizeText = '';
+                if (m.fileSize) {
+                    if (m.fileSize < 1024 * 1024) {
+                        fileSizeText = `${(m.fileSize / 1024).toFixed(1)} КБ`;
+                    } else {
+                        fileSizeText = `${(m.fileSize / 1024 / 1024).toFixed(1)} МБ`;
+                    }
+                }
+                
+                // Загружаем комментарии к материалу
                 const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${m.id}`)) || [];
+                
                 let commentsHtml = '';
                 comments.forEach(c => {
                     const isTeacherComment = c.sender === TEACHER_LOGIN;
@@ -309,8 +535,8 @@
                             <div class="material-title">${m.title}</div>
                             <div>${m.description || ''}</div>
                             <div class="material-meta">
-                                <span>👤 ${m.uploadedBy} ${userRole === 'student' && m.uploadedByLogin === userLogin ? ' (Вы)' : ''}</span>
-                                <span>📅 ${m.date}</span>
+                                <span>👤 ${m.uploadedBy} <span class="student-badge">${m.uploadedBy === 'Ученик' ? 'ученик' : 'учитель'}</span></span>
+                                <span>📅 ${m.date} (${fileSizeText})</span>
                             </div>
                             
                             <div class="comment-section">
@@ -323,6 +549,10 @@
                                         <button class="comment-btn" onclick="addComment('${groupId}', ${m.id})">➤</button>
                                     </div>
                                 ` : ''}
+                                
+                                ${userRole === 'student' && m.uploadedByLogin === userLogin ? `
+                                    <button class="comment-btn" style="margin-top: 10px; background: #dc3545;" onclick="deleteMyMaterial(${m.id})">🗑️ Удалить</button>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -331,42 +561,105 @@
             grid.innerHTML = html;
         }
         
-        function uploadFile() {
+        // Загрузка файла
+        async function uploadFile() {
+            const errorDiv = document.getElementById('uploadError');
+            errorDiv.style.display = 'none';
+            errorDiv.innerHTML = '';
+            
             const file = document.getElementById('fileInput').files[0];
             const title = document.getElementById('fileTitle').value.trim();
             const description = document.getElementById('fileDescription').value.trim();
             
-            if (!file || !title) {
-                alert('Заполните название и выберите файл');
+            if (!file) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
                 return;
             }
             
+            if (!title) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Введите название материала!';
+                return;
+            }
+            
+            if (!description) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Введите описание материала!';
+                return;
+            }
+            
+            const uploadBtn = document.querySelector('.btn-upload');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '⏳ Загрузка...';
+            uploadBtn.disabled = true;
+            
             const reader = new FileReader();
-            reader.onload = function(e) {
+            
+            reader.onload = async function(e) {
                 const material = {
                     id: Date.now(),
-                    type: file.type.startsWith('video') ? 'video' : 'image',
+                    type: file.type.startsWith('video') ? 'video' : 'photo',
                     title: title,
                     description: description,
                     fileData: e.target.result,
-                    uploadedBy: userName,
+                    fileSize: file.size,
+                    uploadedBy: userRole === 'teacher' ? 'Учитель' : 'Ученик',
                     uploadedByLogin: userLogin,
                     date: new Date().toLocaleString()
                 };
                 
-                materials.push(material);
-                localStorage.setItem(`group_library_${groupId}`, JSON.stringify(materials));
-                
-                document.getElementById('fileInput').value = '';
-                document.getElementById('fileTitle').value = '';
-                document.getElementById('fileDescription').value = '';
-                
-                renderMaterials();
-                alert('✅ Материал загружен!');
+                try {
+                    await addMaterial(material);
+                    console.log('Материал сохранён в IndexedDB');
+                    
+                    // Создаём уведомление для учителя (если загрузил ученик)
+                    if (userRole === 'student') {
+                        const notification = {
+                            id: Date.now() + Math.random(),
+                            type: 'group_material',
+                            groupId: groupId,
+                            groupName: currentGroup.name,
+                            title: '📹 Новый материал в группе',
+                            text: `Ученик ${userName} добавил новый материал: "${title}"`,
+                            date: new Date().toLocaleString(),
+                            read: false
+                        };
+                        let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+                        groupMessages.push(notification);
+                        localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
+                    }
+                    
+                    document.getElementById('fileInput').value = '';
+                    document.getElementById('fileTitle').value = '';
+                    document.getElementById('fileDescription').value = '';
+                    
+                    await renderMaterials();
+                    alert('✅ Материал загружен!');
+                    
+                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.disabled = false;
+                    
+                } catch (saveError) {
+                    console.error('Ошибка сохранения:', saveError);
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerHTML = '❌ Ошибка сохранения материала!';
+                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.disabled = false;
+                }
             };
+            
+            reader.onerror = function() {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Ошибка при чтении файла!';
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+            };
+            
             reader.readAsDataURL(file);
         }
         
+        // Добавление комментария
         function addComment(groupId, materialId) {
             const input = document.getElementById(`comment_${materialId}`);
             const text = input.value.trim();
@@ -395,12 +688,35 @@
             }
         }
         
-        renderMaterials();
+        // Удаление своего материала (только для ученика)
+        async function deleteMyMaterial(id) {
+            if (confirm('Удалить этот материал?')) {
+                await deleteMaterialFromDB(id);
+                await renderMaterials();
+                alert('✅ Материал удалён');
+            }
+        }
         
-        setInterval(() => {
-            const newMaterials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
-            if (JSON.stringify(newMaterials) !== JSON.stringify(materials)) {
-                materials = newMaterials;
+        // Очистка всех материалов (только для учителя)
+        async function clearAllMaterials() {
+            if (confirm('ВНИМАНИЕ! Это удалит ВСЕ материалы из библиотеки группы. Продолжить?')) {
+                await clearAllMaterialsFromDB();
+                await renderMaterials();
+                alert('✅ Все материалы удалены');
+            }
+        }
+        
+        // Инициализация
+        async function init() {
+            await renderMaterials();
+        }
+        
+        init();
+        
+        // Обновление каждые 3 секунды
+        setInterval(async () => {
+            const newMaterials = await getAllMaterials();
+            if (JSON.stringify(newMaterials) !== JSON.stringify(allMaterials)) {
                 renderMaterials();
             }
         }, 3000);
