@@ -97,7 +97,6 @@
             padding: 0 20px;
         }
         
-        /* Форма загрузки */
         .upload-section {
             background: white;
             border-radius: 20px;
@@ -164,7 +163,6 @@
             box-shadow: 0 8px 20px rgba(40,167,69,0.3);
         }
         
-        /* Фильтры */
         .filters {
             display: flex;
             gap: 15px;
@@ -180,7 +178,6 @@
             min-width: 200px;
         }
         
-        /* Сетка материалов */
         .materials-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -318,7 +315,6 @@
             border-bottom: 1px dashed #aaa;
         }
         
-        /* Модальное окно уведомлений */
         .modal {
             display: none;
             position: fixed;
@@ -386,6 +382,14 @@
             color: #555;
             line-height: 1.5;
         }
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -405,7 +409,8 @@
     <div class="main-container">
         <h1 style="margin-bottom: 20px; color: #1e1e2f;">📹 Библиотека материалов</h1>
         
-        <!-- Форма загрузки -->
+        <div id="uploadError" class="error-message"></div>
+        
         <div class="upload-section">
             <div class="section-title">📤 Загрузить новый материал</div>
             <div class="upload-form">
@@ -441,11 +446,10 @@
             </div>
         </div>
 
-        <!-- Фильтры -->
         <div class="filters">
             <select class="filter-select" id="filterStudent" onchange="applyFilters()">
                 <option value="">Все ученики</option>
-                <option value="ALL">🌟 Все ученики</option>
+                <option value="ALL">🌟 Для всех учеников</option>
             </select>
             <select class="filter-select" id="filterType" onchange="applyFilters()">
                 <option value="">Все типы</option>
@@ -454,7 +458,6 @@
             </select>
         </div>
 
-        <!-- Сетка материалов -->
         <div id="materialsGrid" class="materials-grid"></div>
 
         <div class="footer-links">
@@ -462,35 +465,24 @@
         </div>
     </div>
 
-    <!-- Модальное окно уведомлений -->
     <div id="notificationsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🔔 Уведомления</h3>
                 <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
             </div>
-            <div id="notificationsContainer" class="notes-list">
-                <!-- Уведомления будут загружаться сюда -->
-            </div>
+            <div id="notificationsContainer" class="notes-list"></div>
         </div>
     </div>
 
     <script>
-        // Данные пользователя
         const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         
-        // Загружаем учеников
         let students = JSON.parse(localStorage.getItem('students')) || [];
-        
-        // Загружаем материалы
         let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
-        
-        // Загружаем уведомления для учителя (из групп и заметок)
         let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-        let teacherNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
 
-        // Обновляем выпадающие списки учеников
         function updateStudentSelects() {
             const studentSelect = document.getElementById('materialStudent');
             const filterSelect = document.getElementById('filterStudent');
@@ -512,23 +504,49 @@
             filterSelect.innerHTML = filterOptions;
         }
 
-        // Загрузка материала
         function uploadMaterial() {
+            // Очищаем предыдущие ошибки
+            const errorDiv = document.getElementById('uploadError');
+            errorDiv.style.display = 'none';
+            errorDiv.innerHTML = '';
+            
             const type = document.getElementById('materialType').value;
-            const file = document.getElementById('materialFile').files[0];
+            const fileInput = document.getElementById('materialFile');
+            const file = fileInput.files[0];
             const title = document.getElementById('materialTitle').value.trim();
             const description = document.getElementById('materialDescription').value.trim();
             const targetStudent = document.getElementById('materialStudent').value;
 
-            if (!file || !title || !description) {
-                alert('❌ Заполните все поля и выберите файл!');
+            // Проверка на заполнение полей
+            if (!file) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
+                return;
+            }
+            
+            if (!title) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Введите название материала!';
+                return;
+            }
+            
+            if (!description) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Введите описание материала!';
                 return;
             }
             
             if (!targetStudent) {
-                alert('❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!');
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!';
                 return;
             }
+
+            // Показываем индикатор загрузки
+            const uploadBtn = document.querySelector('.btn-upload');
+            const originalText = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '⏳ Загрузка...';
+            uploadBtn.disabled = true;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -537,7 +555,7 @@
                     type: type,
                     title: title,
                     description: description,
-                    studentLogin: targetStudent, // "ALL" означает для всех
+                    studentLogin: targetStudent,
                     studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
                     date: new Date().toLocaleString(),
                     fileName: file.name,
@@ -549,7 +567,6 @@
                 materials.push(material);
                 localStorage.setItem('libraryMaterials', JSON.stringify(materials));
                 
-                // Если материал для всех, создаём уведомления для каждого ученика
                 if (targetStudent === "ALL") {
                     students.forEach(student => {
                         const notification = {
@@ -568,7 +585,6 @@
                     alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
                 } else {
                     const student = students.find(s => s.login === targetStudent);
-                    // Создаём уведомление для конкретного ученика
                     const notification = {
                         id: Date.now() + Math.random(),
                         type: 'new_material',
@@ -584,24 +600,32 @@
                     alert(`✅ Материал загружен для ученика ${student?.name}`);
                 }
                 
-                // Очищаем форму
-                document.getElementById('materialFile').value = '';
+                fileInput.value = '';
                 document.getElementById('materialTitle').value = '';
                 document.getElementById('materialDescription').value = '';
                 document.getElementById('materialStudent').value = '';
                 
                 renderMaterials();
                 updateNotificationBadge();
+                
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
             };
+            
+            reader.onerror = function() {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '❌ Ошибка при чтении файла!';
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+            };
+            
             reader.readAsDataURL(file);
         }
 
-        // Применение фильтров
         function applyFilters() {
             renderMaterials();
         }
 
-        // Отображение материалов
         function renderMaterials() {
             const grid = document.getElementById('materialsGrid');
             const filterStudent = document.getElementById('filterStudent').value;
@@ -663,7 +687,6 @@
             grid.innerHTML = html;
         }
 
-        // Удаление материала
         function deleteMaterial(id) {
             if (confirm('Удалить этот материал?')) {
                 materials = materials.filter(m => m.id !== id);
@@ -672,10 +695,7 @@
             }
         }
         
-        // Обновление бейджа уведомлений для учителя
         function updateNotificationBadge() {
-            // Уведомления для учителя — это сообщения из групп + заметки от учеников? 
-            // Для простоты показываем количество непрочитанных сообщений из групп
             const unreadCount = groupMessages.filter(m => !m.read).length;
             const badge = document.getElementById('notificationBadge');
             if (unreadCount > 0) {
@@ -686,12 +706,9 @@
             }
         }
         
-        // Открыть модальное окно уведомлений
         function openNotificationsModal() {
             renderNotifications();
             document.getElementById('notificationsModal').classList.add('active');
-            
-            // Помечаем все как прочитанные
             groupMessages.forEach(m => m.read = true);
             localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
             updateNotificationBadge();
@@ -703,8 +720,6 @@
         
         function renderNotifications() {
             const container = document.getElementById('notificationsContainer');
-            
-            // Собираем все уведомления для учителя (сообщения из групп)
             const allNotifications = [...groupMessages];
             allNotifications.sort((a, b) => b.id - a.id);
             
@@ -726,12 +741,10 @@
             container.innerHTML = html;
         }
 
-        // Инициализация
         updateStudentSelects();
         renderMaterials();
         updateNotificationBadge();
         
-        // Проверяем новые уведомления каждые 3 секунды
         setInterval(() => {
             groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
             updateNotificationBadge();
