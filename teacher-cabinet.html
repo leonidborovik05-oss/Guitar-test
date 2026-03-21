@@ -886,6 +886,41 @@
             groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
             updateNotificationBadge();
         }, 3000);
+        // Функции для уведомлений
+function openNotificationsModal() {
+    renderNotifications();
+    document.getElementById('notificationsModal').classList.add('active');
+    groupMessages.forEach(m => m.read = true);
+    localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
+    updateNotificationBadge();
+}
+
+function closeNotificationsModal() {
+    document.getElementById('notificationsModal').classList.remove('active');
+}
+
+function renderNotifications() {
+    const container = document.getElementById('notificationsContainer');
+    const allNotifications = [...groupMessages];
+    allNotifications.sort((a, b) => b.id - a.id);
+    
+    if (allNotifications.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
+        return;
+    }
+    
+    let html = '';
+    allNotifications.forEach(n => {
+        html += `
+            <div class="note-item">
+                <div class="note-title">${n.groupName || 'Сообщение'}</div>
+                <div class="note-date">${n.date}</div>
+                <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
     </script>
     <!-- Модальное окно уведомлений -->
 <div id="notificationsModal" class="modal">
