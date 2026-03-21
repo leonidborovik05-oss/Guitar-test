@@ -401,22 +401,50 @@
             text-decoration: none;
             border-bottom: 1px dashed #aaa;
         }
+        
+        /* Стили для модального окна уведомлений */
+        .notes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .note-item {
+            background: #f8f9fc;
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 5px solid #ffc107;
+        }
+        .note-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #1e1e2f;
+            margin-bottom: 10px;
+        }
+        .note-date {
+            color: #999;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+        .note-text {
+            color: #555;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
-<header class="header">
-    <div class="logo">
-        🎸 Guitar<span>Studio</span>
-    </div>
-    <div class="user-info">
-        <div class="notification-bell" onclick="openNotificationsModal()">
-            🔔
-            <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+    <header class="header">
+        <div class="logo">
+            🎸 Guitar<span>Studio</span>
         </div>
-        <div class="user-name" id="currentUserDisplay">Загрузка...</div>
-        <a href="login.html" class="logout-btn">Выйти</a>
-    </div>
-</header>
+        <div class="user-info">
+            <div class="notification-bell" onclick="openNotificationsModal()">
+                🔔
+                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+            </div>
+            <div class="user-name" id="currentUserDisplay">Загрузка...</div>
+            <a href="login.html" class="logout-btn">Выйти</a>
+        </div>
+    </header>
 
     <div class="main-container">
         <div class="greeting-card">
@@ -440,23 +468,17 @@
             </div>
         </div>
 
-        <!-- Секция групп -->
         <div class="students-section">
             <div class="section-title">
                 👥 Мои группы
                 <button class="action-btn groups" style="padding: 8px 15px;" onclick="openCreateGroupModal()">+ Создать</button>
             </div>
-            <div id="groupsContainer" class="groups-grid">
-                <!-- Группы будут загружаться сюда -->
-            </div>
+            <div id="groupsContainer" class="groups-grid"></div>
         </div>
 
-        <!-- Секция учеников -->
         <div class="students-section">
             <div class="section-title">👥 Все ученики</div>
-            <div id="studentsContainer" class="students-grid">
-                <!-- Ученики будут загружаться сюда -->
-            </div>
+            <div id="studentsContainer" class="students-grid"></div>
         </div>
 
         <!-- Модальные окна -->
@@ -522,11 +544,20 @@
                 </div>
                 <div class="form-group">
                     <label>👥 Выберите учеников</label>
-                    <div id="studentCheckboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px;">
-                        <!-- Чекбоксы учеников будут загружаться сюда -->
-                    </div>
+                    <div id="studentCheckboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 10px;"></div>
                 </div>
                 <button class="btn-save" onclick="createGroup()">Создать группу</button>
+            </div>
+        </div>
+
+        <!-- Модальное окно уведомлений -->
+        <div id="notificationsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔔 Уведомления</h3>
+                    <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
+                </div>
+                <div id="notificationsContainer" class="notes-list"></div>
             </div>
         </div>
 
@@ -542,7 +573,7 @@
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         document.getElementById('greetingTitle').textContent = `Здравствуйте, ${userName}!`;
 
-        // Автоматическое добавление всех учеников при первом запуске
+        // Автоматическое добавление всех учеников
         function initializeStudents() {
             const defaultStudents = [
                 { login: "NikitaWind456732", password: "0011020571", name: "Никита" },
@@ -586,7 +617,6 @@
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
         let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
 
-        // Функция обновления бейджа уведомлений
         function updateNotificationBadge() {
             const unreadCount = groupMessages.filter(m => !m.read).length;
             const badge = document.getElementById('notificationBadge');
@@ -596,6 +626,41 @@
             } else {
                 badge.style.display = 'none';
             }
+        }
+
+        function openNotificationsModal() {
+            renderNotifications();
+            document.getElementById('notificationsModal').classList.add('active');
+            groupMessages.forEach(m => m.read = true);
+            localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
+            updateNotificationBadge();
+        }
+
+        function closeNotificationsModal() {
+            document.getElementById('notificationsModal').classList.remove('active');
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            const allNotifications = [...groupMessages];
+            allNotifications.sort((a, b) => b.id - a.id);
+            
+            if (allNotifications.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
+                return;
+            }
+            
+            let html = '';
+            allNotifications.forEach(n => {
+                html += `
+                    <div class="note-item">
+                        <div class="note-title">${n.groupName || 'Сообщение'}</div>
+                        <div class="note-date">${n.date}</div>
+                        <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
         }
 
         function renderStudents() {
@@ -886,51 +951,6 @@
             groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
             updateNotificationBadge();
         }, 3000);
-        // Функции для уведомлений
-function openNotificationsModal() {
-    renderNotifications();
-    document.getElementById('notificationsModal').classList.add('active');
-    groupMessages.forEach(m => m.read = true);
-    localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
-    updateNotificationBadge();
-}
-
-function closeNotificationsModal() {
-    document.getElementById('notificationsModal').classList.remove('active');
-}
-
-function renderNotifications() {
-    const container = document.getElementById('notificationsContainer');
-    const allNotifications = [...groupMessages];
-    allNotifications.sort((a, b) => b.id - a.id);
-    
-    if (allNotifications.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
-        return;
-    }
-    
-    let html = '';
-    allNotifications.forEach(n => {
-        html += `
-            <div class="note-item">
-                <div class="note-title">${n.groupName || 'Сообщение'}</div>
-                <div class="note-date">${n.date}</div>
-                <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
     </script>
-    <!-- Модальное окно уведомлений -->
-<div id="notificationsModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>🔔 Уведомления</h3>
-            <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
-        </div>
-        <div id="notificationsContainer" class="notes-list"></div>
-    </div>
-</div>
 </body>
 </html>
