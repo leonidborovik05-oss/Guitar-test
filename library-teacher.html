@@ -183,6 +183,19 @@
         .clear-btn:hover {
             background: #b02a37;
         }
+        .migrate-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .migrate-btn:hover {
+            background: #138496;
+        }
         
         .materials-grid {
             display: grid;
@@ -440,7 +453,7 @@
                 <div class="form-group">
                     <label>Выберите файл</label>
                     <input type="file" id="materialFile" accept="image/*,video/*">
-                    <div id="sizeHint" class="size-hint">Максимальный размер: 50 МБ (IndexedDB позволяет хранить большие файлы)</div>
+                    <div id="sizeHint" class="size-hint">📦 IndexedDB позволяет хранить большие файлы</div>
                 </div>
                 <div class="form-group">
                     <label>Название</label>
@@ -474,7 +487,7 @@
                 <option value="video">🎥 Видео</option>
             </select>
             <button class="clear-btn" onclick="clearAllMaterials()">🗑️ Очистить все</button>
-            <button class="clear-btn" onclick="migrateFromLocalStorage()" style="background: #17a2b8;">📦 Перенести старые материалы</button>
+            <button class="migrate-btn" onclick="migrateFromLocalStorage()">📦 Перенести старые материалы</button>
         </div>
 
         <div id="materialsGrid" class="materials-grid">
@@ -540,7 +553,6 @@
                         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
                         store.createIndex('studentLogin', 'studentLogin', { unique: false });
                         store.createIndex('type', 'type', { unique: false });
-                        store.createIndex('date', 'date', { unique: false });
                         console.log('Хранилище создано');
                     }
                 };
@@ -628,41 +640,36 @@
                 };
             });
         }
+        
         // Перенос материалов из localStorage в IndexedDB
-async function migrateFromLocalStorage() {
-    const oldMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
-    
-    if (oldMaterials.length === 0) {
-        alert('📭 Нет материалов для переноса');
-        return;
-    }
-    
-    if (confirm(`Найдено ${oldMaterials.length} материалов в старом хранилище. Перенести их в новую базу данных?`)) {
-        const database = await openDB();
-        const transaction = database.transaction([STORE_NAME], 'readwrite');
-        const store = transaction.objectStore(STORE_NAME);
-        
-        let count = 0;
-        oldMaterials.forEach(material => {
-            store.put(material);
-            count++;
-        });
-        
-        transaction.oncomplete = () => {
-            alert(`✅ Перенесено ${count} материалов!`);
-            renderMaterials();
-        };
-        
-        transaction.onerror = () => {
-            alert('❌ Ошибка при переносе');
-        };
-    }
-}
-        
-        // Обновление подсказки о размере
-        function updateSizeHint() {
-            const hint = document.getElementById('sizeHint');
-            hint.innerHTML = '📦 IndexedDB позволяет хранить файлы до 50-100 МБ (практически без ограничений)';
+        async function migrateFromLocalStorage() {
+            const oldMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+            
+            if (oldMaterials.length === 0) {
+                alert('📭 Нет материалов для переноса в старом хранилище (localStorage)');
+                return;
+            }
+            
+            if (confirm(`Найдено ${oldMaterials.length} материалов в старом хранилище. Перенести их в новую базу данных?`)) {
+                const database = await openDB();
+                const transaction = database.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                
+                let count = 0;
+                oldMaterials.forEach(material => {
+                    store.put(material);
+                    count++;
+                });
+                
+                transaction.oncomplete = () => {
+                    alert(`✅ Перенесено ${count} материалов! Обновите страницу.`);
+                    renderMaterials();
+                };
+                
+                transaction.onerror = () => {
+                    alert('❌ Ошибка при переносе');
+                };
+            }
         }
         
         // Уведомления
@@ -872,6 +879,11 @@ async function migrateFromLocalStorage() {
             }
         }
         
+        function updateSizeHint() {
+            const hint = document.getElementById('sizeHint');
+            hint.innerHTML = '📦 IndexedDB позволяет хранить большие файлы (до сотен МБ)';
+        }
+        
         // Применение фильтров
         function applyFilters() {
             renderMaterials();
@@ -883,10 +895,8 @@ async function migrateFromLocalStorage() {
             const filterStudent = document.getElementById('filterStudent').value;
             const filterType = document.getElementById('filterType').value;
             
-            // Показываем загрузку
             grid.innerHTML = '<div class="loading">⏳ Загрузка материалов...</div>';
             
-            // Получаем материалы из БД
             const materials = await getAllMaterials();
             
             let filteredMaterials = [...materials];
@@ -902,7 +912,7 @@ async function migrateFromLocalStorage() {
             filteredMaterials.sort((a, b) => b.id - a.id);
             
             if (filteredMaterials.length === 0) {
-                grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет. Загрузите первый!</div>';
+                grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет. Загрузите первый или нажмите "Перенести старые материалы"!</div>';
                 return;
             }
             
@@ -919,7 +929,6 @@ async function migrateFromLocalStorage() {
                     }
                 }
                 
-                // Форматируем размер файла
                 let fileSizeText = '';
                 if (material.fileSize) {
                     if (material.fileSize < 1024 * 1024) {
