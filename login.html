@@ -159,15 +159,19 @@
             }
 
             if (username === teacherUsername && password === teacherPassword) {
-                localStorage.setItem('teacherLoggedIn', 'true');
+                // Единые ключи для всех страниц
+                localStorage.setItem('currentUserRole', 'teacher');
                 localStorage.setItem('currentUserLogin', teacherUsername);
                 localStorage.setItem('currentUserName', 'Евгения (Учитель)');
+                localStorage.setItem('currentUserDisplay', '👩‍🏫 Евгения (Учитель)');
                 window.location.href = "teacher-cabinet.html"; 
             }
             else if (username === studentUsername && password === studentPassword) {
-                localStorage.removeItem('teacherLoggedIn');
+                // Единые ключи для всех страниц
+                localStorage.setItem('currentUserRole', 'student');
                 localStorage.setItem('currentUserLogin', studentUsername);
                 localStorage.setItem('currentUserName', 'Леонид Зас');
+                localStorage.setItem('currentUserDisplay', '👨‍🎓 Леонид Зас (Ученик)');
                 window.location.href = "student-cabinet.html";
             }
             else {
