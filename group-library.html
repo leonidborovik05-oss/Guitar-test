@@ -135,7 +135,7 @@
         
         .materials-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
         }
         .material-card {
@@ -178,6 +178,8 @@
             color: #999;
             font-size: 0.85em;
             margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 5px;
         }
         .empty-state {
             text-align: center;
@@ -245,8 +247,33 @@
             color: white;
             padding: 2px 8px;
             border-radius: 12px;
-            font-size: 0.75em;
+            font-size: 0.7em;
             margin-left: 5px;
+        }
+        .teacher-badge {
+            background: #ffc107;
+            color: #1e1e2f;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            margin-left: 5px;
+        }
+        .delete-my-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-top: 8px;
+            width: 100%;
+        }
+        .delete-my-btn:hover {
+            background: #b02a37;
+        }
+        .material-actions {
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -269,8 +296,8 @@
             <div class="upload-form">
                 <div class="form-group">
                     <label>Файл (фото или видео)</label>
-                    <input type="file" id="fileInput" accept="image/*,video/*">
-                    <div id="sizeHint" class="size-hint">📦 IndexedDB позволяет хранить большие файлы</div>
+                    <input type="file" id="fileInput" accept="image/*,video/*" onchange="checkFileSize()">
+                    <div id="sizeHint" class="size-hint">📦 IndexedDB позволяет хранить большие файлы (до 100 МБ)</div>
                 </div>
                 <div class="form-group">
                     <label>Название</label>
@@ -338,13 +365,12 @@
             console.log('✅ Ученик - форма загрузки ПОКАЗАНА');
         } else {
             console.log('❌ Учитель - форма загрузки СКРЫТА');
-            // Учителю показываем кнопку очистки
             document.getElementById('clearBtn').style.display = 'inline-block';
         }
         
         // ========== INDEXEDDB ДЛЯ ХРАНЕНИЯ МАТЕРИАЛОВ ГРУППЫ ==========
         const DB_NAME = 'GuitarStudioDB';
-        const DB_VERSION = 1;
+        const DB_VERSION = 2; // Увеличиваем версию, чтобы обновить структуру
         const STORE_NAME = `group_library_${groupId}`;
         
         let db = null;
@@ -353,9 +379,12 @@
         // Открытие базы данных
         function openDB() {
             return new Promise((resolve, reject) => {
-                if (db) {
-                    resolve(db);
-                    return;
+                if (db && db.name === DB_NAME && db.version === DB_VERSION) {
+                    // Проверяем, существует ли хранилище
+                    if (db.objectStoreNames.contains(STORE_NAME)) {
+                        resolve(db);
+                        return;
+                    }
                 }
                 
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -367,18 +396,46 @@
                 
                 request.onsuccess = function(event) {
                     db = event.target.result;
-                    console.log('База данных открыта');
+                    console.log('База данных открыта, версия:', db.version);
+                    
+                    // Проверяем, существует ли хранилище
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        console.log(`Хранилище ${STORE_NAME} не найдено, нужно обновить`);
+                        db.close();
+                        // Увеличиваем версию и создаём хранилище
+                        const newVersion = db.version + 1;
+                        const upgradeRequest = indexedDB.open(DB_NAME, newVersion);
+                        upgradeRequest.onupgradeneeded = function(e) {
+                            const newDb = e.target.result;
+                            if (!newDb.objectStoreNames.contains(STORE_NAME)) {
+                                const store = newDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                                store.createIndex('type', 'type', { unique: false });
+                                store.createIndex('uploadedByLogin', 'uploadedByLogin', { unique: false });
+                                console.log(`Хранилище ${STORE_NAME} создано`);
+                            }
+                            db = newDb;
+                            resolve(db);
+                        };
+                        upgradeRequest.onsuccess = function() {
+                            resolve(db);
+                        };
+                        upgradeRequest.onerror = function() {
+                            reject('Ошибка обновления базы данных');
+                        };
+                        return;
+                    }
                     resolve(db);
                 };
                 
                 request.onupgradeneeded = function(event) {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    const newDb = event.target.result;
+                    if (!newDb.objectStoreNames.contains(STORE_NAME)) {
+                        const store = newDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
                         store.createIndex('type', 'type', { unique: false });
-                        store.createIndex('uploadedBy', 'uploadedBy', { unique: false });
-                        console.log(`Хранилище ${STORE_NAME} создано`);
+                        store.createIndex('uploadedByLogin', 'uploadedByLogin', { unique: false });
+                        console.log(`Хранилище ${STORE_NAME} создано при upgrade`);
                     }
+                    db = newDb;
                 };
             });
         }
@@ -399,6 +456,7 @@
                     };
                     
                     request.onerror = function() {
+                        console.error('Ошибка получения материалов');
                         reject('Ошибка получения материалов');
                     };
                 });
@@ -439,6 +497,7 @@
                 
                 request.onsuccess = function() {
                     allMaterials = allMaterials.filter(m => m.id !== id);
+                    console.log('Материал удалён');
                     resolve();
                 };
                 
@@ -465,6 +524,22 @@
                     reject('Ошибка очистки');
                 };
             });
+        }
+        
+        // Проверка размера файла
+        function checkFileSize() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const errorDiv = document.getElementById('uploadError');
+            const maxSize = 100 * 1024 * 1024; // 100 МБ
+            
+            if (file && file.size > maxSize) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `⚠️ Файл слишком большой! Максимум: 100 МБ. Ваш файл: ${(file.size / 1024 / 1024).toFixed(2)} МБ`;
+                fileInput.value = '';
+            } else {
+                errorDiv.style.display = 'none';
+            }
         }
         
         // Применение фильтров
@@ -528,6 +603,8 @@
                     `;
                 });
                 
+                const isOwn = m.uploadedByLogin === userLogin;
+                
                 html += `
                     <div class="material-card">
                         ${previewHtml}
@@ -535,8 +612,9 @@
                             <div class="material-title">${m.title}</div>
                             <div>${m.description || ''}</div>
                             <div class="material-meta">
-                                <span>👤 ${m.uploadedBy} <span class="student-badge">${m.uploadedBy === 'Ученик' ? 'ученик' : 'учитель'}</span></span>
-                                <span>📅 ${m.date} (${fileSizeText})</span>
+                                <span>👤 ${m.uploadedBy} <span class="${m.uploadedBy === 'Ученик' ? 'student-badge' : 'teacher-badge'}">${m.uploadedBy === 'Ученик' ? 'ученик' : 'учитель'}</span></span>
+                                <span>📅 ${m.date}</span>
+                                <span>📦 ${fileSizeText}</span>
                             </div>
                             
                             <div class="comment-section">
@@ -550,8 +628,10 @@
                                     </div>
                                 ` : ''}
                                 
-                                ${userRole === 'student' && m.uploadedByLogin === userLogin ? `
-                                    <button class="comment-btn" style="margin-top: 10px; background: #dc3545;" onclick="deleteMyMaterial(${m.id})">🗑️ Удалить</button>
+                                ${isOwn ? `
+                                    <div class="material-actions">
+                                        <button class="delete-my-btn" onclick="deleteMyMaterial(${m.id})">🗑️ Удалить мой материал</button>
+                                    </div>
                                 ` : ''}
                             </div>
                         </div>
@@ -574,6 +654,14 @@
             if (!file) {
                 errorDiv.style.display = 'block';
                 errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
+                return;
+            }
+            
+            // Проверка размера
+            const maxSize = 100 * 1024 * 1024; // 100 МБ
+            if (file.size > maxSize) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `❌ Файл слишком большой! Максимум: 100 МБ. Ваш файл: ${(file.size / 1024 / 1024).toFixed(2)} МБ`;
                 return;
             }
             
@@ -606,6 +694,7 @@
                     fileSize: file.size,
                     uploadedBy: userRole === 'teacher' ? 'Учитель' : 'Ученик',
                     uploadedByLogin: userLogin,
+                    uploadedByName: userName,
                     date: new Date().toLocaleString()
                 };
                 
@@ -643,7 +732,7 @@
                 } catch (saveError) {
                     console.error('Ошибка сохранения:', saveError);
                     errorDiv.style.display = 'block';
-                    errorDiv.innerHTML = '❌ Ошибка сохранения материала!';
+                    errorDiv.innerHTML = '❌ Ошибка сохранения материала! Попробуйте файл поменьше.';
                     uploadBtn.innerHTML = originalText;
                     uploadBtn.disabled = false;
                 }
@@ -688,7 +777,7 @@
             }
         }
         
-        // Удаление своего материала (только для ученика)
+        // Удаление своего материала (для ученика)
         async function deleteMyMaterial(id) {
             if (confirm('Удалить этот материал?')) {
                 await deleteMaterialFromDB(id);
