@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Задания | Студия гитары</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .logo span {
+            color: #f0b90b;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .user-name {
+            background: #3a3a55;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+        }
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            gap: 20px;
+            min-height: calc(100vh - 100px);
+        }
+        
+        /* Левая панель с темами */
+        .topics-panel {
+            width: 280px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .topics-panel h3 {
+            color: #1e1e2f;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0b90b;
+        }
+        .topic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .topic-btn {
+            background: #f8f9fc;
+            border: none;
+            padding: 12px 15px;
+            text-align: left;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #555;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topic-btn:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        .topic-btn.active {
+            background: #1e1e2f;
+            color: white;
+        }
+        .topic-progress {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75em;
+        }
+        .topic-btn.active .topic-progress {
+            background: white;
+            color: #1e1e2f;
+        }
+        
+        /* Правая панель с вопросами */
+        .questions-panel {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .topic-header {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0b90b;
+        }
+        .topic-header h2 {
+            color: #1e1e2f;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        .topic-header p {
+            color: #666;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .question-counter {
+            font-size: 1.1em;
+            color: #666;
+        }
+        .progress-badge {
+            background: #e9ecef;
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #1e1e2f;
+        }
+        .question-text {
+            font-size: 1.3em;
+            color: #1e1e2f;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .answers-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        .answer-item {
+            background: #f8f9fc;
+            border: 2px solid #eaeef2;
+            border-radius: 12px;
+            padding: 12px 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .answer-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .answer-item.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            box-shadow: 0 2px 8px rgba(33,150,243,0.2);
+        }
+        .answer-marker {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #2196f3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #2196f3;
+        }
+        .answer-item.selected .answer-marker {
+            background: #2196f3;
+            color: white;
+        }
+        .answer-text {
+            font-size: 1em;
+            color: #333;
+            flex: 1;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .nav-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 40px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+        .nav-btn.prev {
+            background: #6c757d;
+            color: white;
+        }
+        .nav-btn.next {
+            background: #1e1e2f;
+            color: white;
+        }
+        .nav-btn.submit {
+            background: #28a745;
+            color: white;
+        }
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .nav-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .result-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .result-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .result-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .footer-links {
+            margin-top: 30px;
+            text-align: right;
+            border-top: 1px solid #eaeef2;
+            padding-top: 20px;
+        }
+        .footer-links a {
+            color: #1e1e2f;
+            text-decoration: none;
+            border-bottom: 1px dashed #aaa;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .topics-panel {
+                width: 100%;
+                position: static;
+            }
+            .topic-list {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            .topic-btn {
+                flex: 1;
+                min-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="user-info">
+            <div class="user-name" id="currentUserDisplay">Загрузка...</div>
+            <a href="student-cabinet.html" class="back-btn">← В кабинет</a>
+            <a href="login.html" class="back-btn">Выйти</a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Левая панель с темами -->
+        <div class="topics-panel">
+            <h3>📚 Темы заданий</h3>
+            <div id="topicList" class="topic-list">
+                <!-- Темы будут загружены динамически -->
+            </div>
+        </div>
+
+        <!-- Правая панель с вопросами -->
+        <div class="questions-panel">
+            <div class="topic-header">
+                <h2 id="topicTitle">Загрузка...</h2>
+                <p id="topicDescription"></p>
+            </div>
+            
+            <div class="question-header">
+                <span class="question-counter" id="questionCounter">Вопрос 1 из 10</span>
+                <span class="progress-badge" id="progressBadge">0/10</span>
+            </div>
+            
+            <div class="question-text" id="questionText">Загрузка вопроса...</div>
+            
+            <div class="answers-list" id="answersList"></div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn prev" onclick="prevQuestion()" id="prevBtn" disabled>← Назад</button>
+                <button class="nav-btn next" onclick="nextQuestion()" id="nextBtn">Далее →</button>
+                <button class="nav-btn submit" onclick="submitTest()" id="submitBtn" style="display: none;">✅ Завершить тему</button>
+            </div>
+
+            <div id="resultMessage" class="result-message" style="display: none;"></div>
+            
+            <div class="footer-links">
+                <a href="student-cabinet.html">← Назад в кабинет</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Данные ученика
+        const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
+        const userName = localStorage.getItem('currentUserName') || 'Ученик';
+        const userDisplay = localStorage.getItem('currentUserDisplay') || '👨‍🎓 Ученик';
+        
+        document.getElementById('currentUserDisplay').textContent = userDisplay;
+        
+        // ========== ВСЕ ВОПРОСЫ ПО ТЕМАМ ==========
+        const topics = [
+            {
+                id: 0,
+                name: "🎸 Всё о гитаре",
+                description: "Строение гитары, история, основные понятия",
+                questions: [
+                    { text: "Сколько струн у классической гитары?", options: ["4", "5", "6", "7"], correct: 2 },
+                    { text: "Как называется приспособление для изменения тональности?", options: ["Медиатор", "Каподастр", "Подставка", "Сурдина"], correct: 1 },
+                    { text: "Какой строй у классической гитары?", options: ["EADGBe", "EADGCF", "DGCFAD", "EBGDAE"], correct: 0 },
+                    { text: "Что обозначает буква 'C' в аккордах?", options: ["До", "Ре", "Ми", "Соль"], correct: 0 },
+                    { text: "Как называется техника игры пальцами?", options: ["Бой", "Перебор", "Свип", "Тэппинг"], correct: 1 },
+                    { text: "Какая струна самая тонкая?", options: ["Первая", "Третья", "Шестая", "Все одинаковые"], correct: 0 },
+                    { text: "Что такое лад на гитаре?", options: ["Струна", "Промежуток между порожками", "Колок", "Дека"], correct: 1 },
+                    { text: "Какой аккорд обозначается 'Am'?", options: ["Ля мажор", "Ля минор", "До мажор", "Ми минор"], correct: 1 },
+                    { text: "Для чего нужен медиатор?", options: ["Зажимать струны", "Настраивать гитару", "Защипывать струны", "Держать ноты"], correct: 2 },
+                    { text: "Сколько ладов обычно у классической гитары?", options: ["12", "19", "22", "24"], correct: 1 }
+                ]
+            },
+            {
+                id: 1,
+                name: "🎵 Аккорды и тональности",
+                description: "Построение аккордов, тональности, гармония",
+                questions: [
+                    { text: "Какой аккорд является доминантсептаккордом в тональности C-dur?", options: ["C7", "D7", "G7", "F7"], correct: 2 },
+                    { text: "Какой аккорд состоит из нот: до, ми, соль?", options: ["C", "Cm", "C7", "Cmaj7"], correct: 0 },
+                    { text: "Какой аккорд обозначается 'Dm'?", options: ["Ре мажор", "Ре минор", "Соль минор", "Ля минор"], correct: 1 },
+                    { text: "Какой аккорд обозначается 'F#m'?", options: ["Фа-диез мажор", "Фа-диез минор", "Фа мажор", "Фа минор"], correct: 1 },
+                    { text: "Какой аккорд является тоникой в тональности G-dur?", options: ["G", "C", "D", "Em"], correct: 0 },
+                    { text: "Что означает цифра '7' в аккорде C7?", options: ["Септима", "Седьмой лад", "Семь струн", "Седьмая ступень"], correct: 0 },
+                    { text: "Какой лад является параллельным минором для C-dur?", options: ["Am", "Em", "Dm", "Gm"], correct: 0 },
+                    { text: "Что означает обозначение 'sus4' в аккорде?", options: ["Задержанный аккорд", "Уменьшённый аккорд", "Увеличенный аккорд", "Септаккорд"], correct: 0 },
+                    { text: "Что означает цифра 'maj7' в аккорде?", options: ["Малая септима", "Большая септима", "Септима", "Уменьшённая септима"], correct: 1 },
+                    { text: "Что такое квинтовый круг?", options: ["Расположение ладов", "Система тональностей", "Тип гитары", "Приём игры"], correct: 1 }
+                ]
+            },
+            {
+                id: 2,
+                name: "✋ Техники и приёмы",
+                description: "Различные техники игры на гитаре",
+                questions: [
+                    { text: "Как называется приём, когда палец скользит по струне?", options: ["Легато", "Глиссандо", "Вибрато", "Стаккато"], correct: 1 },
+                    { text: "Что такое баррэ?", options: ["Удар по струнам", "Зажимание нескольких струн одним пальцем", "Игра медиатором", "Настройка гитары"], correct: 1 },
+                    { text: "Что такое флажолет?", options: ["Приём игры", "Тип гитары", "Название аккорда", "Струна"], correct: 0 },
+                    { text: "Какой лад используется в блюзовой гамме?", options: ["Ионийский", "Дорийский", "Миксолидийский", "Эолийский"], correct: 2 },
+                    { text: "Что такое тритон?", options: ["Три ноты", "Увеличенная кварта", "Малая терция", "Большая секста"], correct: 1 },
+                    { text: "Как называется техника игры медиатором вверх-вниз?", options: ["Альтернативный штрих", "Свип", "Тэппинг", "Легато"], correct: 0 },
+                    { text: "Что такое вибрато на гитаре?", options: ["Покачивание пальца на струне", "Скольжение по струне", "Удар по струне", "Затухание звука"], correct: 0 },
+                    { text: "Что такое тэппинг?", options: ["Игра пальцами", "Игра медиатором", "Постукивание по струнам", "Использование каподастра"], correct: 2 },
+                    { text: "Как называется приём, когда звук извлекается большим пальцем?", options: ["Апояндо", "Тирадо", "Пиццикато", "Расгеадо"], correct: 0 },
+                    { text: "Что такое легато?", options: ["Плавный переход между нотами", "Отрывистое звучание", "Громкое звучание", "Тихое звучание"], correct: 0 }
+                ]
+            },
+            {
+                id: 3,
+                name: "🔊 Струны и интервалы",
+                description: "Строи струн, интервалы, настройка",
+                questions: [
+                    { text: "Какие струны обычно делают из нейлона?", options: ["Первые три", "Все шесть", "Басовые", "Первые и шестую"], correct: 0 },
+                    { text: "Какой интервал между первой и второй струной в стандартном строе?", options: ["Кварта", "Квинта", "Терция", "Октава"], correct: 0 },
+                    { text: "Что такое октава?", options: ["Восемь нот", "Шесть нот", "Двенадцать нот", "Пять нот"], correct: 0 },
+                    { text: "Какой строй у семиструнной гитары?", options: ["EBGDAE", "DGBDGBD", "EADGBE", "EADGBE с дополнительной струной"], correct: 1 },
+                    { text: "Сколько полутонов в кварте?", options: ["5", "4", "6", "3"], correct: 0 },
+                    { text: "Сколько полутонов в квинте?", options: ["5", "7", "6", "8"], correct: 1 },
+                    { text: "Какая струна самая толстая?", options: ["Шестая", "Первая", "Третья", "Четвёртая"], correct: 0 },
+                    { text: "Какой интервал между открытыми струнами E и A?", options: ["Кварта", "Квинта", "Терция", "Секста"], correct: 0 },
+                    { text: "Что означает обозначение '1/2 step down'?", options: ["Опустить строй на полтона", "Поднять строй на тон", "Опустить строй на тон", "Стандартный строй"], correct: 0 },
+                    { text: "Какие струны обычно делают из металла?", options: ["Басовые", "Все шесть", "Первые три", "Никакие"], correct: 0 }
+                ]
+            },
+            {
+                id: 4,
+                name: "📖 История и теория",
+                description: "История гитары, музыкальная теория",
+                questions: [
+                    { text: "В каком веке появилась классическая гитара?", options: ["16 век", "18 век", "19 век", "20 век"], correct: 1 },
+                    { text: "Кто считается отцом современной классической гитары?", options: ["Антонио Торрес", "Андрес Сеговия", "Франсиско Таррега", "Никколо Паганини"], correct: 0 },
+                    { text: "Сколько нот в мажорной гамме?", options: ["7", "8", "5", "12"], correct: 0 },
+                    { text: "Что такое доминанта?", options: ["Пятая ступень", "Первая ступень", "Четвёртая ступень", "Шестая ступень"], correct: 0 },
+                    { text: "Что такое субдоминанта?", options: ["Четвёртая ступень", "Пятая ступень", "Первая ступень", "Шестая ступень"], correct: 0 },
+                    { text: "Что такое тоника?", options: ["Первая ступень", "Пятая ступень", "Четвёртая ступень", "Шестая ступень"], correct: 0 },
+                    { text: "Как называется инструмент предшественник гитары?", options: ["Лютня", "Мандолина", "Балалайка", "Арфа"], correct: 0 },
+                    { text: "В какой стране появилась фламенко-гитара?", options: ["Испания", "Италия", "Франция", "Португалия"], correct: 0 },
+                    { text: "Кто из композиторов писал для гитары?", options: ["Франсиско Таррега", "Людвиг ван Бетховен", "Вольфганг Моцарт", "Иоганн Бах"], correct: 0 },
+                    { text: "Что означает слово 'гитара' в переводе?", options: ["Струнный инструмент", "Четырёхструнная", "Деревянный инструмент", "Певучий инструмент"], correct: 1 }
+                ]
+            },
+            {
+                id: 5,
+                name: "🎼 Чтение нот и табулатур",
+                description: "Как читать ноты и табы",
+                questions: [
+                    { text: "Что такое табулатура?", options: ["Запись нот на грифе", "Обычные ноты", "Аккорды", "Текст песни"], correct: 0 },
+                    { text: "Какая нота на 5-м ладу первой струны?", options: ["Ля", "Соль", "Ми", "До"], correct: 0 },
+                    { text: "Какая нота на 3-м ладу второй струны?", options: ["Ре", "До", "Ми", "Фа"], correct: 0 },
+                    { text: "Что означает цифра на линии табулатуры?", options: ["Номер лада", "Номер струны", "Длительность", "Силу удара"], correct: 0 },
+                    { text: "Сколько линий в стандартной табулатуре?", options: ["6", "5", "4", "7"], correct: 0 },
+                    { text: "Какая струна в табулатуре обозначается верхней линией?", options: ["Первая", "Шестая", "Третья", "Вторая"], correct: 0 },
+                    { text: "Что означает '0' в табулатуре?", options: ["Открытая струна", "Нет звука", "Пауза", "Акцент"], correct: 0 },
+                    { text: "Какая нота на 5-м ладу шестой струны?", options: ["Ля", "Ми", "Соль", "Ре"], correct: 0 },
+                    { text: "Какая нота на 7-м ладу третьей струны?", options: ["Си", "Ля", "Соль", "До"], correct: 0 },
+                    { text: "Что означает 'h' в табулатуре?", options: ["Хаммер-он", "Пулов-офф", "Слайд", "Вибрато"], correct: 0 }
+                ]
+            },
+            {
+                id: 6,
+                name: "🎤 Песни и репертуар",
+                description: "Разбор популярных песен, структура",
+                questions: [
+                    { text: "Из каких частей обычно состоит песня?", options: ["Куплет, припев, бридж", "Вступление, соло, финал", "Только куплет", "Только припев"], correct: 0 },
+                    { text: "Что такое бридж в песне?", options: ["Связующая часть", "Начало песни", "Конец песни", "Соло"], correct: 0 },
+                    { text: "Какой аккорд чаще всего используют в рок-музыке?", options: ["Мощностной аккорд (пауэр-аккорд)", "Мажорный септаккорд", "Минорный септаккорд", "Уменьшённый аккорд"], correct: 0 },
+                    { text: "Что такое рифф?", options: ["Повторяющаяся мелодическая фраза", "Текст песни", "Припев", "Вступление"], correct: 0 },
+                    { text: "Сколько тактов обычно в куплете?", options: ["8-16", "4", "32", "2"], correct: 0 },
+                    { text: "Что такое аутро?", options: ["Завершение песни", "Начало песни", "Середина песни", "Припев"], correct: 0 },
+                    { text: "Какой аккорд часто используют в блюзе?", options: ["Септаккорд", "Мажор", "Минор", "Уменьшённый"], correct: 0 },
+                    { text: "Что такое кода?", options: ["Завершающая часть", "Вступительная часть", "Связующая часть", "Соло"], correct: 0 },
+                    { text: "Какая структура у 12-тактового блюза?", options: ["I-I-I-I-IV-IV-I-I-V-IV-I-I", "I-IV-V-I", "I-VI-IV-V", "I-II-III-IV"], correct: 0 },
+                    { text: "Что означает 'кавер-версия'?", options: ["Исполнение чужой песни", "Своя песня", "Инструментальная версия", "Живое исполнение"], correct: 0 }
+                ]
+            },
+            {
+                id: 7,
+                name: "🎧 Звук и оборудование",
+                description: "Усилители, эффекты, запись",
+                questions: [
+                    { text: "Что такое комбоусилитель?", options: ["Усилитель с колонкой", "Только усилитель", "Только колонка", "Микшер"], correct: 0 },
+                    { text: "Что делает дисторшн?", options: ["Искажает звук", "Усиливает басы", "Добавляет реверберацию", "Отключает звук"], correct: 0 },
+                    { text: "Что такое реверберация?", options: ["Эффект эха", "Искажение звука", "Усиление звука", "Задержка"], correct: 0 },
+                    { text: "Что такое звукосниматель?", options: ["Преобразует колебания струн в сигнал", "Усиливает звук", "Настраивает гитару", "Глушит струны"], correct: 0 },
+                    { text: "Какие бывают звукосниматели?", options: ["Синглы и хамбакеры", "Динамические и конденсаторные", "Активные и пассивные", "Все варианты"], correct: 3 },
+                    { text: "Что такое DI-бокс?", options: ["Подключение к микшеру", "Усилитель", "Процессор эффектов", "Кабель"], correct: 0 },
+                    { text: "Что делает компрессор?", options: ["Выравнивает громкость", "Увеличивает громкость", "Добавляет искажения", "Добавляет эхо"], correct: 0 },
+                    { text: "Что такое хорус?", options: ["Эффект хора", "Искажение", "Задержка", "Эхо"], correct: 0 },
+                    { text: "Что такое фленджер?", options: ["Эффект вращения", "Искажение", "Задержка", "Усиление"], correct: 0 },
+                    { text: "Как правильно настроить гитару?", options: ["С помощью тюнера", "На слух", "По камертону", "Всеми способами"], correct: 3 }
+                ]
+            },
+            {
+                id: 8,
+                name: "🖐️ Упражнения и развитие",
+                description: "Упражнения для развития техники",
+                questions: [
+                    { text: "Как часто нужно заниматься для прогресса?", options: ["Ежедневно", "Раз в неделю", "Раз в месяц", "Когда есть настроение"], correct: 0 },
+                    { text: "Что такое хроматическое упражнение?", options: ["Игра по всем ладам подряд", "Игра аккордов", "Игра гамм", "Игра арпеджио"], correct: 0 },
+                    { text: "Зачем нужны гаммы?", options: ["Развитие техники", "Только для разминки", "Не нужны", "Для концертов"], correct: 0 },
+                    { text: "Что такое метроном?", options: ["Прибор для отсчёта ритма", "Тюнер", "Усилитель", "Процессор эффектов"], correct: 0 },
+                    { text: "С какой скорости начинать играть новое упражнение?", options: ["Медленно", "Быстро", "Средне", "Как получится"], correct: 0 },
+                    { text: "Что такое арпеджио?", options: ["Последовательное извлечение нот аккорда", "Бой", "Перебор", "Гамма"], correct: 0 },
+                    { text: "Какое упражнение развивает независимость пальцев?", options: ["Хроматическое", "Гаммы", "Арпеджио", "Бой"], correct: 0 },
+                    { text: "Что важно для чистого звучания?", options: ["Правильная постановка рук", "Быстрая игра", "Громкая игра", "Слабая игра"], correct: 0 },
+                    { text: "Как избавиться от лишнего шума?", options: ["Глушить неиспользуемые струны", "Играть громче", "Играть тише", "Использовать медиатор"], correct: 0 },
+                    { text: "Что помогает развить чувство ритма?", options: ["Игра под метроном", "Быстрая игра", "Медленная игра", "Игра без метронома"], correct: 0 }
+                ]
+            },
+            {
+                id: 9,
+                name: "🌟 Советы профессионалов",
+                description: "Полезные советы и лайфхаки",
+                questions: [
+                    { text: "Как часто менять струны?", options: ["Раз в 2-3 месяца", "Раз в год", "Никогда", "Каждую неделю"], correct: 0 },
+                    { text: "Как хранить гитару?", options: ["В чехле, в сухом месте", "На солнце", "В сыром месте", "На улице"], correct: 0 },
+                    { text: "Что делать перед игрой?", options: ["Разминать руки", "Сразу играть", "Настраивать после игры", "Пить кофе"], correct: 0 },
+                    { text: "Как выбрать медиатор?", options: ["По толщине и материалу", "По цвету", "По форме", "Любой"], correct: 0 },
+                    { text: "Что важно для сценического выступления?", options: ["Уверенность и подготовка", "Только техника", "Только внешний вид", "Только громкость"], correct: 0 },
+                    { text: "Как преодолеть страх сцены?", options: ["Практика и подготовка", "Алкоголь", "Отказ от выступления", "Играть тише"], correct: 0 },
+                    { text: "Какой совет для начинающих?", options: ["Заниматься регулярно", "Играть сложные песни", "Не заниматься", "Только теория"], correct: 0 },
+                    { text: "Как найти своё звучание?", options: ["Экспериментировать", "Копировать кумиров", "Использовать стандартные настройки", "Не искать"], correct: 0 },
+                    { text: "Что важно для записи?", options: ["Хорошее оборудование и акустика", "Только гитара", "Только микрофон", "Любое помещение"], correct: 0 },
+                    { text: "Главный совет профессионалов?", options: ["Любить музыку и заниматься", "Быстро играть", "Много теории", "Только практика"], correct: 0 }
+                ]
+            }
+        ];
+
+        // Текущее состояние
+        let currentTopicIndex = 0;
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        
+        // Загружаем сохранённые ответы
+        const savedAnswers = JSON.parse(localStorage.getItem(`tasks_answers_${userLogin}`));
+        if (savedAnswers) {
+            userAnswers = savedAnswers;
+        } else {
+            // Инициализируем
+            topics.forEach((topic, i) => {
+                if (!userAnswers[i]) {
+                    userAnswers[i] = Array(10).fill(null);
+                }
+            });
+        }
+        
+        // Функция обновления прогресса на левой панели
+        function updateTopicProgress() {
+            const topicList = document.getElementById('topicList');
+            let html = '';
+            
+            topics.forEach((topic, i) => {
+                const answered = userAnswers[i] ? userAnswers[i].filter(a => a !== null).length : 0;
+                html += `
+                    <button class="topic-btn ${i === currentTopicIndex ? 'active' : ''}" onclick="switchTopic(${i})">
+                        <span>${topic.name}</span>
+                        <span class="topic-progress">${answered}/10</span>
+                    </button>
+                `;
+            });
+            
+            topicList.innerHTML = html;
+            
+            // Обновляем заголовок темы
+            document.getElementById('topicTitle').textContent = topics[currentTopicIndex].name;
+            document.getElementById('topicDescription').textContent = topics[currentTopicIndex].description;
+            
+            // Обновляем общий прогресс
+            const totalAnswered = topics.reduce((sum, topic, i) => {
+                return sum + (userAnswers[i] ? userAnswers[i].filter(a => a !== null).length : 0);
+            }, 0);
+            const totalQuestions = topics.length * 10;
+            document.getElementById('progressBadge').textContent = `${totalAnswered}/${totalQuestions}`;
+        }
+        
+        // Переключение темы
+        function switchTopic(index) {
+            currentTopicIndex = index;
+            currentQuestionIndex = 0;
+            updateTopicProgress();
+            updateQuestionDisplay();
+        }
+        
+        // Обновление отображения вопроса
+        function updateQuestionDisplay() {
+            const topic = topics[currentTopicIndex];
+            const question = topic.questions[currentQuestionIndex];
+            
+            document.getElementById('questionText').textContent = question.text;
+            document.getElementById('questionCounter').textContent = `Вопрос ${currentQuestionIndex + 1} из 10`;
+            
+            // Генерируем ответы
+            const answersHtml = question.options.map((opt, idx) => {
+                const selected = userAnswers[currentTopicIndex] && userAnswers[currentTopicIndex][currentQuestionIndex] === idx ? 'selected' : '';
+                return `
+                    <div class="answer-item ${selected}" onclick="selectAnswer(${idx})">
+                        <div class="answer-marker">${String.fromCharCode(65 + idx)}</div>
+                        <div class="answer-text">${opt}</div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('answersList').innerHTML = answersHtml;
+            
+            // Обновляем кнопки навигации
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').disabled = currentQuestionIndex === 9;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (currentQuestionIndex === 9) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+            }
+            
+            document.getElementById('resultMessage').style.display = 'none';
+        }
+        
+        // Выбор ответа
+        function selectAnswer(answerIndex) {
+            if (!userAnswers[currentTopicIndex]) {
+                userAnswers[currentTopicIndex] = Array(10).fill(null);
+            }
+            userAnswers[currentTopicIndex][currentQuestionIndex] = answerIndex;
+            saveAnswers();
+            updateQuestionDisplay();
+            updateTopicProgress();
+        }
+        
+        // Предыдущий вопрос
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                updateQuestionDisplay();
+            }
+        }
+        
+        // Следующий вопрос
+        function nextQuestion() {
+            if (currentQuestionIndex < 9) {
+                currentQuestionIndex++;
+                updateQuestionDisplay();
+            }
+        }
+        
+        // Завершение теста по теме
+        function submitTest() {
+            const topic = topics[currentTopicIndex];
+            let correctCount = 0;
+            topic.questions.forEach((q, idx) => {
+                if (userAnswers[currentTopicIndex] && userAnswers[currentTopicIndex][idx] === q.correct) {
+                    correctCount++;
+                }
+            });
+            
+            // Сохраняем прогресс
+            const progress = JSON.parse(localStorage.getItem(`progress_${userLogin}`)) || {
+                beginner: 0,
+                intermediate: 0,
+                expert: 0,
+                tasks_completed: {}
+            };
+            progress.tasks_completed = progress.tasks_completed || {};
+            progress.tasks_completed[currentTopicIndex] = correctCount;
+            localStorage.setItem(`progress_${userLogin}`, JSON.stringify(progress));
+            
+            const resultDiv = document.getElementById('resultMessage');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-message ' + (correctCount >= 7 ? 'success' : 'error');
+            resultDiv.innerHTML = `
+                <strong>${correctCount}/10 правильных ответов!</strong><br>
+                ${correctCount >= 7 ? '✅ Тема успешно пройдена! Можете переходить к следующей.' : '❌ Попробуйте ещё раз, чтобы лучше освоить тему.'}
+            `;
+            
+            updateTopicProgress();
+        }
+        
+        // Сохранение ответов
+        function saveAnswers() {
+            localStorage.setItem(`tasks_answers_${userLogin}`, JSON.stringify(userAnswers));
+        }
+        
+        // Инициализация
+        updateTopicProgress();
+        updateQuestionDisplay();
+    </script>
+</body>
+</html>
