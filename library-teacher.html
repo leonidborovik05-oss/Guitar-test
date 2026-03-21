@@ -474,6 +474,7 @@
                 <option value="video">🎥 Видео</option>
             </select>
             <button class="clear-btn" onclick="clearAllMaterials()">🗑️ Очистить все</button>
+            <button class="clear-btn" onclick="migrateFromLocalStorage()" style="background: #17a2b8;">📦 Перенести старые материалы</button>
         </div>
 
         <div id="materialsGrid" class="materials-grid">
@@ -627,6 +628,36 @@
                 };
             });
         }
+        // Перенос материалов из localStorage в IndexedDB
+async function migrateFromLocalStorage() {
+    const oldMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+    
+    if (oldMaterials.length === 0) {
+        alert('📭 Нет материалов для переноса');
+        return;
+    }
+    
+    if (confirm(`Найдено ${oldMaterials.length} материалов в старом хранилище. Перенести их в новую базу данных?`)) {
+        const database = await openDB();
+        const transaction = database.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        
+        let count = 0;
+        oldMaterials.forEach(material => {
+            store.put(material);
+            count++;
+        });
+        
+        transaction.oncomplete = () => {
+            alert(`✅ Перенесено ${count} материалов!`);
+            renderMaterials();
+        };
+        
+        transaction.onerror = () => {
+            alert('❌ Ошибка при переносе');
+        };
+    }
+}
         
         // Обновление подсказки о размере
         function updateSizeHint() {
