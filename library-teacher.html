@@ -74,10 +74,6 @@
             border-radius: 40px;
             text-decoration: none;
             font-weight: 500;
-            transition: background 0.2s;
-        }
-        .back-btn:hover {
-            background: #5a6268;
         }
         .logout-btn {
             background: #dc3545;
@@ -86,10 +82,6 @@
             border-radius: 40px;
             text-decoration: none;
             font-weight: 500;
-            transition: background 0.2s;
-        }
-        .logout-btn:hover {
-            background: #b02a37;
         }
         .main-container {
             max-width: 1300px;
@@ -483,6 +475,52 @@
         let materials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
         let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
 
+        function updateNotificationBadge() {
+            const unreadCount = groupMessages.filter(m => !m.read).length;
+            const badge = document.getElementById('notificationBadge');
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function openNotificationsModal() {
+            renderNotifications();
+            document.getElementById('notificationsModal').classList.add('active');
+            groupMessages.forEach(m => m.read = true);
+            localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
+            updateNotificationBadge();
+        }
+
+        function closeNotificationsModal() {
+            document.getElementById('notificationsModal').classList.remove('active');
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notificationsContainer');
+            const allNotifications = [...groupMessages];
+            allNotifications.sort((a, b) => b.id - a.id);
+            
+            if (allNotifications.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
+                return;
+            }
+            
+            let html = '';
+            allNotifications.forEach(n => {
+                html += `
+                    <div class="note-item">
+                        <div class="note-title">${n.groupName || 'Сообщение'}</div>
+                        <div class="note-date">${n.date}</div>
+                        <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
         function updateStudentSelects() {
             const studentSelect = document.getElementById('materialStudent');
             const filterSelect = document.getElementById('filterStudent');
@@ -505,7 +543,6 @@
         }
 
         function uploadMaterial() {
-            // Очищаем предыдущие ошибки
             const errorDiv = document.getElementById('uploadError');
             errorDiv.style.display = 'none';
             errorDiv.innerHTML = '';
@@ -517,7 +554,6 @@
             const description = document.getElementById('materialDescription').value.trim();
             const targetStudent = document.getElementById('materialStudent').value;
 
-            // Проверка на заполнение полей
             if (!file) {
                 errorDiv.style.display = 'block';
                 errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
@@ -542,7 +578,6 @@
                 return;
             }
 
-            // Показываем индикатор загрузки
             const uploadBtn = document.querySelector('.btn-upload');
             const originalText = uploadBtn.innerHTML;
             uploadBtn.innerHTML = '⏳ Загрузка...';
@@ -693,52 +728,6 @@
                 localStorage.setItem('libraryMaterials', JSON.stringify(materials));
                 renderMaterials();
             }
-        }
-        
-        function updateNotificationBadge() {
-            const unreadCount = groupMessages.filter(m => !m.read).length;
-            const badge = document.getElementById('notificationBadge');
-            if (unreadCount > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = unreadCount;
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-        
-        function openNotificationsModal() {
-            renderNotifications();
-            document.getElementById('notificationsModal').classList.add('active');
-            groupMessages.forEach(m => m.read = true);
-            localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
-            updateNotificationBadge();
-        }
-        
-        function closeNotificationsModal() {
-            document.getElementById('notificationsModal').classList.remove('active');
-        }
-        
-        function renderNotifications() {
-            const container = document.getElementById('notificationsContainer');
-            const allNotifications = [...groupMessages];
-            allNotifications.sort((a, b) => b.id - a.id);
-            
-            if (allNotifications.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
-                return;
-            }
-            
-            let html = '';
-            allNotifications.forEach(n => {
-                html += `
-                    <div class="note-item">
-                        <div class="note-title">${n.groupName || 'Сообщение'}</div>
-                        <div class="note-date">${n.date}</div>
-                        <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
         }
 
         updateStudentSelects();
