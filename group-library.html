@@ -31,6 +31,14 @@
         .logo span {
             color: #f0b90b;
         }
+        .user-badge {
+            background: #ffc107;
+            color: #1e1e2f;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
         .group-info {
             display: flex;
             align-items: center;
@@ -191,6 +199,7 @@
     <div class="header">
         <div class="logo">🎸 Guitar<span>Studio</span></div>
         <div class="group-info">
+            <span class="user-badge" id="currentUserDisplay">Загрузка...</span>
             <span class="group-name" id="groupName">Загрузка...</span>
             <a href="group-chat.html?groupId=" id="chatLink" class="back-btn">← В чат</a>
             <a href="javascript:history.back()" class="back-btn">Назад</a>
@@ -198,7 +207,6 @@
     </div>
 
     <div class="main-container">
-        <!-- Форма загрузки - видна только УЧЕНИКАМ -->
         <div class="upload-section" id="uploadSection" style="display: none;">
             <h3 style="margin-bottom: 20px;">📤 Поделиться успехами</h3>
             <div class="upload-form">
@@ -218,28 +226,30 @@
             </div>
         </div>
 
-        <!-- Сетка материалов -->
-        <div id="materialsGrid" class="materials-grid">
-            <!-- Материалы будут загружаться сюда -->
-        </div>
+        <div id="materialsGrid" class="materials-grid"></div>
     </div>
 
     <script>
-        // Получаем ID группы из URL
         const urlParams = new URLSearchParams(window.location.search);
         const groupId = urlParams.get('groupId');
         
-        // Константы
         const TEACHER_LOGIN = "EvgenyaGuitara01543";
         
-        // Получаем информацию о текущем пользователе из localStorage
-        const userRole = localStorage.getItem('userRole') || 'student';
-        const userLogin = localStorage.getItem('userLogin') || (userRole === 'teacher' ? TEACHER_LOGIN : 'LeonidzasFire23457');
-        const userName = localStorage.getItem('userName') || (userRole === 'teacher' ? 'Евгения (Учитель)' : 'Леонид Зас');
+        // Единые ключи из localStorage
+        const userRole = localStorage.getItem('currentUserRole') || 'student';
+        const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
+        const userName = localStorage.getItem('currentUserName') || 'Леонид Зас';
+        const userDisplay = localStorage.getItem('currentUserDisplay') || (userRole === 'teacher' ? '👩‍🏫 Евгения (Учитель)' : '👨‍🎓 Леонид Зас (Ученик)');
         
-        console.log('Библиотека - текущий пользователь:', { userRole, userLogin, userName });
+        console.log('========== БИБЛИОТЕКА ГРУППЫ ==========');
+        console.log('Роль:', userRole);
+        console.log('Логин:', userLogin);
+        console.log('Имя:', userName);
+        console.log('Отображение:', userDisplay);
+        console.log('======================================');
         
-        // Загружаем группы
+        document.getElementById('currentUserDisplay').textContent = userDisplay;
+        
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
         const currentGroup = groups.find(g => g.id == groupId);
         
@@ -251,15 +261,14 @@
         document.getElementById('groupName').textContent = currentGroup.name;
         document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`;
         
-        // Показываем форму загрузки ТОЛЬКО ученикам
+        // Форма загрузки ТОЛЬКО для учеников
         if (userRole === 'student') {
             document.getElementById('uploadSection').style.display = 'block';
-            console.log('Показываем форму загрузки для ученика');
+            console.log('✅ Ученик - форма загрузки ПОКАЗАНА');
         } else {
-            console.log('Учитель - форма загрузки скрыта');
+            console.log('❌ Учитель - форма загрузки СКРЫТА');
         }
         
-        // Загружаем материалы группы
         let materials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
         
         function renderMaterials() {
@@ -281,9 +290,7 @@
                     previewHtml = '<div class="material-preview">📸</div>';
                 }
                 
-                // Загружаем комментарии к материалу
                 const comments = JSON.parse(localStorage.getItem(`comments_${groupId}_${m.id}`)) || [];
-                
                 let commentsHtml = '';
                 comments.forEach(c => {
                     const isTeacherComment = c.sender === TEACHER_LOGIN;
@@ -302,16 +309,14 @@
                             <div class="material-title">${m.title}</div>
                             <div>${m.description || ''}</div>
                             <div class="material-meta">
-                                <span>👤 ${m.uploadedBy}</span>
+                                <span>👤 ${m.uploadedBy} ${userRole === 'student' && m.uploadedByLogin === userLogin ? ' (Вы)' : ''}</span>
                                 <span>📅 ${m.date}</span>
                             </div>
                             
-                            <!-- Комментарии -->
                             <div class="comment-section">
                                 <div style="font-weight: 600; margin-bottom: 5px;">💬 Комментарии:</div>
                                 ${commentsHtml || '<div style="color: #999;">Пока нет комментариев</div>'}
                                 
-                                <!-- Форма комментария (только для учителя) -->
                                 ${userRole === 'teacher' ? `
                                     <div class="comment-input">
                                         <input type="text" id="comment_${m.id}" placeholder="Напишите комментарий..." onkeypress="checkCommentEnter(event, '${groupId}', ${m.id})">
@@ -392,7 +397,6 @@
         
         renderMaterials();
         
-        // Обновление каждые 3 секунды
         setInterval(() => {
             const newMaterials = JSON.parse(localStorage.getItem(`group_library_${groupId}`)) || [];
             if (JSON.stringify(newMaterials) !== JSON.stringify(materials)) {
