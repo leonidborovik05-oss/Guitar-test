@@ -952,5 +952,282 @@
             updateNotificationBadge();
         }, 3000);
     </script>
+
+    <!-- Кнопки синхронизации с Яндекс.Диском -->
+<div class="sync-section" style="margin-top: 30px; padding: 20px; background: #f8f9fc; border-radius: 20px;">
+    <h3 style="margin-bottom: 15px;">☁️ Синхронизация с Яндекс.Диском</h3>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+        <button id="syncSaveBtn" class="action-btn" style="background: #28a745;">💾 Сохранить на Диск</button>
+        <button id="syncLoadBtn" class="action-btn" style="background: #17a2b8;">📥 Загрузить с Диска</button>
+        <button id="syncCheckBtn" class="action-btn" style="background: #6f42c1;">🔍 Проверить бэкап</button>
+    </div>
+    <div id="syncStatus" style="margin-top: 15px; font-size: 0.9em; color: #666;"></div>
+</div>
+
+<script>
+    // ========== СИНХРОНИЗАЦИЯ С ЯНДЕКС.ДИСКОМ ==========
+    const YANDEX_TOKEN = "y0__xD2tIviCBimxj8g74HW8RYw_rSL4giKccw_Xe4pqffL5xEQQp8Q-W8nQA"; // <--- ВСТАВЬТЕ СВОЙ ТОКЕН СЮДА
+    const BACKUP_FOLDER = "guitar-studio";
+    const BACKUP_FILE = `${BACKUP_FOLDER}/backup.json`;
+    const MATERIALS_FOLDER = `${BACKUP_FOLDER}/materials`;
+
+    // Функция для запросов к API Яндекс.Диска
+    async function yandexRequest(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Authorization': `OAuth ${YANDEX_TOKEN}`,
+                ...options.headers
+            }
+        });
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`Ошибка ${response.status}: ${error}`);
+        }
+        return response.json();
+    }
+
+    // Создать папку на Диске, если её нет
+    async function createFolderIfNotExists(path) {
+        try {
+            await yandexRequest(`https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(path)}`);
+        } catch (e) {
+            // Папки нет — создаём
+            await yandexRequest(`https://cloud-api.yandex.net/v1/disk/resources?path=${encodeURIComponent(path)}`, {
+                method: 'PUT'
+            });
+        }
+    }
+
+    // Загрузить файл на Диск
+    async function uploadFileToDisk(diskPath, fileBlob) {
+        // Получаем ссылку для загрузки
+        const uploadUrlData = await yandexRequest(
+            `https://cloud-api.yandex.net/v1/disk/resources/upload?path=${encodeURIComponent(diskPath)}&overwrite=true`
+        );
+        
+        // Загружаем файл
+        await fetch(uploadUrlData.href, {
+            method: 'PUT',
+            body: fileBlob
+        });
+    }
+
+    // Скачать файл с Диска
+    async function downloadFileFromDisk(diskPath) {
+        const downloadUrlData = await yandexRequest(
+            `https://cloud-api.yandex.net/v1/disk/resources/download?path=${encodeURIComponent(diskPath)}`
+        );
+        const response = await fetch(downloadUrlData.href);
+        return await response.blob();
+    }
+
+    // Собрать все данные для бэкапа
+    function collectAllData() {
+        const students = JSON.parse(localStorage.getItem('students')) || [];
+        const groups = JSON.parse(localStorage.getItem('groups')) || [];
+        const teacherNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
+        const groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+        
+        // Собираем прогресс каждого ученика
+        const progress = {};
+        const tasksAnswers = {};
+        students.forEach(student => {
+            progress[student.login] = JSON.parse(localStorage.getItem(`progress_${student.login}`)) || {};
+            tasksAnswers[student.login] = JSON.parse(localStorage.getItem(`tasks_answers_${student.login}`)) || {};
+        });
+        
+        // Собираем материалы (только метаданные, без файлов)
+        const libraryMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+        const materialsMeta = libraryMaterials.map(m => ({
+            id: m.id,
+            type: m.type,
+            title: m.title,
+            description: m.description,
+            studentLogin: m.studentLogin,
+            studentDisplay: m.studentDisplay,
+            date: m.date,
+            fileName: m.fileName,
+            fileType: m.fileType,
+            fileSize: m.fileSize,
+            // Вместо fileData сохраняем имя файла на Диске
+            diskFileName: `${m.id}_${m.fileName}`
+        }));
+        
+        return {
+            version: "1.0",
+            timestamp: new Date().toISOString(),
+            students,
+            groups,
+            teacherNotes,
+            groupMessages,
+            progress,
+            tasksAnswers,
+            materials: materialsMeta
+        };
+    }
+
+    // Восстановить данные из бэкапа
+    async function restoreFromBackup(backupData) {
+        // Восстанавливаем основные данные
+        localStorage.setItem('students', JSON.stringify(backupData.students || []));
+        localStorage.setItem('groups', JSON.stringify(backupData.groups || []));
+        localStorage.setItem('teacherNotes', JSON.stringify(backupData.teacherNotes || []));
+        localStorage.setItem('groupMessages', JSON.stringify(backupData.groupMessages || []));
+        
+        // Восстанавливаем прогресс
+        if (backupData.progress) {
+            Object.keys(backupData.progress).forEach(login => {
+                localStorage.setItem(`progress_${login}`, JSON.stringify(backupData.progress[login]));
+            });
+        }
+        
+        // Восстанавливаем ответы на задания
+        if (backupData.tasksAnswers) {
+            Object.keys(backupData.tasksAnswers).forEach(login => {
+                localStorage.setItem(`tasks_answers_${login}`, JSON.stringify(backupData.tasksAnswers[login]));
+            });
+        }
+        
+        // Восстанавливаем метаданные материалов (без файлов, они будут загружены отдельно)
+        if (backupData.materials) {
+            const existingMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+            // Сохраняем метаданные, но без fileData (файлы будут загружены позже)
+            const materialsWithoutData = backupData.materials.map(m => ({
+                ...m,
+                fileData: null
+            }));
+            localStorage.setItem('libraryMaterials', JSON.stringify(materialsWithoutData));
+        }
+        
+        return true;
+    }
+
+    // Сохранить бэкап на Диск
+    async function saveBackupToDisk() {
+        const statusDiv = document.getElementById('syncStatus');
+        statusDiv.innerHTML = '⏳ Подготовка данных...';
+        
+        try {
+            // Создаём папки на Диске
+            await createFolderIfNotExists(BACKUP_FOLDER);
+            await createFolderIfNotExists(MATERIALS_FOLDER);
+            
+            // Собираем данные
+            const backupData = collectAllData();
+            
+            // Сохраняем JSON
+            const jsonBlob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            await uploadFileToDisk(BACKUP_FILE, jsonBlob);
+            statusDiv.innerHTML = '✅ JSON-файл сохранён на Диске<br>';
+            
+            // Сохраняем файлы материалов
+            const libraryMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
+            let uploadedFiles = 0;
+            
+            for (const material of libraryMaterials) {
+                if (material.fileData) {
+                    const fileName = `${material.id}_${material.fileName}`;
+                    const diskPath = `${MATERIALS_FOLDER}/${fileName}`;
+                    const fileBlob = await fetch(material.fileData).then(r => r.blob());
+                    await uploadFileToDisk(diskPath, fileBlob);
+                    uploadedFiles++;
+                    statusDiv.innerHTML = `📤 Сохранено файлов: ${uploadedFiles}/${libraryMaterials.length}`;
+                }
+            }
+            
+            statusDiv.innerHTML = `✅ Бэкап сохранён! Данные: ${backupData.students.length} учеников, ${backupData.groups.length} групп. Загружено файлов: ${uploadedFiles}`;
+        } catch (error) {
+            statusDiv.innerHTML = `❌ Ошибка сохранения: ${error.message}`;
+            console.error(error);
+        }
+    }
+
+    // Загрузить бэкап с Диска
+    async function loadBackupFromDisk() {
+        const statusDiv = document.getElementById('syncStatus');
+        statusDiv.innerHTML = '⏳ Загрузка данных с Диска...';
+        
+        try {
+            // Проверяем, есть ли бэкап
+            let backupData;
+            try {
+                const backupBlob = await downloadFileFromDisk(BACKUP_FILE);
+                const backupText = await backupBlob.text();
+                backupData = JSON.parse(backupText);
+            } catch (e) {
+                throw new Error('Бэкап на Диске не найден');
+            }
+            
+            statusDiv.innerHTML = '⏳ Восстановление данных...';
+            
+            // Восстанавливаем данные из JSON
+            await restoreFromBackup(backupData);
+            
+            // Загружаем файлы материалов
+            if (backupData.materials && backupData.materials.length > 0) {
+                statusDiv.innerHTML = '⏳ Загрузка файлов...';
+                const materialsToRestore = [];
+                
+                for (const materialMeta of backupData.materials) {
+                    try {
+                        const diskPath = `${MATERIALS_FOLDER}/${materialMeta.diskFileName}`;
+                        const fileBlob = await downloadFileFromDisk(diskPath);
+                        const reader = new FileReader();
+                        const fileData = await new Promise((resolve) => {
+                            reader.onload = () => resolve(reader.result);
+                            reader.readAsDataURL(fileBlob);
+                        });
+                        
+                        materialsToRestore.push({
+                            ...materialMeta,
+                            fileData: fileData
+                        });
+                        statusDiv.innerHTML = `📥 Загружено файлов: ${materialsToRestore.length}/${backupData.materials.length}`;
+                    } catch (e) {
+                        console.warn(`Не удалось загрузить файл ${materialMeta.diskFileName}:`, e);
+                    }
+                }
+                
+                localStorage.setItem('libraryMaterials', JSON.stringify(materialsToRestore));
+            }
+            
+            statusDiv.innerHTML = `✅ Бэкап загружен! Данные восстановлены. Обновите страницу.`;
+            setTimeout(() => location.reload(), 2000);
+            
+        } catch (error) {
+            statusDiv.innerHTML = `❌ Ошибка загрузки: ${error.message}`;
+            console.error(error);
+        }
+    }
+
+    // Проверить наличие бэкапа на Диске
+    async function checkBackup() {
+        const statusDiv = document.getElementById('syncStatus');
+        statusDiv.innerHTML = '⏳ Проверка...';
+        
+        try {
+            const backupBlob = await downloadFileFromDisk(BACKUP_FILE);
+            const backupText = await backupBlob.text();
+            const backupData = JSON.parse(backupText);
+            
+            statusDiv.innerHTML = `✅ Бэкап найден!<br>
+                📅 Дата: ${backupData.timestamp}<br>
+                👥 Учеников: ${backupData.students?.length || 0}<br>
+                📁 Групп: ${backupData.groups?.length || 0}<br>
+                📦 Материалов: ${backupData.materials?.length || 0}<br>
+                <button id="quickLoadBtn" class="action-btn" style="margin-top: 10px; padding: 8px 15px;">📥 Восстановить сейчас</button>`;
+            
+            document.getElementById('quickLoadBtn')?.addEventListener('click', loadBackupFromDisk);
+        } catch (error) {
+            statusDiv.innerHTML = `📭 Бэкап на Диске не найден. Нажмите "Сохранить на Диск", чтобы создать первый бэкап.`;
+        }
+    }
+
+    // Подключаем обработчики кнопок
+    document.getElementById('syncSaveBtn')?.addEventListener('click', saveBackupToDisk);
+    document.getElementById('syncLoadBtn')?.addEventListener('click', loadBackupFromDisk);
+    document.getElementById('syncCheckBtn')?.addEventListener('click', checkBackup);
+</script>
 </body>
 </html>
