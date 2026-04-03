@@ -151,12 +151,6 @@
         .action-btn.library {
             background: #17a2b8;
         }
-        .action-btn.export {
-            background: #28a745;
-        }
-        .action-btn.import {
-            background: #17a2b8;
-        }
         
         .modal {
             display: none;
@@ -290,24 +284,6 @@
             padding: 5px 10px;
             border-radius: 8px;
         }
-        .student-progress {
-            background: #e3f2fd;
-            padding: 12px;
-            border-radius: 10px;
-            margin: 15px 0;
-        }
-        .progress-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        .progress-label {
-            color: #555;
-        }
-        .progress-value {
-            font-weight: 600;
-            color: #1976d2;
-        }
         .student-notes-badge {
             background: #ffc107;
             color: #1e1e2f;
@@ -317,14 +293,29 @@
             display: inline-block;
             margin-bottom: 10px;
         }
+        .student-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
         .view-student-btn {
+            flex: 1;
             background: #1e1e2f;
             color: white;
             border: none;
             padding: 10px;
             border-radius: 8px;
             cursor: pointer;
-            width: 100%;
+            font-weight: 500;
+        }
+        .progress-student-btn {
+            flex: 1;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
             font-weight: 500;
         }
         
@@ -436,55 +427,114 @@
             line-height: 1.5;
         }
         
-        /* Стили для экспорта/импорта */
-        .sync-section {
+        /* Стили для окна прогресса */
+        .progress-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        .progress-modal.active {
+            display: flex;
+        }
+        .progress-modal-content {
             background: white;
             border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
         }
-        .sync-section h3 {
+        .progress-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .progress-modal-header h3 {
+            font-size: 1.4em;
+            color: #1e1e2f;
+        }
+        .progress-close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+        .progress-student-name {
+            background: #e3f2fd;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #1976d2;
+        }
+        .topic-progress-card {
+            background: #f8f9fc;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid #6f42c1;
+        }
+        .topic-title {
+            font-weight: 600;
+            font-size: 1.1em;
             color: #1e1e2f;
             margin-bottom: 10px;
-        }
-        .sync-section p {
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 0.95em;
-        }
-        .sync-buttons {
+            cursor: pointer;
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
         }
-        .sync-status {
-            margin-top: 15px;
+        .topic-title:hover {
+            color: #6f42c1;
+        }
+        .topic-stats {
             font-size: 0.9em;
             color: #666;
-            padding: 10px;
-            border-radius: 10px;
+            margin-bottom: 10px;
         }
-        .sync-status.success {
-            background: #d4edda;
-            color: #155724;
-        }
-        .sync-status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .sync-status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .file-input-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        #importFileInput {
+        .topic-answers {
             display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .topic-answers.show {
+            display: block;
+        }
+        .answer-item-progress {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+        }
+        .answer-correct {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .answer-wrong {
+            color: #dc3545;
+        }
+        .answer-not-answered {
+            color: #999;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .progress-modal-content {
+                width: 95%;
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -523,22 +573,6 @@
                     📹 Библиотека
                 </a>
             </div>
-        </div>
-
-        <!-- Блок экспорта/импорта данных -->
-        <div class="sync-section">
-            <h3>📦 Перенос данных между устройствами</h3>
-            <p>Сохраните все данные (ученики, группы, заметки, прогресс) в файл, перешлите его на другое устройство и загрузите там. Фото и видео из библиотеки не переносятся (их нужно загрузить заново).</p>
-            <div class="sync-buttons">
-                <button class="action-btn export" id="exportDataBtn">
-                    📥 Скачать данные (JSON)
-                </button>
-                <label class="action-btn import file-input-label" id="importLabelBtn">
-                    📤 Загрузить данные
-                    <input type="file" id="importFileInput" accept=".json">
-                </label>
-            </div>
-            <div id="syncStatus" class="sync-status"></div>
         </div>
 
         <div class="students-section">
@@ -634,209 +668,144 @@
             </div>
         </div>
 
+        <!-- Модальное окно прогресса ученика -->
+        <div id="progressModal" class="progress-modal">
+            <div class="progress-modal-content">
+                <div class="progress-modal-header">
+                    <h3>📊 Прогресс ученика</h3>
+                    <button class="progress-close-btn" onclick="closeProgressModal()">&times;</button>
+                </div>
+                <div id="progressStudentName" class="progress-student-name"></div>
+                <div id="progressTopicsContainer"></div>
+            </div>
+        </div>
+
         <div class="footer-links">
             <a href="index.html">🏠 На главную страницу студии</a>
         </div>
     </div>
 
     <script>
-        // ========== ДАННЫЕ ПОЛЬЗОВАТЕЛЯ ==========
+        // Supabase конфигурация
+        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+        
+        let supabase = null;
+        let currentProgressStudent = null;
+        
+        // Список тем для заданий (10 тем)
+        const topics = [
+            { id: 0, name: "🎸 Всё о гитаре", totalQuestions: 9 },
+            { id: 1, name: "🎵 Аккорды и тональности", totalQuestions: 9 },
+            { id: 2, name: "✋ Техники и приёмы", totalQuestions: 9 },
+            { id: 3, name: "🔊 Струны и интервалы", totalQuestions: 9 },
+            { id: 4, name: "📖 История и теория", totalQuestions: 9 },
+            { id: 5, name: "🎼 Чтение нот и табулатур", totalQuestions: 9 },
+            { id: 6, name: "🎤 Песни и репертуар", totalQuestions: 9 },
+            { id: 7, name: "🎧 Звук и оборудование", totalQuestions: 9 },
+            { id: 8, name: "🖐️ Упражнения и развитие", totalQuestions: 9 },
+            { id: 9, name: "🌟 Советы профессионалов", totalQuestions: 9 }
+        ];
+        
+        // Инициализация Supabase
+        async function initSupabase() {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase инициализирован');
+                await loadData();
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await initSupabase();
+            }
+        }
+        
+        // Данные пользователя
         const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
         const userName = localStorage.getItem('currentUserName') || 'Евгения';
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         document.getElementById('greetingTitle').textContent = `Здравствуйте, ${userName}!`;
-
-        // ========== ЭКСПОРТ/ИМПОРТ ДАННЫХ ==========
         
-        // Функция для отображения статуса
-        function setSyncStatus(message, type = 'info') {
-            const statusDiv = document.getElementById('syncStatus');
-            statusDiv.textContent = message;
-            statusDiv.className = `sync-status ${type}`;
-        }
+        // Данные
+        let students = [];
+        let notes = [];
+        let groups = [];
+        let groupMessages = [];
+        let studentProgress = {};
+        let tasksAnswers = {};
         
-        // Собрать все данные для экспорта (без фото/видео)
-        function collectAllData() {
-            const students = JSON.parse(localStorage.getItem('students')) || [];
-            const groups = JSON.parse(localStorage.getItem('groups')) || [];
-            const teacherNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-            const groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-            
-            // Собираем прогресс каждого ученика
-            const progress = {};
-            const tasksAnswers = {};
-            students.forEach(student => {
-                progress[student.login] = JSON.parse(localStorage.getItem(`progress_${student.login}`)) || {};
-                tasksAnswers[student.login] = JSON.parse(localStorage.getItem(`tasks_answers_${student.login}`)) || {};
-            });
-            
-            // Собираем метаданные материалов (только названия, без файлов)
-            const libraryMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
-            const materialsMeta = libraryMaterials.map(m => ({
-                id: m.id,
-                type: m.type,
-                title: m.title,
-                description: m.description,
-                studentLogin: m.studentLogin,
-                studentDisplay: m.studentDisplay,
-                date: m.date,
-                fileName: m.fileName,
-                fileType: m.fileType,
-                fileSize: m.fileSize
-            }));
-            
-            return {
-                version: "1.0",
-                exportDate: new Date().toLocaleString(),
-                students,
-                groups,
-                teacherNotes,
-                groupMessages,
-                progress,
-                tasksAnswers,
-                materials: materialsMeta
-            };
-        }
-        
-        // Экспорт данных в файл
-        function exportData() {
+        // Загрузка данных из Supabase
+        async function loadData() {
             try {
-                const data = collectAllData();
-                const jsonStr = JSON.stringify(data, null, 2);
-                const blob = new Blob([jsonStr], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `guitar-studio-data-${new Date().toISOString().slice(0,19)}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
+                // Загружаем учеников
+                const { data: studentsData, error: studentsError } = await supabase
+                    .from('students')
+                    .select('*')
+                    .order('name');
                 
-                setSyncStatus(`✅ Данные сохранены в файл! Включено: ${data.students.length} учеников, ${data.groups.length} групп, ${data.materials.length} материалов (только названия)`, 'success');
-            } catch (error) {
-                console.error(error);
-                setSyncStatus(`❌ Ошибка экспорта: ${error.message}`, 'error');
-            }
-        }
-        
-        // Импорт данных из файла
-        function importData(file) {
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    // Проверка версии
-                    if (!data.version || data.version !== "1.0") {
-                        setSyncStatus('⚠️ Файл имеет несовместимую версию. Возможны проблемы.', 'info');
-                    }
-                    
-                    // Восстанавливаем данные
-                    localStorage.setItem('students', JSON.stringify(data.students || []));
-                    localStorage.setItem('groups', JSON.stringify(data.groups || []));
-                    localStorage.setItem('teacherNotes', JSON.stringify(data.teacherNotes || []));
-                    localStorage.setItem('groupMessages', JSON.stringify(data.groupMessages || []));
-                    
-                    // Восстанавливаем прогресс
-                    if (data.progress) {
-                        Object.keys(data.progress).forEach(login => {
-                            localStorage.setItem(`progress_${login}`, JSON.stringify(data.progress[login]));
-                        });
-                    }
-                    
-                    // Восстанавливаем ответы на задания
-                    if (data.tasksAnswers) {
-                        Object.keys(data.tasksAnswers).forEach(login => {
-                            localStorage.setItem(`tasks_answers_${login}`, JSON.stringify(data.tasksAnswers[login]));
-                        });
-                    }
-                    
-                    // Восстанавливаем метаданные материалов (без файлов)
-                    if (data.materials) {
-                        const existingMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
-                        // Сохраняем метаданные, но без fileData
-                        const materialsWithoutData = data.materials.map(m => ({
-                            ...m,
-                            fileData: null
-                        }));
-                        localStorage.setItem('libraryMaterials', JSON.stringify(materialsWithoutData));
-                    }
-                    
-                    setSyncStatus(`✅ Данные успешно загружены! Восстановлено: ${data.students?.length || 0} учеников, ${data.groups?.length || 0} групп. Обновите страницу.`, 'success');
-                    
-                    setTimeout(() => location.reload(), 2000);
-                    
-                } catch (error) {
-                    console.error(error);
-                    setSyncStatus(`❌ Ошибка импорта: файл повреждён или имеет неверный формат`, 'error');
-                }
-            };
-            
-            reader.onerror = function() {
-                setSyncStatus('❌ Ошибка чтения файла', 'error');
-            };
-            
-            reader.readAsText(file);
-        }
-        
-        // Обработчики кнопок экспорта/импорта
-        document.getElementById('exportDataBtn').addEventListener('click', exportData);
-        
-        const importInput = document.getElementById('importFileInput');
-        importInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                importData(e.target.files[0]);
-                importInput.value = ''; // Очищаем, чтобы можно было загрузить тот же файл снова
-            }
-        });
-
-        // ========== ОСТАЛЬНЫЕ ФУНКЦИИ КАБИНЕТА ==========
-        
-        // Автоматическое добавление всех учеников при первом запуске
-        function initializeStudents() {
-            const defaultStudents = [
-                { login: "NikitaWind456732", password: "0011020571", name: "Никита" },
-                { login: "SonyaIce035142", password: "1235476450", name: "Соня" },
-                { login: "DanilStone055622", password: "4591223719", name: "Данил" },
-                { login: "IlyaTree921308", password: "0215224785", name: "Илья" },
-                { login: "TamerlaneSand453671", password: "0293528921", name: "Тамерлан" },
-                { login: "RamazanSun225140", password: "6007204910", name: "Рамазан" }
-            ];
-            
-            let students = JSON.parse(localStorage.getItem('students')) || [];
-            
-            let added = 0;
-            defaultStudents.forEach(defStudent => {
-                if (!students.some(s => s.login === defStudent.login)) {
-                    students.push(defStudent);
-                    added++;
-                }
-            });
-            
-            if (added > 0) {
+                if (studentsError) throw studentsError;
+                students = studentsData || [];
                 localStorage.setItem('students', JSON.stringify(students));
-                console.log(`✅ Добавлено ${added} новых учеников`);
-            }
-            
-            students.forEach(student => {
-                if (!localStorage.getItem(`progress_${student.login}`)) {
-                    localStorage.setItem(`progress_${student.login}`, JSON.stringify({
-                        beginner: 0,
-                        intermediate: 0,
-                        expert: 0
-                    }));
+                
+                // Загружаем группы
+                const { data: groupsData, error: groupsError } = await supabase
+                    .from('groups')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (groupsError) throw groupsError;
+                groups = groupsData || [];
+                localStorage.setItem('groups', JSON.stringify(groups));
+                
+                // Загружаем заметки
+                const { data: notesData, error: notesError } = await supabase
+                    .from('teacher_notes')
+                    .select('*')
+                    .order('id', { ascending: false });
+                
+                if (notesError) throw notesError;
+                notes = notesData || [];
+                localStorage.setItem('teacherNotes', JSON.stringify(notes));
+                
+                // Загружаем сообщения групп
+                const { data: messagesData, error: messagesError } = await supabase
+                    .from('group_messages')
+                    .select('*')
+                    .order('id', { ascending: false });
+                
+                if (messagesError) throw messagesError;
+                groupMessages = messagesData || [];
+                localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
+                
+                // Загружаем прогресс учеников
+                for (const student of students) {
+                    const { data: progressData, error: progressError } = await supabase
+                        .from('student_progress')
+                        .select('*')
+                        .eq('student_login', student.login);
+                    
+                    if (!progressError && progressData) {
+                        studentProgress[student.login] = progressData;
+                    }
+                    
+                    const { data: answersData, error: answersError } = await supabase
+                        .from('tasks_answers')
+                        .select('*')
+                        .eq('student_login', student.login);
+                    
+                    if (!answersError && answersData && answersData.length > 0) {
+                        tasksAnswers[student.login] = answersData[0].answers;
+                    }
                 }
-            });
-            
-            return students;
+                
+                renderStudents();
+                renderGroups();
+                updateNotificationBadge();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+            }
         }
-
-        let students = initializeStudents();
-        let notes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-        let groups = JSON.parse(localStorage.getItem('groups')) || [];
-        let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-
+        
         function updateNotificationBadge() {
             const unreadCount = groupMessages.filter(m => !m.read).length;
             const badge = document.getElementById('notificationBadge');
@@ -847,7 +816,7 @@
                 badge.style.display = 'none';
             }
         }
-
+        
         function openNotificationsModal() {
             renderNotifications();
             document.getElementById('notificationsModal').classList.add('active');
@@ -855,11 +824,11 @@
             localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
             updateNotificationBadge();
         }
-
+        
         function closeNotificationsModal() {
             document.getElementById('notificationsModal').classList.remove('active');
         }
-
+        
         function renderNotifications() {
             const container = document.getElementById('notificationsContainer');
             const allNotifications = [...groupMessages];
@@ -874,15 +843,15 @@
             allNotifications.forEach(n => {
                 html += `
                     <div class="note-item">
-                        <div class="note-title">${n.groupName || 'Сообщение'}</div>
+                        <div class="note-title">${n.group_name || 'Сообщение'}</div>
                         <div class="note-date">${n.date}</div>
-                        <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
+                        <div class="note-text"><strong>${n.sender_name}:</strong> ${n.text}</div>
                     </div>
                 `;
             });
             container.innerHTML = html;
         }
-
+        
         function renderStudents() {
             const container = document.getElementById('studentsContainer');
             
@@ -890,18 +859,18 @@
                 container.innerHTML = '<div class="empty-state">👥 Список учеников пуст. Добавьте первого ученика!</div>';
                 return;
             }
-
+            
             let html = '';
             students.forEach((student) => {
-                const progress = JSON.parse(localStorage.getItem(`progress_${student.login}`)) || {
-                    beginner: 0,
-                    intermediate: 0,
-                    expert: 0
-                };
-                
-                const studentNotes = notes.filter(n => n.studentLogin === student.login);
+                const studentNotes = notes.filter(n => n.student_login === student.login);
                 const unreadCount = studentNotes.filter(n => !n.read).length;
-
+                
+                // Подсчитываем общий прогресс
+                const progressData = studentProgress[student.login] || [];
+                const totalCorrect = progressData.reduce((sum, p) => sum + (p.correct_count || 0), 0);
+                const totalQuestions = progressData.reduce((sum, p) => sum + (p.total_count || 0), 0);
+                const progressPercent = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+                
                 html += `
                     <div class="student-card">
                         <div class="student-name">${student.name}</div>
@@ -909,19 +878,14 @@
                         ${unreadCount > 0 ? `<div class="student-notes-badge">📝 ${unreadCount} новая заметка</div>` : ''}
                         <div class="student-progress">
                             <div class="progress-item">
-                                <span class="progress-label">🌱 С нуля:</span>
-                                <span class="progress-value">${progress.beginner}/10</span>
-                            </div>
-                            <div class="progress-item">
-                                <span class="progress-label">🌿 Немного знающий:</span>
-                                <span class="progress-value">${progress.intermediate}/10</span>
-                            </div>
-                            <div class="progress-item">
-                                <span class="progress-label">🌳 Знаток:</span>
-                                <span class="progress-value">${progress.expert}/10</span>
+                                <span class="progress-label">📊 Общий прогресс:</span>
+                                <span class="progress-value">${progressPercent}%</span>
                             </div>
                         </div>
-                        <button class="view-student-btn" onclick="viewStudent('${student.login}')">📊 Подробнее</button>
+                        <div class="student-buttons">
+                            <button class="view-student-btn" onclick="viewStudent('${student.login}')">📝 Заметки</button>
+                            <button class="progress-student-btn" onclick="showStudentProgress('${student.login}', '${student.name}')">📊 Прогресс</button>
+                        </div>
                     </div>
                 `;
             });
@@ -929,7 +893,7 @@
             updateStudentSelect();
             updateStudentCheckboxes();
         }
-
+        
         function renderGroups() {
             const container = document.getElementById('groupsContainer');
             
@@ -937,7 +901,7 @@
                 container.innerHTML = '<div class="empty-state">👥 Групп пока нет. Создайте первую группу!</div>';
                 return;
             }
-
+            
             let html = '';
             groups.forEach((group) => {
                 const memberCount = group.members ? group.members.length : 0;
@@ -958,7 +922,7 @@
             });
             container.innerHTML = html;
         }
-
+        
         function updateStudentSelect() {
             const select = document.getElementById('noteStudentSelect');
             if (!select) return;
@@ -990,18 +954,109 @@
             });
             container.innerHTML = html;
         }
-
+        
+        async function showStudentProgress(login, name) {
+            currentProgressStudent = login;
+            document.getElementById('progressStudentName').textContent = `📚 ${name}`;
+            
+            // Загружаем прогресс и ответы
+            const { data: progressData } = await supabase
+                .from('student_progress')
+                .select('*')
+                .eq('student_login', login);
+            
+            const { data: answersData } = await supabase
+                .from('tasks_answers')
+                .select('answers')
+                .eq('student_login', login);
+            
+            const studentAnswers = answersData && answersData.length > 0 ? answersData[0].answers : {};
+            
+            let html = '';
+            for (const topic of topics) {
+                const topicProgress = progressData ? progressData.find(p => p.topic_id === topic.id) : null;
+                const correctCount = topicProgress ? topicProgress.correct_count || 0 : 0;
+                const totalCount = topicProgress ? topicProgress.total_count || topic.totalQuestions : topic.totalQuestions;
+                const percent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+                
+                const topicAnswers = studentAnswers[topic.id] || {};
+                
+                html += `
+                    <div class="topic-progress-card">
+                        <div class="topic-title" onclick="toggleTopicAnswers(${topic.id})">
+                            <span>${topic.name}</span>
+                            <span>${percent}% (${correctCount}/${totalCount})</span>
+                        </div>
+                        <div class="topic-stats">${correctCount} из ${totalCount} вопросов правильно</div>
+                        <div id="topic-answers-${topic.id}" class="topic-answers"></div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('progressTopicsContainer').innerHTML = html;
+            
+            // Загружаем ответы для каждой темы
+            for (const topic of topics) {
+                await loadTopicAnswers(login, topic.id, studentAnswers[topic.id] || {});
+            }
+            
+            document.getElementById('progressModal').classList.add('active');
+        }
+        
+        async function loadTopicAnswers(login, topicId, answers) {
+            const container = document.getElementById(`topic-answers-${topicId}`);
+            if (!container) return;
+            
+            // Здесь нужно загрузить вопросы для темы
+            // Для демонстрации покажем заглушку
+            let html = '<div style="margin-top: 10px;">';
+            
+            for (let i = 0; i < 9; i++) {
+                const answer = answers[i];
+                let statusClass = '';
+                let statusText = '';
+                
+                if (answer === undefined || answer === null) {
+                    statusClass = 'answer-not-answered';
+                    statusText = '❌ Не решён';
+                } else {
+                    statusClass = 'answer-correct';
+                    statusText = '✅ Решён';
+                }
+                
+                html += `
+                    <div class="answer-item-progress">
+                        Вопрос ${i + 1}: <span class="${statusClass}">${statusText}</span>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function toggleTopicAnswers(topicId) {
+            const container = document.getElementById(`topic-answers-${topicId}`);
+            if (container) {
+                container.classList.toggle('show');
+            }
+        }
+        
+        function closeProgressModal() {
+            document.getElementById('progressModal').classList.remove('active');
+        }
+        
         function openAddStudentModal() {
             document.getElementById('addStudentModal').classList.add('active');
         }
-
+        
         function closeAddStudentModal() {
             document.getElementById('addStudentModal').classList.remove('active');
             document.getElementById('studentLogin').value = '';
             document.getElementById('studentPassword').value = '';
             document.getElementById('studentName').value = '';
         }
-
+        
         function openAddNoteModal() {
             if (students.length === 0) {
                 alert('❌ Сначала добавьте хотя бы одного ученика!');
@@ -1009,14 +1064,14 @@
             }
             document.getElementById('addNoteModal').classList.add('active');
         }
-
+        
         function closeAddNoteModal() {
             document.getElementById('addNoteModal').classList.remove('active');
             document.getElementById('noteStudentSelect').value = '';
             document.getElementById('noteTitle').value = '';
             document.getElementById('noteText').value = '';
         }
-
+        
         function openCreateGroupModal() {
             if (students.length === 0) {
                 alert('❌ Сначала добавьте хотя бы одного ученика!');
@@ -1025,77 +1080,77 @@
             updateStudentCheckboxes();
             document.getElementById('createGroupModal').classList.add('active');
         }
-
+        
         function closeCreateGroupModal() {
             document.getElementById('createGroupModal').classList.remove('active');
             document.getElementById('groupName').value = '';
             document.getElementById('groupDescription').value = '';
         }
-
-        function addStudent() {
+        
+        async function addStudent() {
             const login = document.getElementById('studentLogin').value.trim();
             const password = document.getElementById('studentPassword').value.trim();
             const name = document.getElementById('studentName').value.trim();
-
+            
             if (!login || !password || !name) {
                 alert('❌ Заполните все поля!');
                 return;
             }
-
+            
             if (students.some(s => s.login === login)) {
                 alert('❌ Ученик с таким логином уже существует!');
                 return;
             }
-
-            students.push({
-                login: login,
-                password: password,
-                name: name
-            });
-
-            localStorage.setItem('students', JSON.stringify(students));
-
-            if (!localStorage.getItem(`progress_${login}`)) {
-                localStorage.setItem(`progress_${login}`, JSON.stringify({
-                    beginner: 0,
-                    intermediate: 0,
-                    expert: 0
-                }));
+            
+            try {
+                const { error } = await supabase
+                    .from('students')
+                    .insert([{ login, password, name }]);
+                
+                if (error) throw error;
+                
+                await loadData();
+                closeAddStudentModal();
+                alert('✅ Ученик успешно добавлен!');
+            } catch (error) {
+                console.error('Ошибка добавления:', error);
+                alert('❌ Ошибка добавления ученика');
             }
-
-            closeAddStudentModal();
-            renderStudents();
-            alert('✅ Ученик успешно добавлен!');
         }
-
-        function addNote() {
+        
+        async function addNote() {
             const studentLogin = document.getElementById('noteStudentSelect').value;
             const title = document.getElementById('noteTitle').value.trim();
             const text = document.getElementById('noteText').value.trim();
-
+            
             if (!studentLogin || !title || !text) {
                 alert('❌ Заполните все поля!');
                 return;
             }
-
-            const note = {
-                id: Date.now(),
-                studentLogin: studentLogin,
-                title: title,
-                text: text,
-                date: new Date().toLocaleString(),
-                read: false
-            };
-
-            notes.push(note);
-            localStorage.setItem('teacherNotes', JSON.stringify(notes));
-
-            closeAddNoteModal();
-            renderStudents();
-            alert('✅ Заметка успешно добавлена!');
+            
+            try {
+                const { error } = await supabase
+                    .from('teacher_notes')
+                    .insert([{
+                        student_login: studentLogin,
+                        title: title,
+                        text: text,
+                        date: new Date().toLocaleString(),
+                        read: false
+                    }]);
+                
+                if (error) throw error;
+                
+                await loadData();
+                closeAddNoteModal();
+                alert('✅ Заметка успешно добавлена!');
+            } catch (error) {
+                console.error('Ошибка добавления заметки:', error);
+                alert('❌ Ошибка добавления заметки');
+            }
         }
-
-        function createGroup() {
+        
+        async function createGroup() {
             const name = document.getElementById('groupName').value.trim();
             const description = document.getElementById('groupDescription').value.trim();
             
@@ -1111,45 +1166,49 @@
                 alert('❌ Выберите хотя бы одного ученика!');
                 return;
             }
-
-            const group = {
-                id: Date.now(),
-                name: name,
-                description: description,
-                members: members,
-                createdBy: 'EvgenyaGuitara01543',
-                createdAt: new Date().toLocaleString()
-            };
-
-            groups.push(group);
-            localStorage.setItem('groups', JSON.stringify(groups));
             
-            members.forEach(studentLogin => {
-                const notification = {
-                    id: Date.now() + Math.random(),
-                    type: 'group_invite',
-                    groupId: group.id,
-                    groupName: name,
-                    studentLogin: studentLogin,
-                    title: '👥 Приглашение в группу',
-                    text: `Вас добавили в группу "${name}"`,
-                    date: new Date().toLocaleString(),
-                    read: false
-                };
+            try {
+                const { data: groupData, error: groupError } = await supabase
+                    .from('groups')
+                    .insert([{
+                        name: name,
+                        description: description,
+                        created_by: 'EvgenyaGuitara01543',
+                        created_at: new Date().toLocaleString(),
+                        members: members
+                    }])
+                    .select();
                 
-                let studentNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                studentNotes.push(notification);
-                localStorage.setItem('teacherNotes', JSON.stringify(studentNotes));
-            });
-
-            closeCreateGroupModal();
-            renderGroups();
-            alert('✅ Группа успешно создана!');
+                if (groupError) throw groupError;
+                
+                // Создаём уведомления для учеников
+                for (const studentLogin of members) {
+                    await supabase
+                        .from('teacher_notes')
+                        .insert([{
+                            student_login: studentLogin,
+                            title: '👥 Приглашение в группу',
+                            text: `Вас добавили в группу "${name}"`,
+                            date: new Date().toLocaleString(),
+                            read: false,
+                            type: 'group_invite',
+                            group_id: groupData[0].id,
+                            group_name: name
+                        }]);
+                }
+                
+                await loadData();
+                closeCreateGroupModal();
+                alert('✅ Группа успешно создана!');
+            } catch (error) {
+                console.error('Ошибка создания группы:', error);
+                alert('❌ Ошибка создания группы');
+            }
         }
-
+        
         function viewStudent(login) {
             const student = students.find(s => s.login === login);
-            const studentNotes = notes.filter(n => n.studentLogin === login);
+            const studentNotes = notes.filter(n => n.student_login === login);
             
             let notesText = '';
             if (studentNotes.length > 0) {
@@ -1159,18 +1218,18 @@
             } else {
                 notesText = '\n\n📝 Заметок пока нет.';
             }
-
+            
             alert(`👤 ${student.name}\nЛогин: ${student.login}\nПароль: ${student.password}${notesText}`);
         }
-
-        renderStudents();
-        renderGroups();
-        updateNotificationBadge();
         
-        setInterval(() => {
-            groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-            updateNotificationBadge();
-        }, 3000);
+        // Инициализация
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+            console.log('Supabase JS загружен');
+            initSupabase();
+        };
+        document.head.appendChild(script);
     </script>
 </body>
 </html>
