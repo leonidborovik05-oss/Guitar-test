@@ -99,23 +99,18 @@
         .back-link:hover {
             color: #43C6AC;
         }
-        .hint {
-            margin-top: 20px;
-            font-size: 0.85em;
-            color: #888;
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: left;
-            max-height: 250px;
-            overflow-y: auto;
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 10px;
         }
-        .hint strong {
-            color: #191654;
-        }
-        .hint p {
-            margin: 5px 0;
-            font-family: monospace;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -140,111 +135,120 @@
         </div>
 
         <a href="index.html" class="back-link">← Вернуться на главную</a>
-        
-        <div class="hint">
-            <strong>👩‍🏫 Учитель:</strong>
-            <p>Логин: EvgenyaGuitara01543 / Пароль: 0019234509</p>
-            <strong>👨‍🎓 Ученики:</strong>
-            <p>Леонид Зас: LeonidzasFire23457 / 11265497</p>
-            <p>Никита: NikitaWind456732 / 0011020571</p>
-            <p>Соня: SonyaIce035142 / 1235476450</p>
-            <p>Данил: DanilStone055622 / 4591223719</p>
-            <p>Илья: IlyaTree921308 / 0215224785</p>
-            <p>Тамерлан: TamerlaneSand453671 / 0293528921</p>
-            <p>Рамазан: RamazanSun225140 / 6007204910</p>
-        </div>
     </div>
 
     <script>
-        // База данных пользователей
-        const users = {
-            // Учитель
-            "EvgenyaGuitara01543": {
-                password: "0019234509",
-                name: "Евгения",
-                display: "👩‍🏫 Евгения (Учитель)",
-                role: "teacher"
-            },
-            // Тестовый ученик Леонид Зас
-            "LeonidzasFire23457": {
-                password: "11265497",
-                name: "Леонид Зас",
-                display: "👨‍🎓 Леонид Зас (Ученик)",
-                role: "student"
-            },
-            // Остальные ученики
-            "NikitaWind456732": {
-                password: "0011020571",
-                name: "Никита",
-                display: "👨‍🎓 Никита (Ученик)",
-                role: "student"
-            },
-            "SonyaIce035142": {
-                password: "1235476450",
-                name: "Соня",
-                display: "👩‍🎓 Соня (Ученица)",
-                role: "student"
-            },
-            "DanilStone055622": {
-                password: "4591223719",
-                name: "Данил",
-                display: "👨‍🎓 Данил (Ученик)",
-                role: "student"
-            },
-            "IlyaTree921308": {
-                password: "0215224785",
-                name: "Илья",
-                display: "👨‍🎓 Илья (Ученик)",
-                role: "student"
-            },
-            "TamerlaneSand453671": {
-                password: "0293528921",
-                name: "Тамерлан",
-                display: "👨‍🎓 Тамерлан (Ученик)",
-                role: "student"
-            },
-            "RamazanSun225140": {
-                password: "6007204910",
-                name: "Рамазан",
-                display: "👨‍🎓 Рамазан (Ученик)",
-                role: "student"
+        // Supabase конфигурация
+        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+        
+        let supabaseClient = null;
+        
+        async function initSupabase() {
+            if (window.supabase) {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase инициализирован');
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
             }
-        };
-
-        function checkLogin() {
+        }
+        
+        async function checkLogin() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
-
             const errorDiv = document.getElementById('errorMessage');
-
+            const loginBtn = document.querySelector('.btn-login');
+            
             if (username === "" || password === "") {
                 errorDiv.style.display = 'block';
                 errorDiv.innerText = '❌ Поля не могут быть пустыми.';
                 return;
             }
-
-            const user = users[username];
             
-            if (user && user.password === password) {
-                // Сохраняем данные пользователя
-                localStorage.setItem('currentUserRole', user.role);
-                localStorage.setItem('currentUserLogin', username);
-                localStorage.setItem('currentUserName', user.name);
-                localStorage.setItem('currentUserDisplay', user.display);
-                
-                console.log('Вход выполнен:', { role: user.role, name: user.name, login: username });
-                
-                // Перенаправляем в зависимости от роли
-                if (user.role === 'teacher') {
-                    window.location.href = "teacher-cabinet.html";
-                } else {
-                    window.location.href = "student-cabinet.html";
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = 'Вход... <span class="loading"></span>';
+            loginBtn.disabled = true;
+            errorDiv.style.display = 'none';
+            
+            try {
+                if (!supabaseClient) {
+                    await initSupabase();
                 }
-            } else {
+                
+                // Сначала проверяем, не учитель ли это
+                const { data: teacher, error: teacherError } = await supabaseClient
+                    .from('teachers')
+                    .select('*')
+                    .eq('login', username)
+                    .eq('password', password);
+                
+                if (teacherError) {
+                    console.error('Ошибка запроса учителя:', teacherError);
+                }
+                
+                if (teacher && teacher.length > 0) {
+                    // Это учитель
+                    localStorage.setItem('currentUserRole', 'teacher');
+                    localStorage.setItem('currentUserLogin', teacher[0].login);
+                    localStorage.setItem('currentUserName', teacher[0].name);
+                    localStorage.setItem('currentUserDisplay', '👩‍🏫 ' + teacher[0].name + ' (Учитель)');
+                    window.location.href = 'teacher-cabinet.html';
+                    return;
+                }
+                
+                // Проверяем ученика
+                const { data: student, error: studentError } = await supabaseClient
+                    .from('students')
+                    .select('*')
+                    .eq('login', username)
+                    .eq('password', password);
+                
+                if (studentError) {
+                    console.error('Ошибка запроса ученика:', studentError);
+                }
+                
+                if (student && student.length > 0) {
+                    // Это ученик
+                    localStorage.setItem('currentUserRole', 'student');
+                    localStorage.setItem('currentUserLogin', student[0].login);
+                    localStorage.setItem('currentUserName', student[0].name);
+                    localStorage.setItem('currentUserDisplay', '👨‍🎓 ' + student[0].name + ' (Ученик)');
+                    window.location.href = 'student-cabinet.html';
+                    return;
+                }
+                
+                // Если ни учитель, ни ученик не найден
                 errorDiv.style.display = 'block';
                 errorDiv.innerText = '❌ Неверный логин или пароль. Попробуйте снова.';
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+                
+            } catch (err) {
+                console.error('Ошибка:', err);
+                errorDiv.style.display = 'block';
+                errorDiv.innerText = '❌ Ошибка подключения к серверу. Проверьте интернет.';
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
             }
         }
+        
+        // Загружаем Supabase JS библиотеку
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+            console.log('Supabase JS загружен');
+            initSupabase();
+        };
+        document.head.appendChild(script);
+        
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkLogin();
+            }
+        });
     </script>
 </body>
 </html>
