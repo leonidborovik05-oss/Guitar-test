@@ -60,7 +60,6 @@
             min-height: calc(100vh - 100px);
         }
         
-        /* Левая панель с темами */
         .topics-panel {
             width: 300px;
             background: white;
@@ -119,7 +118,6 @@
             color: #1e1e2f;
         }
         
-        /* Правая панель с контентом */
         .content-panel {
             flex: 1;
             background: white;
@@ -141,7 +139,6 @@
             color: #666;
         }
         
-        /* Стили для вступления (учебный текст) */
         .intro-section {
             background: #f8f9fc;
             border-radius: 20px;
@@ -175,33 +172,54 @@
             border-left: 3px solid #ffc107;
         }
         
-        /* Стили для тестовых вопросов */
-        .tests-section {
-            margin-top: 20px;
-        }
-        .tests-section h3 {
-            color: #1e1e2f;
-            margin-bottom: 20px;
-            font-size: 1.3em;
+        .difficulty-filters {
             display: flex;
-            align-items: center;
             gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
-        .difficulty-badge {
-            font-size: 0.8em;
-            padding: 4px 12px;
-            border-radius: 20px;
+        .difficulty-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .difficulty-easy {
+        .difficulty-btn.easy {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        .difficulty-btn.easy.active {
             background: #28a745;
             color: white;
         }
-        .difficulty-medium {
+        .difficulty-btn.medium {
+            background: #fff8e1;
+            color: #f57c00;
+            border: 1px solid #ffe082;
+        }
+        .difficulty-btn.medium.active {
             background: #ffc107;
             color: #1e1e2f;
         }
-        .difficulty-hard {
+        .difficulty-btn.hard {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        .difficulty-btn.hard.active {
             background: #dc3545;
+            color: white;
+        }
+        .difficulty-btn.all {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #90caf9;
+        }
+        .difficulty-btn.all.active {
+            background: #1e1e2f;
             color: white;
         }
         
@@ -342,13 +360,11 @@
     </header>
 
     <div class="main-container">
-        <!-- Левая панель с темами -->
         <div class="topics-panel">
             <h3>📚 Темы заданий</h3>
             <div id="topicList" class="topic-list"></div>
         </div>
 
-        <!-- Правая панель с контентом -->
         <div class="content-panel">
             <div class="topic-header">
                 <h2 id="topicTitle">Загрузка...</h2>
@@ -371,7 +387,13 @@
         
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         
-        // ========== ВСЕ ТЕМЫ С ВСТУПЛЕНИЯМИ И ВОПРОСАМИ ==========
+        // Supabase конфигурация
+        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+        
+        let supabase = null;
+        
+        // ========== ВСЕ 10 ТЕМ С ВСТУПЛЕНИЯМИ И ВОПРОСАМИ ==========
         const topics = [
             {
                 id: 0,
@@ -379,29 +401,9 @@
                 description: "Строение гитары, история, основные понятия",
                 intro: {
                     title: "📖 Что такое гитара?",
-                    content: `
-                        <p><strong>Гитара</strong> — это струнный щипковый музыкальный инструмент, один из самых популярных в мире. Она используется в самых разных жанрах: от классической музыки до рока и джаза.</p>
-                        
+                    content: `<p><strong>Гитара</strong> — это струнный щипковый музыкальный инструмент, один из самых популярных в мире.</p>
                         <h4>🎵 Строение гитары</h4>
-                        <p>Классическая гитара состоит из следующих частей:</p>
-                        <ul>
-                            <li><strong>Дека</strong> — корпус гитары, который усиливает звук. Бывает верхняя, нижняя и обечайка.</li>
-                            <li><strong>Гриф</strong> — длинная часть, на которой расположены лады.</li>
-                            <li><strong>Головка грифа</strong> — здесь находятся колки для настройки струн.</li>
-                            <li><strong>Лады</strong> — металлические порожки, разделяющие гриф на полутона.</li>
-                            <li><strong>Струны</strong> — у классической гитары 6 струн (нейлоновые), у семиструнной — 7 струн.</li>
-                            <li><strong>Розетка</strong> — круглое отверстие в деке для выхода звука.</li>
-                        </ul>
-                        
-                        <h4>🎵 Материалы изготовления</h4>
-                        <p><strong>Классическая гитара:</strong> корпус делают из красного дерева, кедра или ели. Струны — нейлоновые (первые три) и металлические (басовые).</p>
-                        <p><strong>Семиструнная гитара:</strong> часто используется в русской музыке. Корпус чаще всего из ели или красного дерева. Строй: D G B D G B D (ре-соль-си-ре-соль-си-ре).</p>
-                        <p><strong>Акустическая гитара:</strong> отличается от классической металлическими струнами и более узким грифом.</p>
-                        
-                        <div class="note">
-                            <strong>💡 Интересный факт:</strong> Самая старая из сохранившихся гитар была сделана в 1581 году! Она хранится в музее музыкальных инструментов в Париже.
-                        </div>
-                    `
+                        <ul><li><strong>Дека</strong> — корпус гитары</li><li><strong>Гриф</strong> — длинная часть с ладами</li><li><strong>Головка грифа</strong> — с колками для настройки</li><li><strong>Лады</strong> — металлические порожки</li><li><strong>Струны</strong> — 6 струн</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -410,14 +412,14 @@
                         { text: "Какой строй у классической гитары?", options: ["EADGBe", "EADGCF", "DGCFAD", "EBGDAE"], correct: 0 }
                     ],
                     medium: [
-                        { text: "Какая струна самая тонкая?", options: ["Первая", "Третья", "Шестая", "Все одинаковые"], correct: 0 },
-                        { text: "Что такое лад на гитаре?", options: ["Струна", "Промежуток между порожками", "Колок", "Дека"], correct: 1 },
-                        { text: "Для чего нужен медиатор?", options: ["Зажимать струны", "Настраивать гитару", "Защипывать струны", "Держать ноты"], correct: 2 }
+                        { text: "Что обозначает буква 'C' в аккордах?", options: ["До", "Ре", "Ми", "Соль"], correct: 0 },
+                        { text: "Как называется техника игры пальцами?", options: ["Бой", "Перебор", "Свип", "Тэппинг"], correct: 1 },
+                        { text: "Какая струна самая тонкая?", options: ["Первая", "Третья", "Шестая", "Все одинаковые"], correct: 0 }
                     ],
                     hard: [
-                        { text: "Сколько ладов обычно у классической гитары?", options: ["12", "19", "22", "24"], correct: 1 },
-                        { text: "Из какого дерева чаще всего делают верхнюю деку классической гитары?", options: ["Кедр или ель", "Дуб", "Берёза", "Сосна"], correct: 0 },
-                        { text: "Какой строй у семиструнной гитары?", options: ["EADGBE", "DGBDGBD", "EADGBe", "EBGDAE"], correct: 1 }
+                        { text: "Что такое лад на гитаре?", options: ["Струна", "Промежуток между порожками", "Колок", "Дека"], correct: 1 },
+                        { text: "Какой аккорд обозначается 'Am'?", options: ["Ля мажор", "Ля минор", "До мажор", "Ми минор"], correct: 1 },
+                        { text: "Для чего нужен медиатор?", options: ["Зажимать струны", "Настраивать гитару", "Защипывать струны", "Держать ноты"], correct: 2 }
                     ]
                 }
             },
@@ -427,21 +429,9 @@
                 description: "Построение аккордов, тональности, гармония",
                 intro: {
                     title: "📖 Что такое аккорды и тональности?",
-                    content: `
-                        <p><strong>Аккорд</strong> — это одновременное звучание трёх или более нот. Самые простые аккорды — мажорные и минорные.</p>
-                        
-                        <h4>🎵 Построение аккордов</h4>
-                        <p>Мажорный аккорд строится по формуле: <strong>тоника + большая терция + малая терция</strong> (например, C — до, ми, соль).</p>
-                        <p>Минорный аккорд: <strong>тоника + малая терция + большая терция</strong> (например, Am — ля, до, ми).</p>
-                        
-                        <h4>🎵 Что такое тональность?</h4>
-                        <p><strong>Тональность</strong> — это высотное положение лада. Бывают мажорные и минорные тональности. Например, C-dur (до мажор) — без знаков, G-dur (соль мажор) — с одним диезом (фа#).</p>
-                        <p>Каждая тональность имеет свою тонику (главную ноту). Например, в C-dur тоника — нота До.</p>
-                        
-                        <div class="note">
-                            <strong>💡 Запомните:</strong> Самые популярные аккорды для начинающих: Am, C, Dm, E, F, G. Они используются в сотнях песен!
-                        </div>
-                    `
+                    content: `<p><strong>Аккорд</strong> — это одновременное звучание трёх или более нот.</p>
+                        <p><strong>Тональность</strong> — это высотное положение лада.</p>
+                        <div class="note"><strong>💡 Запомните:</strong> Самые популярные аккорды: Am, C, Dm, E, F, G.</div>`
                 },
                 questions: {
                     easy: [
@@ -467,29 +457,7 @@
                 description: "Различные техники игры на гитаре",
                 intro: {
                     title: "📖 Основные техники игры на гитаре",
-                    content: `
-                        <p>Чтобы играть выразительно и красиво, нужно знать базовые приёмы игры. Вот основные из них:</p>
-                        
-                        <h4>🎸 Базовые приёмы</h4>
-                        <ul>
-                            <li><strong>Бой</strong> — ритмичное удары по струнам (вниз/вверх). Используется в аккомпанементе.</li>
-                            <li><strong>Перебор (арпеджио)</strong> — последовательное извлечение нот аккорда. Создаёт более нежное звучание.</li>
-                            <li><strong>Баррэ</strong> — зажимание всех или нескольких струн одним пальцем. Позволяет играть аккорды по всему грифу.</li>
-                            <li><strong>Легато</strong> — плавный переход между нотами (хаммер-он и пул-офф).</li>
-                            <li><strong>Глиссандо</strong> — скольжение пальцем по струне.</li>
-                            <li><strong>Вибрато</strong> — покачивание пальца для придания звуку певучести.</li>
-                            <li><strong>Флажолет</strong> — приём извлечения обертона (лёгкое касание струны).</li>
-                        </ul>
-                        
-                        <h4>🎸 Техники для сложных пассажей</h4>
-                        <p><strong>Тэппинг</strong> — постукивание по струнам пальцами правой руки. Используется в рок-музыке для быстрых пассажей.</p>
-                        <p><strong>Свип</strong> — быстрое проведение медиатором по нескольким струнам для арпеджио.</p>
-                        <p><strong>Альтернативный штрих</strong> — чередование ударов медиатором вниз-вверх для быстрой игры.</p>
-                        
-                        <div class="note">
-                            <strong>💡 Совет:</strong> Начинайте осваивать приёмы с медленного темпа. Используйте метроном для развития чувства ритма!
-                        </div>
-                    `
+                    content: `<ul><li><strong>Бой</strong> — ритмичные удары по струнам</li><li><strong>Перебор</strong> — последовательное извлечение нот</li><li><strong>Баррэ</strong> — зажимание всех струн одним пальцем</li><li><strong>Легато</strong> — плавный переход между нотами</li><li><strong>Глиссандо</strong> — скольжение по струне</li><li><strong>Вибрато</strong> — покачивание пальца</li><li><strong>Флажолет</strong> — приём извлечения обертона</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -514,34 +482,9 @@
                 name: "🔊 Струны и интервалы",
                 description: "Строи струн, интервалы, настройка",
                 intro: {
-                    title: "📖 Струны и интервалы в музыке",
-                    content: `
-                        <p><strong>Струны</strong> — важнейшая часть гитары. От них зависит звук и удобство игры.</p>
-                        
-                        <h4>🎵 Типы струн</h4>
-                        <ul>
-                            <li><strong>Нейлоновые</strong> — мягкие, используются на классических гитарах. Первые три струны — нейлон, басовые — металлические с нейлоновой оплёткой.</li>
-                            <li><strong>Металлические</strong> — яркие, звонкие. Используются на акустических и электрогитарах.</li>
-                            <li><strong>Толщина струн</strong> — измеряется в долях дюйма. Чем толще струна, тем плотнее звук, но сложнее зажимать.</li>
-                        </ul>
-                        
-                        <h4>🎵 Что такое интервалы?</h4>
-                        <p><strong>Интервал</strong> — это расстояние между двумя нотами. Основные интервалы:</p>
-                        <ul>
-                            <li><strong>Прима</strong> — 0 полутонов (одна и та же нота)</li>
-                            <li><strong>Малая секунда</strong> — 1 полутон</li>
-                            <li><strong>Большая секунда</strong> — 2 полутона</li>
-                            <li><strong>Малая терция</strong> — 3 полутона</li>
-                            <li><strong>Большая терция</strong> — 4 полутона</li>
-                            <li><strong>Кварта</strong> — 5 полутонов</li>
-                            <li><strong>Квинта</strong> — 7 полутонов</li>
-                            <li><strong>Октава</strong> — 12 полутонов</li>
-                        </ul>
-                        
-                        <div class="note">
-                            <strong>💡 Знаете ли вы?</strong> Между 5-й и 6-й струнами в стандартном строе — интервал кварта (5 полутонов).
-                        </div>
-                    `
+                    title: "📖 Струны и интервалы",
+                    content: `<p><strong>Интервал</strong> — расстояние между двумя нотами.</p>
+                        <ul><li>Прима — 0 полутонов</li><li>Секунда — 2 полутона</li><li>Терция — 4 полутона</li><li>Кварта — 5 полутонов</li><li>Квинта — 7 полутонов</li><li>Октава — 12 полутонов</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -567,29 +510,7 @@
                 description: "История гитары, музыкальная теория",
                 intro: {
                     title: "📖 История гитары",
-                    content: `
-                        <p>История гитары насчитывает несколько тысяч лет. Предшественниками гитары были древнегреческая кифара и арабский уд.</p>
-                        
-                        <h4>🎵 Эволюция гитары</h4>
-                        <ul>
-                            <li><strong>16 век</strong> — в Испании появляется виуэла и гитарра, имевшие 4-5 струн.</li>
-                            <li><strong>18 век</strong> — гитара получает шестую струну.</li>
-                            <li><strong>19 век</strong> — Антонио Торрес создаёт современную классическую гитару с увеличенным корпусом.</li>
-                            <li><strong>20 век</strong> — появляется электрогитара (Лес Пол, Фендер Стратокастер).</li>
-                        </ul>
-                        
-                        <h4>🎵 Музыкальная теория</h4>
-                        <p>Основные понятия:</p>
-                        <ul>
-                            <li><strong>Тоника</strong> — первая ступень лада (главная нота).</li>
-                            <li><strong>Субдоминанта</strong> — четвёртая ступень.</li>
-                            <li><strong>Доминанта</strong> — пятая ступень.</li>
-                        </ul>
-                        
-                        <div class="note">
-                            <strong>💡 Интересно:</strong> Антонио Торрес (1817-1892) считается отцом современной классической гитары. Именно он увеличил корпус и изменил конструкцию, что дало более мощный звук.
-                        </div>
-                    `
+                    content: `<ul><li>16 век — появление гитары в Испании</li><li>18 век — добавление шестой струны</li><li>19 век — Антонио Торрес создаёт современную классическую гитару</li><li>20 век — появление электрогитары</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -614,30 +535,9 @@
                 name: "🎼 Чтение нот и табулатур",
                 description: "Как читать ноты и табы",
                 intro: {
-                    title: "📖 Как читать табулатуры и ноты",
-                    content: `
-                        <p><strong>Табулатура (табы)</strong> — это самый простой способ записи музыки для гитары. Она показывает, какую струну и на каком ладу нужно зажать.</p>
-                        
-                        <h4>🎵 Как читать табулатуру</h4>
-                        <p>Табулатура состоит из 6 линий, каждая линия — это струна (верхняя линия — 1-я струна, нижняя — 6-я). Цифры на линиях означают номер лада. Ноль — открытая струна.</p>
-                        <p>Пример: на верхней линии цифра 3 означает — нужно зажать 1-ю струну на 3-м ладу.</p>
-                        
-                        <h4>🎵 Обозначения приёмов в табах</h4>
-                        <ul>
-                            <li><strong>h</strong> — хаммер-он (удар левой рукой)</li>
-                            <li><strong>p</strong> — пул-офф (срыв пальца)</li>
-                            <li><strong>s</strong> — слайд (скольжение)</li>
-                            <li><strong>b</strong> — бенд (подтяжка струны)</li>
-                            <li><strong>r</strong> — релиз (возврат бенда)</li>
-                        </ul>
-                        
-                        <h4>🎵 Ноты на грифе</h4>
-                        <p>На 5-м ладу 1-й струны — нота Ля (A). На 3-м ладу 2-й струны — нота Ре (D). На 5-м ладу 6-й струны — тоже нота Ля (A).</p>
-                        
-                        <div class="note">
-                            <strong>💡 Совет:</strong> Выучите расположение нот на первых 5 ладах — это основа для чтения табулатур!
-                        </div>
-                    `
+                    title: "📖 Как читать табулатуры",
+                    content: `<p><strong>Табулатура</strong> — запись музыки для гитары, показывающая струну и лад.</p>
+                        <ul><li>Цифра — номер лада</li><li>0 — открытая струна</li><li>h — хаммер-он</li><li>p — пул-офф</li><li>s — слайд</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -662,28 +562,8 @@
                 name: "🎤 Песни и репертуар",
                 description: "Разбор популярных песен, структура",
                 intro: {
-                    title: "📖 Как устроены песни",
-                    content: `
-                        <p>Песни имеют определённую структуру. Понимание этой структуры помогает быстро разучивать новые произведения.</p>
-                        
-                        <h4>🎵 Части песни</h4>
-                        <ul>
-                            <li><strong>Вступление (Intro)</strong> — начало песни, часто без вокала.</li>
-                            <li><strong>Куплет (Verse)</strong> — часть песни, где меняется текст, а музыка повторяется.</li>
-                            <li><strong>Припев (Chorus)</strong> — повторяющаяся часть, главная идея песни.</li>
-                            <li><strong>Бридж (Bridge)</strong> — контрастная часть между припевами.</li>
-                            <li><strong>Соло</strong> — инструментальная импровизация.</li>
-                            <li><strong>Аутро (Outro)</strong> — завершение песни.</li>
-                        </ul>
-                        
-                        <h4>🎵 Аккорды в песнях</h4>
-                        <p>Самые популярные аккорды: Am, C, G, D, Em, F. Они составляют основу тысяч песен.</p>
-                        <p><strong>Рифф</strong> — повторяющаяся мелодическая фраза, которая делает песню узнаваемой.</p>
-                        
-                        <div class="note">
-                            <strong>💡 Интересно:</strong> 12-тактовый блюз — самая распространённая структура в рок-музыке. Её используют The Beatles, Led Zeppelin, AC/DC и многие другие.
-                        </div>
-                    `
+                    title: "📖 Структура песни",
+                    content: `<ul><li><strong>Вступление</strong> — начало песни</li><li><strong>Куплет</strong> — часть с меняющимся текстом</li><li><strong>Припев</strong> — повторяющаяся часть</li><li><strong>Бридж</strong> — контрастная часть</li><li><strong>Соло</strong> — инструментальная импровизация</li><li><strong>Аутро</strong> — завершение</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -709,31 +589,7 @@
                 description: "Усилители, эффекты, запись",
                 intro: {
                     title: "📖 Оборудование для гитары",
-                    content: `
-                        <p>Для получения качественного звука важно правильно выбрать оборудование.</p>
-                        
-                        <h4>🎸 Основное оборудование</h4>
-                        <ul>
-                            <li><strong>Комбоусилитель</strong> — усилитель со встроенной колонкой. Бывают транзисторные и ламповые.</li>
-                            <li><strong>Звукосниматели</strong> — бывают синглы (чистый звук) и хамбакеры (мощный, без шума).</li>
-                            <li><strong>Тюнер</strong> — устройство для настройки гитары.</li>
-                            <li><strong>Медиаторы</strong> — бывают разной толщины (от 0.5 до 2.0 мм).</li>
-                        </ul>
-                        
-                        <h4>🎸 Эффекты для гитары</h4>
-                        <ul>
-                            <li><strong>Дисторшн / Овердрайв</strong> — искажение для рока и металла.</li>
-                            <li><strong>Реверберация</strong> — создаёт эффект эха, как в большом зале.</li>
-                            <li><strong>Хорус</strong> — добавляет «хоровое» звучание.</li>
-                            <li><strong>Фленджер / Фейзер</strong> — эффекты вращения.</li>
-                            <li><strong>Компрессор</strong> — выравнивает громкость.</li>
-                            <li><strong>Дилей (Delay)</strong> — задержка, повторение нот.</li>
-                        </ul>
-                        
-                        <div class="note">
-                            <strong>💡 Для начинающего гитариста достаточно:</strong> гитара, комбоусилитель, тюнер, медиатор и набор струн.
-                        </div>
-                    `
+                    content: `<ul><li><strong>Комбоусилитель</strong> — усилитель с колонкой</li><li><strong>Звукосниматели</strong> — синглы и хамбакеры</li><li><strong>Дисторшн</strong> — искажение</li><li><strong>Реверберация</strong> — эффект эха</li><li><strong>Хорус</strong> — хоровое звучание</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -759,29 +615,7 @@
                 description: "Упражнения для развития техники",
                 intro: {
                     title: "📖 Полезные упражнения",
-                    content: `
-                        <p>Регулярные упражнения — залог быстрого прогресса. Вот основные упражнения для развития техники:</p>
-                        
-                        <h4>🎸 Упражнения для начинающих</h4>
-                        <ul>
-                            <li><strong>Хроматическое упражнение</strong> — игра пальцами 1-2-3-4 на каждой струне. Развивает координацию.</li>
-                            <li><strong>Гаммы</strong> — игра до-мажорной гаммы в разных позициях. Развивает знание грифа.</li>
-                            <li><strong>Арпеджио</strong> — последовательное извлечение нот аккорда. Развивает перебор.</li>
-                            <li><strong>Упражнения с метрономом</strong> — развивают чувство ритма.</li>
-                        </ul>
-                        
-                        <h4>🎸 Лёгкие упражнения для разминки</h4>
-                        <p>Перед игрой обязательно разминайте руки:</p>
-                        <ul>
-                            <li>Сжимайте и разжимайте кисти (20 раз).</li>
-                            <li>Вращайте кистями по часовой стрелке и против.</li>
-                            <li>Поставьте пальцы на гриф и поднимайте по одному.</li>
-                        </ul>
-                        
-                        <div class="note">
-                            <strong>💡 Главное правило:</strong> Начинайте упражнения с медленного темпа, увеличивая скорость постепенно. Лучше сыграть медленно и чисто, чем быстро и грязно.
-                        </div>
-                    `
+                    content: `<ul><li><strong>Хроматическое упражнение</strong> — развитие координации</li><li><strong>Гаммы</strong> — знание грифа</li><li><strong>Арпеджио</strong> — развитие перебора</li><li><strong>Упражнения с метрономом</strong> — чувство ритма</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -807,31 +641,7 @@
                 description: "Полезные советы и лайфхаки",
                 intro: {
                     title: "📖 Советы от профессионалов",
-                    content: `
-                        <p>В этой теме мы собрали главные советы от опытных гитаристов. Они помогут вам быстрее прогрессировать и избежать типичных ошибок.</p>
-                        
-                        <h4>🎸 Советы для начинающих</h4>
-                        <ul>
-                            <li><strong>Занимайтесь регулярно</strong> — лучше 15 минут каждый день, чем 2 часа раз в неделю.</li>
-                            <li><strong>Следите за постановкой рук</strong> — правильная позиция поможет избежать травм.</li>
-                            <li><strong>Используйте метроном</strong> — ритм важнее скорости.</li>
-                            <li><strong>Записывайте свою игру</strong> — это поможет услышать ошибки.</li>
-                            <li><strong>Учитесь на любимых песнях</strong> — это поддерживает мотивацию.</li>
-                        </ul>
-                        
-                        <h4>🎸 Лайфхаки</h4>
-                        <ul>
-                            <li>Меняйте струны раз в 2-3 месяца (или чаще, если играете много).</li>
-                            <li>Храните гитару в чехле, в сухом месте, подальше от батарей.</li>
-                            <li>Перед игрой всегда настраивайте гитару — привыкайте к чистому звуку.</li>
-                            <li>Не бойтесь экспериментировать со звуком и искать свой стиль.</li>
-                            <li>Слушайте много разной музыки — это расширяет музыкальный кругозор.</li>
-                        </ul>
-                        
-                        <div class="note">
-                            <strong>💡 Главный совет:</strong> Любите музыку и получайте удовольствие от игры! Гитара — это инструмент для самовыражения и радости.
-                        </div>
-                    `
+                    content: `<ul><li>Занимайтесь регулярно (15 минут каждый день)</li><li>Следите за постановкой рук</li><li>Используйте метроном</li><li>Записывайте свою игру</li><li>Меняйте струны раз в 2-3 месяца</li><li>Храните гитару в чехле, в сухом месте</li></ul>`
                 },
                 questions: {
                     easy: [
@@ -855,31 +665,83 @@
 
         // Текущее состояние
         let currentTopicIndex = 0;
+        let currentDifficulty = 'all'; // all, easy, medium, hard
         let userAnswers = {};
+        let supabaseInitialized = false;
         
-        // Загружаем сохранённые ответы
-        const savedAnswers = JSON.parse(localStorage.getItem(`tasks_answers_${userLogin}`));
-        if (savedAnswers) {
-            userAnswers = savedAnswers;
-        } else {
-            // Инициализируем
-            topics.forEach((topic, i) => {
-                if (!userAnswers[i]) {
-                    userAnswers[i] = {};
+        // Загрузка ответов из Supabase
+        async function loadAnswersFromSupabase() {
+            try {
+                const { data, error } = await supabase
+                    .from('tasks_answers')
+                    .select('answers')
+                    .eq('student_login', userLogin);
+                
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    userAnswers = data[0].answers || {};
                 }
-            });
+                
+                // Инициализируем структуру для всех тем
+                for (let i = 0; i < topics.length; i++) {
+                    if (!userAnswers[i]) {
+                        userAnswers[i] = {};
+                    }
+                }
+                
+                supabaseInitialized = true;
+                updateTopicProgress();
+                renderContent();
+            } catch (error) {
+                console.error('Ошибка загрузки ответов:', error);
+                supabaseInitialized = true;
+                updateTopicProgress();
+                renderContent();
+            }
         }
         
-        // Функция обновления прогресса на левой панели
+        // Сохранение ответов в Supabase
+        async function saveAnswersToSupabase() {
+            if (!supabase) return;
+            
+            try {
+                const { data, error: selectError } = await supabase
+                    .from('tasks_answers')
+                    .select('id')
+                    .eq('student_login', userLogin);
+                
+                if (selectError) throw selectError;
+                
+                if (data && data.length > 0) {
+                    await supabase
+                        .from('tasks_answers')
+                        .update({ answers: userAnswers })
+                        .eq('student_login', userLogin);
+                } else {
+                    await supabase
+                        .from('tasks_answers')
+                        .insert([{
+                            student_login: userLogin,
+                            answers: userAnswers
+                        }]);
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения ответов:', error);
+            }
+        }
+        
+        // Функция обновления прогресса
         function updateTopicProgress() {
             const topicList = document.getElementById('topicList');
             let html = '';
             
             topics.forEach((topic, i) => {
                 let answeredCount = 0;
-                const totalQuestions = 9; // 3 легких + 3 средних + 3 сложных
+                const answers = userAnswers[i] || {};
+                const totalQuestions = 9;
                 for (let j = 0; j < totalQuestions; j++) {
-                    if (userAnswers[i] && userAnswers[i][j] !== undefined && userAnswers[i][j] !== null) {
+                    if (answers[j] !== undefined && answers[j] !== null) {
                         answeredCount++;
                     }
                 }
@@ -892,95 +754,91 @@
             });
             
             topicList.innerHTML = html;
-            
             document.getElementById('topicTitle').textContent = topics[currentTopicIndex].name;
             document.getElementById('topicDescription').textContent = topics[currentTopicIndex].description;
         }
         
-        // Переключение темы
         function switchTopic(index) {
             currentTopicIndex = index;
+            currentDifficulty = 'all';
             updateTopicProgress();
             renderContent();
         }
         
-        // Рендер всего контента темы
-        function renderContent() {
-            const topic = topics[currentTopicIndex];
-            const container = document.getElementById('contentContainer');
-            
-            let html = `
-                <div class="intro-section">
-                    <h3>${topic.intro.title}</h3>
-                    ${topic.intro.content}
-                </div>
-                
-                <div class="tests-section">
-                    <h3>📝 Проверь себя!</h3>
-            `;
-            
-            // Добавляем вопросы по сложности
-            const difficulties = [
-                { name: "Лёгкие вопросы", key: "easy", badge: "difficulty-easy", icon: "🌱" },
-                { name: "Средние вопросы", key: "medium", badge: "difficulty-medium", icon: "🌿" },
-                { name: "Сложные вопросы", key: "hard", badge: "difficulty-hard", icon: "🌳" }
-            ];
-            
-            let questionIndex = 0;
-            
-            difficulties.forEach(diff => {
-                const questionsList = topic.questions[diff.key];
-                if (questionsList) {
-                    html += `
-                        <div style="margin-top: 25px;">
-                            <h4 style="margin-bottom: 15px;">
-                                <span class="difficulty-badge ${diff.badge}">${diff.icon} ${diff.name}</span>
-                            </h4>
-                    `;
-                    
-                    questionsList.forEach((q, idx) => {
-                        const savedAnswer = userAnswers[currentTopicIndex] ? userAnswers[currentTopicIndex][questionIndex] : null;
-                        html += `
-                            <div class="question-block" data-qidx="${questionIndex}">
-                                <div class="question-text">${questionIndex + 1}. ${q.text}</div>
-                                <div class="answers-list" data-qidx="${questionIndex}">
-                                    ${q.options.map((opt, optIdx) => `
-                                        <div class="answer-item ${savedAnswer === optIdx ? 'selected' : ''}" onclick="selectAnswer(${currentTopicIndex}, ${questionIndex}, ${optIdx})">
-                                            <div class="answer-marker">${String.fromCharCode(65 + optIdx)}</div>
-                                            <div class="answer-text">${opt}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `;
-                        questionIndex++;
-                    });
-                    html += `</div>`;
-                }
+        function setDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
             });
+            document.querySelector(`.difficulty-btn.${difficulty}`).classList.add('active');
+            renderQuestions();
+        }
+        
+        function renderQuestions() {
+            const topic = topics[currentTopicIndex];
+            const container = document.getElementById('questionsContainer');
+            if (!container) return;
             
-            // Добавляем кнопку проверки
-            html += `
-                    <div class="submit-section">
-                        <button class="submit-btn" onclick="checkAnswers()">✅ Проверить ответы</button>
+            let questionsList = [];
+            
+            if (currentDifficulty === 'all') {
+                questionsList = [
+                    ...topic.questions.easy.map((q, idx) => ({ ...q, difficulty: 'easy', originalIdx: idx })),
+                    ...topic.questions.medium.map((q, idx) => ({ ...q, difficulty: 'medium', originalIdx: idx })),
+                    ...topic.questions.hard.map((q, idx) => ({ ...q, difficulty: 'hard', originalIdx: idx }))
+                ];
+            } else if (currentDifficulty === 'easy') {
+                questionsList = topic.questions.easy.map((q, idx) => ({ ...q, difficulty: 'easy', originalIdx: idx }));
+            } else if (currentDifficulty === 'medium') {
+                questionsList = topic.questions.medium.map((q, idx) => ({ ...q, difficulty: 'medium', originalIdx: idx }));
+            } else if (currentDifficulty === 'hard') {
+                questionsList = topic.questions.hard.map((q, idx) => ({ ...q, difficulty: 'hard', originalIdx: idx }));
+            }
+            
+            let html = '';
+            questionsList.forEach((q, idx) => {
+                const globalIdx = getGlobalQuestionIndex(currentDifficulty, idx);
+                const savedAnswer = userAnswers[currentTopicIndex] ? userAnswers[currentTopicIndex][globalIdx] : null;
+                
+                html += `
+                    <div class="question-block">
+                        <div class="question-text">${idx + 1}. ${q.text}</div>
+                        <div class="answers-list" data-qidx="${globalIdx}">
+                            ${q.options.map((opt, optIdx) => `
+                                <div class="answer-item ${savedAnswer === optIdx ? 'selected' : ''}" onclick="selectAnswer(${currentTopicIndex}, ${globalIdx}, ${optIdx})">
+                                    <div class="answer-marker">${String.fromCharCode(65 + optIdx)}</div>
+                                    <div class="answer-text">${opt}</div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                    <div id="resultMessage" class="result-message" style="display: none;"></div>
-                </div>
-            `;
+                `;
+            });
             
             container.innerHTML = html;
         }
         
-        // Выбор ответа
+        function getGlobalQuestionIndex(difficulty, localIdx) {
+            if (difficulty === 'all') {
+                return localIdx;
+            } else if (difficulty === 'easy') {
+                return localIdx;
+            } else if (difficulty === 'medium') {
+                return 3 + localIdx;
+            } else if (difficulty === 'hard') {
+                return 6 + localIdx;
+            }
+            return localIdx;
+        }
+        
         function selectAnswer(topicId, questionIndex, answerIndex) {
             if (!userAnswers[topicId]) {
                 userAnswers[topicId] = {};
             }
             userAnswers[topicId][questionIndex] = answerIndex;
-            saveAnswers();
+            saveAnswersToSupabase();
             
-            // Обновляем отображение выбранного ответа
-            const questionBlock = document.querySelector(`.question-block[data-qidx="${questionIndex}"]`);
+            const questionBlock = document.querySelector(`.answers-list[data-qidx="${questionIndex}"]`);
             if (questionBlock) {
                 const answers = questionBlock.querySelectorAll('.answer-item');
                 answers.forEach((item, idx) => {
@@ -995,35 +853,40 @@
             updateTopicProgress();
         }
         
-        // Проверка ответов
         function checkAnswers() {
             const topic = topics[currentTopicIndex];
+            let questionsList = [];
+            
+            if (currentDifficulty === 'all') {
+                questionsList = [
+                    ...topic.questions.easy.map((q, idx) => ({ ...q, difficulty: 'easy', localIdx: idx, globalIdx: idx })),
+                    ...topic.questions.medium.map((q, idx) => ({ ...q, difficulty: 'medium', localIdx: idx, globalIdx: 3 + idx })),
+                    ...topic.questions.hard.map((q, idx) => ({ ...q, difficulty: 'hard', localIdx: idx, globalIdx: 6 + idx }))
+                ];
+            } else if (currentDifficulty === 'easy') {
+                questionsList = topic.questions.easy.map((q, idx) => ({ ...q, difficulty: 'easy', localIdx: idx, globalIdx: idx }));
+            } else if (currentDifficulty === 'medium') {
+                questionsList = topic.questions.medium.map((q, idx) => ({ ...q, difficulty: 'medium', localIdx: idx, globalIdx: 3 + idx }));
+            } else if (currentDifficulty === 'hard') {
+                questionsList = topic.questions.hard.map((q, idx) => ({ ...q, difficulty: 'hard', localIdx: idx, globalIdx: 6 + idx }));
+            }
+            
             let correctCount = 0;
-            let totalQuestions = 0;
             const results = [];
             
-            let questionIndex = 0;
-            const difficulties = ['easy', 'medium', 'hard'];
-            
-            difficulties.forEach(diff => {
-                const questionsList = topic.questions[diff];
-                if (questionsList) {
-                    questionsList.forEach((q, idx) => {
-                        const savedAnswer = userAnswers[currentTopicIndex] ? userAnswers[currentTopicIndex][questionIndex] : null;
-                        const isCorrect = savedAnswer === q.correct;
-                        if (isCorrect) correctCount++;
-                        totalQuestions++;
-                        results.push({
-                            number: questionIndex + 1,
-                            text: q.text,
-                            isCorrect: isCorrect,
-                            correctAnswer: q.options[q.correct]
-                        });
-                        questionIndex++;
-                    });
-                }
+            questionsList.forEach((q) => {
+                const savedAnswer = userAnswers[currentTopicIndex] ? userAnswers[currentTopicIndex][q.globalIdx] : null;
+                const isCorrect = savedAnswer === q.correct;
+                if (isCorrect) correctCount++;
+                results.push({
+                    text: q.text,
+                    isCorrect: isCorrect,
+                    correctAnswer: q.options[q.correct],
+                    userAnswer: savedAnswer !== null ? q.options[savedAnswer] : 'Не отвечено'
+                });
             });
             
+            const totalQuestions = questionsList.length;
             const resultDiv = document.getElementById('resultMessage');
             resultDiv.style.display = 'block';
             
@@ -1031,52 +894,122 @@
             
             if (correctCount === totalQuestions) {
                 resultDiv.className = 'result-message success';
-                resultDiv.innerHTML = `
-                    <strong>🎉 Отлично! ${correctCount}/${totalQuestions} правильных ответов (${percentage}%)</strong><br>
-                    Вы отлично усвоили тему! Можете переходить к следующей.
-                `;
-            } else if (correctCount >= 7) {
+                resultDiv.innerHTML = `<strong>🎉 Отлично! ${correctCount}/${totalQuestions} правильных ответов (${percentage}%)</strong><br>Вы отлично усвоили материал!`;
+            } else if (correctCount >= Math.floor(totalQuestions * 0.7)) {
                 resultDiv.className = 'result-message success';
-                resultDiv.innerHTML = `
-                    <strong>✅ Хороший результат! ${correctCount}/${totalQuestions} правильных ответов (${percentage}%)</strong><br>
-                    Рекомендуем повторить вопросы, на которые ответили неправильно.
-                `;
+                resultDiv.innerHTML = `<strong>✅ Хороший результат! ${correctCount}/${totalQuestions} правильных ответов (${percentage}%)</strong><br>Рекомендуем повторить вопросы, на которые ответили неправильно.`;
             } else {
                 resultDiv.className = 'result-message error';
-                resultDiv.innerHTML = `
-                    <strong>❌ ${correctCount}/${totalQuestions} правильных ответов (${percentage}%)</strong><br>
-                    Рекомендуем перечитать вступление и пройти тест заново.
-                `;
+                resultDiv.innerHTML = `<strong>❌ ${correctCount}/${totalQuestions} правильных ответов (${percentage}%)</strong><br>Рекомендуем перечитать вступление и пройти тест заново.`;
             }
             
-            // Добавляем детализацию
             let detailsHtml = '<div style="margin-top: 15px; text-align: left;"><strong>📋 Разбор ответов:</strong><ul style="margin-top: 10px;">';
-            results.forEach(r => {
+            results.forEach((r, i) => {
                 detailsHtml += `
                     <li style="margin: 5px 0; ${r.isCorrect ? 'color: #28a745;' : 'color: #dc3545;'}">
-                        <strong>Вопрос ${r.number}:</strong> ${r.text}<br>
-                        ${!r.isCorrect ? `&nbsp;&nbsp;✓ Правильный ответ: ${r.correctAnswer}` : '✓ Ответ верный'}
+                        <strong>Вопрос ${i + 1}:</strong> ${r.text}<br>
+                        ${!r.isCorrect ? `&nbsp;&nbsp;✓ Правильный ответ: ${r.correctAnswer}<br>&nbsp;&nbsp;✗ Ваш ответ: ${r.userAnswer}` : '✓ Ответ верный'}
                     </li>
                 `;
             });
             detailsHtml += '</ul></div>';
             resultDiv.innerHTML += detailsHtml;
             
-            // Сохраняем прогресс
-            const progress = JSON.parse(localStorage.getItem(`progress_${userLogin}`)) || {};
-            progress.tasks_progress = progress.tasks_progress || {};
-            progress.tasks_progress[currentTopicIndex] = { correct: correctCount, total: totalQuestions, percentage: percentage };
-            localStorage.setItem(`progress_${userLogin}`, JSON.stringify(progress));
+            saveProgressToSupabase(currentTopicIndex, correctCount, totalQuestions);
         }
         
-        // Сохранение ответов
-        function saveAnswers() {
-            localStorage.setItem(`tasks_answers_${userLogin}`, JSON.stringify(userAnswers));
+        async function saveProgressToSupabase(topicId, correctCount, totalCount) {
+            if (!supabase) return;
+            
+            try {
+                const { data, error: selectError } = await supabase
+                    .from('student_progress')
+                    .select('id')
+                    .eq('student_login', userLogin)
+                    .eq('topic_id', topicId);
+                
+                if (selectError) throw selectError;
+                
+                const percentage = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+                
+                if (data && data.length > 0) {
+                    await supabase
+                        .from('student_progress')
+                        .update({ 
+                            correct_count: correctCount, 
+                            total_count: totalCount,
+                            percentage: percentage,
+                            updated_at: new Date()
+                        })
+                        .eq('student_login', userLogin)
+                        .eq('topic_id', topicId);
+                } else {
+                    await supabase
+                        .from('student_progress')
+                        .insert([{
+                            student_login: userLogin,
+                            topic_id: topicId,
+                            correct_count: correctCount,
+                            total_count: totalCount,
+                            percentage: percentage,
+                            updated_at: new Date()
+                        }]);
+                }
+            } catch (error) {
+                console.error('Ошибка сохранения прогресса:', error);
+            }
         }
         
-        // Инициализация
-        updateTopicProgress();
-        renderContent();
+        function renderContent() {
+            const topic = topics[currentTopicIndex];
+            const container = document.getElementById('contentContainer');
+            
+            let html = `
+                <div class="intro-section">
+                    <h3>${topic.intro.title}</h3>
+                    ${topic.intro.content}
+                </div>
+                
+                <div class="tests-section">
+                    <h3 style="margin-bottom: 15px;">📝 Проверь себя!</h3>
+                    <div class="difficulty-filters">
+                        <button class="difficulty-btn all active" onclick="setDifficulty('all')">Все вопросы</button>
+                        <button class="difficulty-btn easy" onclick="setDifficulty('easy')">🌱 Лёгкие</button>
+                        <button class="difficulty-btn medium" onclick="setDifficulty('medium')">🌿 Средние</button>
+                        <button class="difficulty-btn hard" onclick="setDifficulty('hard')">🌳 Сложные</button>
+                    </div>
+                    <div id="questionsContainer"></div>
+                    <div class="submit-section">
+                        <button class="submit-btn" onclick="checkAnswers()">✅ Проверить ответы</button>
+                    </div>
+                    <div id="resultMessage" class="result-message" style="display: none;"></div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            renderQuestions();
+        }
+        
+        // Инициализация Supabase
+        async function initSupabase() {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase инициализирован');
+                await loadAnswersFromSupabase();
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await initSupabase();
+            }
+        }
+        
+        // Загрузка Supabase JS
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+            console.log('Supabase JS загружен');
+            initSupabase();
+        };
+        document.head.appendChild(script);
     </script>
 </body>
 </html>
