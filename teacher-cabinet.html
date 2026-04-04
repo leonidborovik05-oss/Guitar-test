@@ -594,7 +594,6 @@
             <div id="studentsContainer" class="students-grid"></div>
         </div>
 
-        <!-- Модальные окна -->
         <div id="addStudentModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -691,12 +690,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase конфигурация
+        // Supabase конфигурация - используем глобальный объект window.supabase
         const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
         
-        let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let supabaseReady = true;
+        // Создаём клиент Supabase
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         // Данные пользователя
         const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
@@ -729,7 +728,7 @@
             try {
                 console.log('📥 Загрузка данных из Supabase...');
                 
-                const { data: studentsData, error: studentsError } = await supabase
+                const { data: studentsData, error: studentsError } = await supabaseClient
                     .from('students')
                     .select('*')
                     .order('name');
@@ -738,7 +737,7 @@
                 students = studentsData || [];
                 console.log(`✅ Загружено учеников: ${students.length}`);
                 
-                const { data: groupsData, error: groupsError } = await supabase
+                const { data: groupsData, error: groupsError } = await supabaseClient
                     .from('groups')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -747,7 +746,7 @@
                 groups = groupsData || [];
                 console.log(`✅ Загружено групп: ${groups.length}`);
                 
-                const { data: notesData, error: notesError } = await supabase
+                const { data: notesData, error: notesError } = await supabaseClient
                     .from('teacher_notes')
                     .select('*')
                     .order('id', { ascending: false });
@@ -755,7 +754,7 @@
                 if (notesError) throw notesError;
                 notes = notesData || [];
                 
-                const { data: messagesData, error: messagesError } = await supabase
+                const { data: messagesData, error: messagesError } = await supabaseClient
                     .from('group_messages')
                     .select('*')
                     .order('id', { ascending: false });
@@ -932,12 +931,12 @@
         async function showStudentProgress(login, name) {
             document.getElementById('progressStudentName').textContent = `📚 ${name}`;
             
-            const { data: progressData } = await supabase
+            const { data: progressData } = await supabaseClient
                 .from('student_progress')
                 .select('*')
                 .eq('student_login', login);
             
-            const { data: answersData } = await supabase
+            const { data: answersData } = await supabaseClient
                 .from('tasks_answers')
                 .select('answers')
                 .eq('student_login', login);
@@ -1059,7 +1058,7 @@
                 return;
             }
             
-            const { data: existing } = await supabase
+            const { data: existing } = await supabaseClient
                 .from('students')
                 .select('login')
                 .eq('login', login);
@@ -1070,7 +1069,7 @@
             }
             
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('students')
                     .insert([{ login, password, name }]);
                 
@@ -1097,7 +1096,7 @@
             }
             
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('teacher_notes')
                     .insert([{
                         student_login: studentLogin,
@@ -1137,7 +1136,7 @@
             }
             
             try {
-                const { data: groupData, error: groupError } = await supabase
+                const { data: groupData, error: groupError } = await supabaseClient
                     .from('groups')
                     .insert([{
                         name: name,
@@ -1151,7 +1150,7 @@
                 if (groupError) throw groupError;
                 
                 for (const studentLogin of members) {
-                    await supabase
+                    await supabaseClient
                         .from('teacher_notes')
                         .insert([{
                             student_login: studentLogin,
@@ -1191,7 +1190,6 @@
             alert(`👤 ${student.name}\nЛогин: ${student.login}\nПароль: ${student.password}${notesText}`);
         }
         
-        // Загрузка данных
         loadData();
     </script>
 </body>
