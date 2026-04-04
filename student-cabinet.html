@@ -5,635 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кабинет ученика | Студия гитары</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            min-height: 100vh;
-        }
-        .header {
-            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        .logo span {
-            color: #f0b90b;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-        .notification-bell {
-            position: relative;
-            cursor: pointer;
-            font-size: 1.5em;
-            padding: 5px;
-        }
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            color: white;
-            font-size: 0.6em;
-            font-weight: bold;
-            min-width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-        }
-        .user-name {
-            background: #3a3a55;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-        }
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        .logout-btn:hover {
-            background: #b02a37;
-        }
-        .main-container {
-            max-width: 1300px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-        .greeting-card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-            border-left: 8px solid #f0b90b;
-        }
-        .greeting-card h2 {
-            color: #1e1e2f;
-            font-size: 2em;
-        }
-        .greeting-card p {
-            color: #555;
-            font-size: 1.1em;
-            margin-top: 10px;
-        }
-        .role-badge {
-            background: #ffc107;
-            color: #1e1e2f;
-            padding: 5px 15px;
-            border-radius: 30px;
-            display: inline-block;
-            margin-top: 10px;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+        .header { background: #1e1e2f; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8em; font-weight: bold; }
+        .user-info { display: flex; gap: 20px; align-items: center; }
+        .user-name { background: #3a3a55; padding: 8px 20px; border-radius: 40px; }
+        .logout-btn { background: #dc3545; padding: 8px 20px; border-radius: 40px; text-decoration: none; color: white; }
+        .main-container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
+        .greeting-card { background: white; border-radius: 20px; padding: 25px; margin-bottom: 30px; border-left: 8px solid #f0b90b; }
+        .action-buttons { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .action-btn { background: #1e1e2f; color: white; border: none; padding: 12px 25px; border-radius: 50px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .action-btn.tasks { background: #28a745; }
+        .action-btn.groups { background: #6f42c1; }
+        .action-btn.library { background: #17a2b8; }
         
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        .action-btn {
-            background: #1e1e2f;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-        }
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-        .action-btn.tasks {
-            background: #28a745;
-        }
-        .action-btn.notifications {
-            background: #ffc107;
-            color: #1e1e2f;
-        }
-        .action-btn.groups {
-            background: #6f42c1;
-        }
-        .action-btn.library {
-            background: #17a2b8;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .modal.active {
-            display: flex;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 800px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .modal-header h3 {
-            font-size: 1.5em;
-            color: #1e1e2f;
-        }
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 2em;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .notes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .note-item {
-            background: #f8f9fc;
-            border-radius: 15px;
-            padding: 20px;
-            border-left: 5px solid #ffc107;
-        }
-        .note-title {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #1e1e2f;
-            margin-bottom: 10px;
-        }
-        .note-date {
-            color: #999;
-            font-size: 0.85em;
-            margin-bottom: 10px;
-        }
-        .note-text {
-            color: #555;
-            line-height: 1.5;
-        }
-        
-        .groups-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .group-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            border-left: 5px solid #6f42c1;
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        .group-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.1);
-        }
-        .group-name {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #1e1e2f;
-            margin-bottom: 10px;
-        }
-        .group-description {
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 0.95em;
-        }
-        .group-meta {
-            display: flex;
-            justify-content: space-between;
-            color: #999;
-            font-size: 0.85em;
-        }
-        
-        /* Стили для прогресса по темам */
-        .topics-progress {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            margin-top: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .topics-progress h3 {
-            color: #1e1e2f;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0b90b;
-        }
-        .topics-progress-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-        }
-        .topic-progress-card {
-            background: #f8f9fc;
-            border-radius: 15px;
-            padding: 15px;
-            border-left: 4px solid #28a745;
-        }
-        .topic-progress-name {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #1e1e2f;
-        }
-        .topic-progress-bar {
-            background: #e0e0e0;
-            border-radius: 10px;
-            height: 8px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-        .topic-progress-fill {
-            background: #28a745;
-            height: 100%;
-            border-radius: 10px;
-            width: 0%;
-            transition: width 0.3s;
-        }
-        .topic-progress-stats {
-            font-size: 0.85em;
-            color: #666;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-            font-size: 1.1em;
-            background: white;
-            border-radius: 15px;
-        }
-        
-        .footer-links {
-            margin-top: 30px;
-            text-align: right;
-        }
-        .footer-links a {
-            color: #1e1e2f;
-            text-decoration: none;
-            border-bottom: 1px dashed #aaa;
-        }
+        .students-section { background: white; border-radius: 20px; padding: 25px; margin-bottom: 30px; }
+        .section-title { font-size: 1.4em; margin-bottom: 20px; }
+        .students-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .group-card { background: #f8f9fc; border-radius: 15px; padding: 20px; border-left: 5px solid #6f42c1; cursor: pointer; }
+        .group-name { font-size: 1.2em; font-weight: 600; }
+        .group-members { color: #666; margin: 10px 0; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .footer-links { margin-top: 30px; text-align: right; }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo">🎸 Guitar<span>Studio</span></div>
+    <div class="header">
+        <div class="logo">🎸 GuitarStudio</div>
         <div class="user-info">
-            <div class="notification-bell" onclick="openNotificationsModal()">
-                🔔
-                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
-            </div>
             <div class="user-name" id="currentUserDisplay">Загрузка...</div>
             <a href="login.html" class="logout-btn">Выйти</a>
         </div>
-    </header>
+    </div>
 
     <div class="main-container">
         <div class="greeting-card">
             <h2 id="greetingTitle">Привет!</h2>
-            <p>Продолжай заниматься. Выбери, чем хочешь заняться сейчас.</p>
-            <span class="role-badge">Ученик</span>
-            
+            <p>Твои группы и задания</p>
             <div class="action-buttons">
-                <a href="tasks.html" class="action-btn tasks">
-                    📚 Задания
-                </a>
-                <button class="action-btn notifications" onclick="openNotificationsModal()">
-                    🔔 Уведомления
-                    <span id="notificationCount" style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.8em;">0</span>
-                </button>
-                <button class="action-btn groups" onclick="openGroupsModal()">
-                    👥 Мои группы
-                </button>
-                <a href="library-student.html" class="action-btn library">
-                    📹 Библиотека
-                </a>
+                <a href="tasks.html" class="action-btn tasks">📚 Задания</a>
+                <button class="action-btn groups" id="groupsBtn">👥 Мои группы</button>
+                <a href="library-student.html" class="action-btn library">📹 Библиотека</a>
             </div>
         </div>
 
-        <!-- Блок прогресса по темам -->
-        <div class="topics-progress">
-            <h3>📊 Мой прогресс по темам</h3>
-            <div id="topicsProgressContainer" class="topics-progress-grid">
-                <div class="empty-state">Загрузка прогресса...</div>
-            </div>
+        <div class="students-section">
+            <div class="section-title">👥 Мои группы</div>
+            <div id="groupsContainer" class="students-grid">Загрузка...</div>
         </div>
 
-        <!-- Модальное окно уведомлений -->
-        <div id="notificationsModal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>🔔 Уведомления</h3>
-                    <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
-                </div>
-                <div id="notesContainer" class="notes-list"></div>
-            </div>
-        </div>
-
-        <!-- Модальное окно групп -->
-        <div id="groupsModal" class="modal">
-            <div class="modal-content" style="max-width: 900px;">
-                <div class="modal-header">
-                    <h3>👥 Мои группы</h3>
-                    <button class="close-btn" onclick="closeGroupsModal()">&times;</button>
-                </div>
-                <div id="groupsContainer" class="groups-grid"></div>
-            </div>
-        </div>
-
-        <div class="footer-links">
-            <a href="index.html">🏠 На главную страницу студии</a>
-        </div>
+        <div class="footer-links"><a href="index.html">🏠 На главную</a></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase конфигурация
-        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
-        
-        let supabase = null;
-        
-        // Данные ученика
-        const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
-        const userName = localStorage.getItem('currentUserName') || 'Ученик';
-        const userDisplay = localStorage.getItem('currentUserDisplay') || '👨‍🎓 Ученик';
-        
-        document.getElementById('currentUserDisplay').textContent = userDisplay;
-        document.getElementById('greetingTitle').textContent = `Привет, ${userName}!`;
-        
-        // Список тем (10 тем)
-        const topics = [
-            { id: 0, name: "🎸 Всё о гитаре", totalQuestions: 9 },
-            { id: 1, name: "🎵 Аккорды и тональности", totalQuestions: 9 },
-            { id: 2, name: "✋ Техники и приёмы", totalQuestions: 9 },
-            { id: 3, name: "🔊 Струны и интервалы", totalQuestions: 9 },
-            { id: 4, name: "📖 История и теория", totalQuestions: 9 },
-            { id: 5, name: "🎼 Чтение нот и табулатур", totalQuestions: 9 },
-            { id: 6, name: "🎤 Песни и репертуар", totalQuestions: 9 },
-            { id: 7, name: "🎧 Звук и оборудование", totalQuestions: 9 },
-            { id: 8, name: "🖐️ Упражнения и развитие", totalQuestions: 9 },
-            { id: 9, name: "🌟 Советы профессионалов", totalQuestions: 9 }
-        ];
-        
-        // Данные
-        let notes = [];
-        let groups = [];
-        let groupMessages = [];
-        let studentProgress = [];
-        let tasksAnswers = {};
-        
-        // Инициализация Supabase
-        async function initSupabase() {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('Supabase инициализирован');
-                await loadData();
-            } else {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await initSupabase();
-            }
-        }
-        
-        // Загрузка данных из Supabase
-        async function loadData() {
-            try {
-                // Загружаем заметки для ученика
-                const { data: notesData, error: notesError } = await supabase
-                    .from('teacher_notes')
-                    .select('*')
-                    .eq('student_login', userLogin)
-                    .order('id', { ascending: false });
-                
-                if (notesError) throw notesError;
-                notes = notesData || [];
-                
-                // Загружаем группы, в которых состоит ученик
-                const { data: groupsData, error: groupsError } = await supabase
-                    .from('groups')
-                    .select('*');
-                
-                if (groupsError) throw groupsError;
-                
-                // Фильтруем группы, где ученик есть в members
-                groups = (groupsData || []).filter(group => 
-                    group.members && group.members.includes(userLogin)
-                );
-                
-                // Загружаем сообщения для уведомлений
-                const { data: messagesData, error: messagesError } = await supabase
-                    .from('group_messages')
-                    .select('*');
-                
-                if (messagesError) throw messagesError;
-                groupMessages = messagesData || [];
-                
-                // Загружаем прогресс ученика
-                const { data: progressData, error: progressError } = await supabase
-                    .from('student_progress')
-                    .select('*')
-                    .eq('student_login', userLogin);
-                
-                if (progressError) throw progressError;
-                studentProgress = progressData || [];
-                
-                // Загружаем ответы на задания
-                const { data: answersData, error: answersError } = await supabase
-                    .from('tasks_answers')
-                    .select('answers')
-                    .eq('student_login', userLogin);
-                
-                if (answersError) throw answersError;
-                if (answersData && answersData.length > 0) {
-                    tasksAnswers = answersData[0].answers || {};
+        (function() {
+            const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+            
+            const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
+            const userName = localStorage.getItem('currentUserName') || 'Ученик';
+            document.getElementById('currentUserDisplay').textContent = localStorage.getItem('currentUserDisplay') || '👨‍🎓 ' + userName;
+            document.getElementById('greetingTitle').textContent = `Привет, ${userName}!`;
+            
+            async function loadGroups() {
+                const { data } = await _supabase.from('groups').select('*');
+                const myGroups = (data || []).filter(g => g.members && g.members.includes(userLogin));
+                const container = document.getElementById('groupsContainer');
+                if (myGroups.length === 0) {
+                    container.innerHTML = '<div class="empty-state">👥 Вы пока не состоите в группах</div>';
+                    return;
                 }
-                
-                renderTopicsProgress();
-                updateNotificationBadge();
-                
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
-            }
-        }
-        
-        function renderTopicsProgress() {
-            const container = document.getElementById('topicsProgressContainer');
-            
-            let html = '';
-            for (const topic of topics) {
-                const progress = studentProgress.find(p => p.topic_id === topic.id);
-                const correctCount = progress ? progress.correct_count || 0 : 0;
-                const totalCount = topic.totalQuestions;
-                const percentage = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-                
-                html += `
-                    <div class="topic-progress-card">
-                        <div class="topic-progress-name">${topic.name}</div>
-                        <div class="topic-progress-bar">
-                            <div class="topic-progress-fill" style="width: ${percentage}%;"></div>
-                        </div>
-                        <div class="topic-progress-stats">${correctCount} из ${totalCount} вопросов (${percentage}%)</div>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = html;
-        }
-        
-        function updateNotificationBadge() {
-            const studentNotes = notes.filter(n => !n.read);
-            const unreadCount = studentNotes.length;
-            
-            const badge = document.getElementById('notificationBadge');
-            const countSpan = document.getElementById('notificationCount');
-            
-            if (unreadCount > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = unreadCount;
-                countSpan.textContent = unreadCount;
-            } else {
-                badge.style.display = 'none';
-                countSpan.textContent = '0';
-            }
-        }
-        
-        function openNotificationsModal() {
-            renderNotes();
-            document.getElementById('notificationsModal').classList.add('active');
-            
-            // Помечаем заметки как прочитанные
-            notes.forEach(async (note) => {
-                if (!note.read) {
-                    await supabase
-                        .from('teacher_notes')
-                        .update({ read: true })
-                        .eq('id', note.id);
+                let html = '';
+                for (let g of myGroups) {
+                    html += `<div class="group-card" onclick="window.location.href='group-chat.html?groupId=${g.id}'">
+                        <div class="group-name">${escapeHtml(g.name)}</div>
+                        <div class="group-members">${escapeHtml(g.description || 'Нет описания')}</div>
+                        <div class="group-members">👥 Участников: ${g.members.length}</div>
+                    </div>`;
                 }
-            });
-            
-            notes.forEach(note => note.read = true);
-            updateNotificationBadge();
-        }
-        
-        function closeNotificationsModal() {
-            document.getElementById('notificationsModal').classList.remove('active');
-        }
-        
-        function renderNotes() {
-            const container = document.getElementById('notesContainer');
-            const studentNotes = [...notes];
-            studentNotes.sort((a, b) => b.id - a.id);
-            
-            if (studentNotes.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">📭 У вас пока нет уведомлений</div>';
-                return;
+                container.innerHTML = html;
             }
             
-            let html = '';
-            studentNotes.forEach(note => {
-                const isGroupInvite = note.type === 'group_invite';
-                html += `
-                    <div class="note-item" style="${isGroupInvite ? 'border-left-color: #6f42c1;' : ''}">
-                        <div class="note-title">${note.title}</div>
-                        <div class="note-date">${note.date}</div>
-                        <div class="note-text">${note.text}</div>
-                        ${isGroupInvite ? `<button class="action-btn groups" style="margin-top: 10px; padding: 8px 15px;" onclick="window.location.href='group-chat.html?groupId=${note.group_id}'">👥 Перейти в группу</button>` : ''}
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-        
-        function openGroupsModal() {
-            renderGroups();
-            document.getElementById('groupsModal').classList.add('active');
-        }
-        
-        function closeGroupsModal() {
-            document.getElementById('groupsModal').classList.remove('active');
-        }
-        
-        function renderGroups() {
-            const container = document.getElementById('groupsContainer');
-            
-            if (groups.length === 0) {
-                container.innerHTML = '<div class="empty-state">👥 Вы пока не состоите в группах</div>';
-                return;
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
             }
             
-            let html = '';
-            groups.forEach(group => {
-                const memberCount = group.members ? group.members.length : 0;
-                html += `
-                    <div class="group-card" onclick="window.location.href='group-chat.html?groupId=${group.id}'">
-                        <div class="group-name">${group.name}</div>
-                        <div class="group-description">${group.description || 'Нет описания'}</div>
-                        <div class="group-meta">
-                            <span>👥 Участников: ${memberCount}</span>
-                            <span>📅 Создана: ${group.created_at || 'недавно'}</span>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-        
-        // Инициализация Supabase
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        script.onload = () => {
-            console.log('Supabase JS загружен');
-            initSupabase();
-        };
-        document.head.appendChild(script);
+            loadGroups();
+        })();
     </script>
 </body>
 </html>
