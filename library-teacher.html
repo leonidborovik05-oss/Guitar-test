@@ -3,687 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Библиотека материалов | Учитель</title>
+    <title>Библиотека учителя</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            min-height: 100vh;
-        }
-        .header {
-            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        .logo span {
-            color: #f0b90b;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-        }
-        .user-name {
-            background: #3a3a55;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-        }
-        .back-btn {
-            background: #6c757d;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .logout-btn {
-            background: #dc3545;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .main-container {
-            max-width: 1300px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-        
-        .upload-section {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        }
-        .section-title {
-            font-size: 1.5em;
-            color: #1e1e2f;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .upload-form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            align-items: end;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .form-group label {
-            font-weight: 600;
-            color: #555;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 1em;
-            font-family: inherit;
-        }
-        .form-group input[type="file"] {
-            padding: 10px;
-            background: #f8f9fc;
-        }
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        .btn-upload {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 12px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: transform 0.2s;
-            height: 50px;
-        }
-        .btn-upload:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(40,167,69,0.3);
-        }
-        .btn-upload:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .filters {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .filter-select {
-            padding: 10px 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 40px;
-            font-size: 1em;
-            background: white;
-            min-width: 200px;
-        }
-        
-        .materials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-        }
-        .material-card {
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.2s;
-        }
-        .material-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        }
-        .material-preview {
-            width: 100%;
-            height: 200px;
-            background: #1e1e2f;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 3em;
-            position: relative;
-        }
-        .material-preview.video::after {
-            content: "▶️";
-            position: absolute;
-            font-size: 3em;
-            opacity: 0.8;
-        }
-        .material-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .material-info {
-            padding: 20px;
-        }
-        .material-title {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #1e1e2f;
-            margin-bottom: 10px;
-        }
-        .material-description {
-            color: #666;
-            font-size: 0.95em;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-        .material-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .material-student {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-        .material-student.all {
-            background: #28a745;
-            color: white;
-        }
-        .material-date {
-            color: #999;
-        }
-        .material-type {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 500;
-            margin-bottom: 10px;
-        }
-        .type-video {
-            background: #ffc107;
-            color: #1e1e2f;
-        }
-        .type-photo {
-            background: #17a2b8;
-            color: white;
-        }
-        .material-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .btn-view {
-            flex: 1;
-            background: #1e1e2f;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 500;
-            text-decoration: none;
-            text-align: center;
-            display: inline-block;
-        }
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            color: #999;
-            font-size: 1.2em;
-            background: white;
-            border-radius: 20px;
-            grid-column: 1 / -1;
-        }
-        .footer-links {
-            margin-top: 30px;
-            text-align: right;
-        }
-        .footer-links a {
-            color: #1e1e2f;
-            text-decoration: none;
-            border-bottom: 1px dashed #aaa;
-        }
-        .error-message {
-            background: #ffebee;
-            color: #c62828;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+        .header { background: #1e1e2f; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8em; font-weight: bold; }
+        .user-info { display: flex; gap: 20px; align-items: center; }
+        .user-name { background: #3a3a55; padding: 8px 20px; border-radius: 40px; }
+        .back-btn { background: #6c757d; padding: 8px 20px; border-radius: 40px; text-decoration: none; color: white; }
+        .logout-btn { background: #dc3545; padding: 8px 20px; border-radius: 40px; text-decoration: none; color: white; }
+        .main-container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
+        .upload-section { background: white; border-radius: 20px; padding: 25px; margin-bottom: 30px; }
+        .upload-form { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+        .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+        .btn-upload { background: #28a745; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; }
+        .materials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .material-card { background: white; border-radius: 15px; overflow: hidden; }
+        .material-preview { height: 180px; background: #1e1e2f; display: flex; align-items: center; justify-content: center; color: white; font-size: 3em; }
+        .material-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .material-info { padding: 15px; }
+        .material-title { font-weight: 600; font-size: 1.1em; margin-bottom: 8px; }
+        .material-meta { display: flex; justify-content: space-between; color: #999; font-size: 0.85em; margin-top: 10px; }
+        .empty-state { text-align: center; padding: 60px; color: #999; }
+        .error-message { background: #ffebee; color: #c62828; padding: 12px; border-radius: 10px; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo">🎸 Guitar<span>Studio</span></div>
+    <div class="header">
+        <div class="logo">🎸 GuitarStudio</div>
         <div class="user-info">
             <div class="user-name" id="currentUserDisplay">Загрузка...</div>
             <a href="teacher-cabinet.html" class="back-btn">← В кабинет</a>
             <a href="login.html" class="logout-btn">Выйти</a>
         </div>
-    </header>
+    </div>
 
     <div class="main-container">
-        <h1 style="margin-bottom: 20px; color: #1e1e2f;">📹 Библиотека материалов</h1>
+        <h1 style="margin-bottom: 20px;">📹 Библиотека материалов</h1>
         
         <div id="uploadError" class="error-message"></div>
         
         <div class="upload-section">
-            <div class="section-title">📤 Загрузить новый материал</div>
+            <h3 style="margin-bottom: 20px;">📤 Загрузить материал</h3>
             <div class="upload-form">
                 <div class="form-group">
-                    <label>Тип материала</label>
+                    <label>Тип</label>
                     <select id="materialType">
                         <option value="photo">📸 Фото</option>
                         <option value="video">🎥 Видео</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Выберите файл</label>
+                    <label>Файл</label>
                     <input type="file" id="materialFile" accept="image/*,video/*">
                 </div>
                 <div class="form-group">
                     <label>Название</label>
-                    <input type="text" id="materialTitle" placeholder="Например: Урок 5 - бой">
+                    <input type="text" id="materialTitle" placeholder="Название">
                 </div>
                 <div class="form-group">
                     <label>Описание</label>
-                    <textarea id="materialDescription" placeholder="Краткое описание материала..."></textarea>
+                    <textarea id="materialDescription" placeholder="Описание"></textarea>
                 </div>
                 <div class="form-group">
-                    <label>👥 Для кого</label>
-                    <select id="materialStudent">
-                        <option value="">-- Выберите ученика --</option>
-                        <option value="ALL">🌟 ДЛЯ ВСЕХ УЧЕНИКОВ</option>
-                    </select>
+                    <label>Для кого</label>
+                    <select id="materialStudent"></select>
                 </div>
-                <button class="btn-upload" onclick="uploadMaterial()">
-                    ⬆️ Загрузить
-                </button>
+                <button class="btn-upload" id="uploadBtn">⬆️ Загрузить</button>
             </div>
         </div>
 
-        <div class="filters">
-            <select class="filter-select" id="filterStudent" onchange="applyFilters()">
-                <option value="">Все ученики</option>
-                <option value="ALL">🌟 Для всех учеников</option>
-            </select>
-            <select class="filter-select" id="filterType" onchange="applyFilters()">
-                <option value="">Все типы</option>
-                <option value="photo">📸 Фото</option>
-                <option value="video">🎥 Видео</option>
-            </select>
-        </div>
-
-        <div id="materialsGrid" class="materials-grid">
-            <div class="loading">⏳ Загрузка материалов...</div>
-        </div>
-
-        <div class="footer-links">
-            <a href="teacher-cabinet.html">← Назад в кабинет</a>
-        </div>
+        <div id="materialsGrid" class="materials-grid">Загрузка...</div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase конфигурация
-        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
-        
-        let supabase = null;
-        
-        // Данные пользователя
-        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
-        document.getElementById('currentUserDisplay').textContent = userDisplay;
-        
-        let students = [];
-        let materials = [];
-        
-        // Инициализация Supabase
-        async function initSupabase() {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('Supabase инициализирован');
-                await loadData();
-            } else {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await initSupabase();
-            }
-        }
-        
-        async function loadData() {
-            try {
-                // Загружаем учеников
-                const { data: studentsData, error: studentsError } = await supabase
-                    .from('students')
-                    .select('*')
-                    .order('name');
-                
-                if (studentsError) throw studentsError;
-                students = studentsData || [];
-                
-                // Загружаем материалы
-                const { data: materialsData, error: materialsError } = await supabase
-                    .from('library_materials')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (materialsError) throw materialsError;
-                materials = materialsData || [];
-                
-                updateStudentSelects();
-                renderMaterials();
-                
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
-            }
-        }
-        
-        function updateStudentSelects() {
-            const studentSelect = document.getElementById('materialStudent');
-            const filterSelect = document.getElementById('filterStudent');
+        (function() {
+            const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
             
-            if (!studentSelect) return;
+            const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            let options = '<option value="">-- Выберите ученика --</option>';
-            options += '<option value="ALL">🌟 ДЛЯ ВСЕХ УЧЕНИКОВ</option>';
-            students.forEach(student => {
-                options += `<option value="${student.login}">👤 ${student.name}</option>`;
-            });
-            studentSelect.innerHTML = options;
+            let students = [];
+            let materials = [];
             
-            let filterOptions = '<option value="">Все ученики</option>';
-            filterOptions += '<option value="ALL">🌟 Для всех учеников</option>';
-            students.forEach(student => {
-                filterOptions += `<option value="${student.login}">👤 ${student.name}</option>`;
-            });
-            filterSelect.innerHTML = filterOptions;
-        }
-        
-        async function uploadMaterial() {
-            const errorDiv = document.getElementById('uploadError');
-            errorDiv.style.display = 'none';
-            errorDiv.innerHTML = '';
+            document.getElementById('currentUserDisplay').textContent = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения';
             
-            const type = document.getElementById('materialType').value;
-            const fileInput = document.getElementById('materialFile');
-            const file = fileInput.files[0];
-            const title = document.getElementById('materialTitle').value.trim();
-            const description = document.getElementById('materialDescription').value.trim();
-            const targetStudent = document.getElementById('materialStudent').value;
-            
-            if (!file) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
-                return;
-            }
-            
-            if (!title) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Введите название материала!';
-                return;
-            }
-            
-            if (!description) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Введите описание материала!';
-                return;
-            }
-            
-            if (!targetStudent) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Выберите ученика или пункт "ДЛЯ ВСЕХ"!';
-                return;
-            }
-            
-            const uploadBtn = document.querySelector('.btn-upload');
-            const originalText = uploadBtn.innerHTML;
-            uploadBtn.innerHTML = '⏳ Загрузка...';
-            uploadBtn.disabled = true;
-            
-            try {
-                // Генерируем уникальное имя файла
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-                const filePath = `materials/${fileName}`;
-                
-                // Загружаем файл в Supabase Storage
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('guitar-studio')
-                    .upload(filePath, file);
-                
-                if (uploadError) throw uploadError;
-                
-                // Получаем публичный URL
-                const { data: urlData } = supabase.storage
-                    .from('guitar-studio')
-                    .getPublicUrl(filePath);
-                
-                const fileUrl = urlData.publicUrl;
-                
-                // Сохраняем информацию о материале в базу данных
-                const material = {
-                    type: type,
-                    title: title,
-                    description: description,
-                    student_login: targetStudent,
-                    student_display: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
-                    date: new Date().toLocaleString(),
-                    file_name: file.name,
-                    file_type: file.type,
-                    file_size: file.size,
-                    file_url: fileUrl,
-                    created_at: new Date()
-                };
-                
-                const { error: insertError } = await supabase
-                    .from('library_materials')
-                    .insert([material]);
-                
-                if (insertError) throw insertError;
-                
-                // Создаём уведомления для учеников
-                if (targetStudent === "ALL") {
-                    for (const student of students) {
-                        await supabase
-                            .from('teacher_notes')
-                            .insert([{
-                                student_login: student.login,
-                                title: '📹 Новый материал в библиотеке',
-                                text: `Учитель добавил новый материал: "${title}"`,
-                                date: new Date().toLocaleString(),
-                                read: false,
-                                type: 'new_material'
-                            }]);
-                    }
-                    alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
-                } else {
-                    const student = students.find(s => s.login === targetStudent);
-                    await supabase
-                        .from('teacher_notes')
-                        .insert([{
-                            student_login: targetStudent,
-                            title: '📹 Новый материал в библиотеке',
-                            text: `Учитель добавил новый материал специально для вас: "${title}"`,
-                            date: new Date().toLocaleString(),
-                            read: false,
-                            type: 'new_material'
-                        }]);
-                    alert(`✅ Материал загружен для ученика ${student?.name}`);
+            // Загрузка учеников
+            async function loadStudents() {
+                const { data } = await _supabase.from('students').select('*').order('name');
+                students = data || [];
+                const select = document.getElementById('materialStudent');
+                if (select) {
+                    let options = '<option value="ALL">🌟 ДЛЯ ВСЕХ</option>';
+                    students.forEach(s => options += `<option value="${s.login}">👤 ${s.name}</option>`);
+                    select.innerHTML = options;
                 }
-                
-                // Очищаем форму
-                fileInput.value = '';
-                document.getElementById('materialTitle').value = '';
-                document.getElementById('materialDescription').value = '';
-                document.getElementById('materialStudent').value = '';
-                
-                await loadData();
-                
-                uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = false;
-                
-            } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `❌ Ошибка загрузки: ${error.message}`;
-                uploadBtn.innerHTML = originalText;
-                uploadBtn.disabled = false;
-            }
-        }
-        
-        function applyFilters() {
-            renderMaterials();
-        }
-        
-        function renderMaterials() {
-            const grid = document.getElementById('materialsGrid');
-            const filterStudent = document.getElementById('filterStudent').value;
-            const filterType = document.getElementById('filterType').value;
-            
-            let filteredMaterials = [...materials];
-            
-            if (filterStudent) {
-                filteredMaterials = filteredMaterials.filter(m => m.student_login === filterStudent);
             }
             
-            if (filterType) {
-                filteredMaterials = filteredMaterials.filter(m => m.type === filterType);
-            }
-            
-            if (filteredMaterials.length === 0) {
-                grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет. Загрузите первый!</div>';
-                return;
-            }
-            
-            let html = '';
-            filteredMaterials.forEach(material => {
-                let previewHtml = '';
-                if (material.type === 'video') {
-                    previewHtml = `<div class="material-preview video">🎥</div>`;
-                } else {
-                    previewHtml = `<div class="material-preview"><img src="${material.file_url}" alt="${material.title}"></div>`;
+            // Загрузка материалов
+            async function loadMaterials() {
+                const { data } = await _supabase.from('library_materials').select('*').order('created_at', { ascending: false });
+                materials = data || [];
+                const grid = document.getElementById('materialsGrid');
+                if (materials.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет</div>';
+                    return;
                 }
-                
-                let fileSizeText = '';
-                if (material.file_size) {
-                    if (material.file_size < 1024 * 1024) {
-                        fileSizeText = `${(material.file_size / 1024).toFixed(1)} КБ`;
-                    } else {
-                        fileSizeText = `${(material.file_size / 1024 / 1024).toFixed(1)} МБ`;
-                    }
-                }
-                
-                html += `
-                    <div class="material-card">
-                        ${previewHtml}
+                let html = '';
+                for (let m of materials) {
+                    let preview = m.type === 'video' ? '<div class="material-preview">🎥</div>' : `<div class="material-preview"><img src="${m.file_url}" alt="${m.title}"></div>`;
+                    html += `<div class="material-card">
+                        ${preview}
                         <div class="material-info">
-                            <span class="material-type ${material.type === 'video' ? 'type-video' : 'type-photo'}">
-                                ${material.type === 'video' ? '🎥 Видео' : '📸 Фото'} (${fileSizeText})
-                            </span>
-                            <div class="material-title">${material.title}</div>
-                            <div class="material-description">${material.description}</div>
+                            <div class="material-title">${escapeHtml(m.title)}</div>
+                            <div>${escapeHtml(m.description)}</div>
                             <div class="material-meta">
-                                <span class="material-student ${material.student_login === 'ALL' ? 'all' : ''}">
-                                    ${material.student_login === 'ALL' ? '🌟 Для всех учеников' : `👤 ${material.student_display}`}
-                                </span>
-                                <span class="material-date">📅 ${material.date}</span>
-                            </div>
-                            <div class="material-actions">
-                                <a href="${material.file_url}" class="btn-view" target="_blank">👁️ Просмотр</a>
-                                <button class="btn-delete" onclick="deleteMaterial(${material.id})">🗑️</button>
+                                <span>${m.student_login === 'ALL' ? '🌟 Для всех' : `👤 ${m.student_display || 'Ученик'}`}</span>
+                                <span>📅 ${m.date}</span>
                             </div>
                         </div>
-                    </div>
-                `;
-            });
-            grid.innerHTML = html;
-        }
-        
-        async function deleteMaterial(id) {
-            if (confirm('Удалить этот материал?')) {
-                // Находим материал
-                const material = materials.find(m => m.id === id);
-                
-                if (material && material.file_url) {
-                    // Извлекаем путь из URL
-                    const urlParts = material.file_url.split('/');
-                    const filePath = urlParts.slice(-2).join('/');
-                    
-                    // Удаляем файл из Storage
-                    await supabase.storage
-                        .from('guitar-studio')
-                        .remove([filePath]);
+                    </div>`;
                 }
-                
-                // Удаляем запись из базы данных
-                await supabase
-                    .from('library_materials')
-                    .delete()
-                    .eq('id', id);
-                
-                await loadData();
-                alert('✅ Материал удалён');
+                grid.innerHTML = html;
             }
-        }
-        
-        // Инициализация Supabase
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        script.onload = () => {
-            console.log('Supabase JS загружен');
-            initSupabase();
-        };
-        document.head.appendChild(script);
+            
+            // Загрузка файла в Storage
+            async function uploadFile(file, path) {
+                const { error } = await _supabase.storage.from('guitar-studio').upload(path, file);
+                if (error) throw error;
+                const { data } = _supabase.storage.from('guitar-studio').getPublicUrl(path);
+                return data.publicUrl;
+            }
+            
+            // Загрузка материала
+            document.getElementById('uploadBtn').onclick = async () => {
+                const errorDiv = document.getElementById('uploadError');
+                errorDiv.style.display = 'none';
+                
+                const type = document.getElementById('materialType').value;
+                const file = document.getElementById('materialFile').files[0];
+                const title = document.getElementById('materialTitle').value.trim();
+                const description = document.getElementById('materialDescription').value.trim();
+                const target = document.getElementById('materialStudent').value;
+                
+                if (!file) { errorDiv.innerHTML = '❌ Выберите файл'; errorDiv.style.display = 'block'; return; }
+                if (!title) { errorDiv.innerHTML = '❌ Введите название'; errorDiv.style.display = 'block'; return; }
+                if (!description) { errorDiv.innerHTML = '❌ Введите описание'; errorDiv.style.display = 'block'; return; }
+                if (!target) { errorDiv.innerHTML = '❌ Выберите получателя'; errorDiv.style.display = 'block'; return; }
+                
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const filePath = `materials/${fileName}`;
+                
+                try {
+                    const fileUrl = await uploadFile(file, filePath);
+                    const studentName = target === 'ALL' ? 'Все ученики' : (students.find(s => s.login === target)?.name || target);
+                    
+                    const { error } = await _supabase.from('library_materials').insert([{
+                        type: type,
+                        title: title,
+                        description: description,
+                        student_login: target,
+                        student_display: target === 'ALL' ? '🌟 Для всех учеников' : studentName,
+                        date: new Date().toLocaleString(),
+                        file_name: file.name,
+                        file_url: fileUrl,
+                        created_at: new Date()
+                    }]);
+                    
+                    if (error) throw error;
+                    
+                    alert('✅ Материал загружен');
+                    document.getElementById('materialFile').value = '';
+                    document.getElementById('materialTitle').value = '';
+                    document.getElementById('materialDescription').value = '';
+                    await loadMaterials();
+                    
+                } catch (err) {
+                    errorDiv.innerHTML = '❌ Ошибка: ' + err.message;
+                    errorDiv.style.display = 'block';
+                }
+            };
+            
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+            
+            loadStudents();
+            loadMaterials();
+        })();
     </script>
 </body>
 </html>
