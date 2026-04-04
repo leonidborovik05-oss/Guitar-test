@@ -5,342 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Чат группы | Студия гитары</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .header {
-            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-        }
-        .logo span {
-            color: #f0b90b;
-        }
-        .user-badge {
-            background: #ffc107;
-            color: #1e1e2f;
-            padding: 5px 15px;
-            border-radius: 30px;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
-        .group-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .group-name {
-            font-size: 1.2em;
-            font-weight: 600;
-        }
-        .member-count {
-            background: #3a3a55;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-        .back-btn {
-            background: #6c757d;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            max-width: 1000px;
-            margin: 20px auto;
-            width: 100%;
-            padding: 0 20px;
-        }
-        .messages-area {
-            flex: 1;
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            min-height: 400px;
-        }
-        .message {
-            display: flex;
-            flex-direction: column;
-            max-width: 70%;
-        }
-        .message.own {
-            align-self: flex-end;
-        }
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-        }
-        .message-sender {
-            font-weight: 600;
-            color: #1e1e2f;
-        }
-        .message-time {
-            color: #999;
-        }
-        .message-content {
-            background: #f0f2f5;
-            padding: 12px 15px;
-            border-radius: 18px;
-            color: #333;
-            line-height: 1.5;
-        }
-        .message.own .message-content {
-            background: #1e1e2f;
-            color: white;
-        }
-        .message.teacher .message-content {
-            background: #ffc107;
-            color: #1e1e2f;
-        }
-        .input-area {
-            display: flex;
-            gap: 10px;
-            background: white;
-            padding: 15px;
-            border-radius: 50px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .message-input {
-            flex: 1;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1em;
-            outline: none;
-            background: #f0f2f5;
-            border-radius: 40px;
-        }
-        .send-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2em;
-            transition: transform 0.2s;
-        }
-        .send-btn:hover {
-            transform: scale(1.1);
-        }
-        .library-link {
-            position: fixed;
-            bottom: 100px;
-            right: 30px;
-            background: #17a2b8;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        .library-link:hover {
-            transform: translateY(-5px);
-        }
-        .system-message {
-            text-align: center;
-            color: #999;
-            font-size: 0.9em;
-            padding: 10px;
-            background: #f8f9fc;
-            border-radius: 20px;
-            margin: 10px 0;
-        }
-        .teacher-badge {
-            background: #ffc107;
-            color: #1e1e2f;
-            font-size: 0.7em;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; height: 100vh; display: flex; flex-direction: column; }
+        .header { background: #1e1e2f; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .logo { font-size: 1.8em; font-weight: bold; }
+        .group-info { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .back-btn { background: #6c757d; color: white; padding: 8px 20px; border-radius: 40px; text-decoration: none; }
+        .chat-container { flex: 1; display: flex; flex-direction: column; max-width: 1000px; margin: 20px auto; width: 100%; padding: 0 20px; }
+        .messages-area { flex: 1; background: white; border-radius: 20px; padding: 20px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .message { display: flex; flex-direction: column; max-width: 70%; }
+        .message.own { align-self: flex-end; }
+        .message-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; font-size: 0.9em; }
+        .message-sender { font-weight: 600; }
+        .message-time { color: #999; }
+        .message-content { background: #f0f2f5; padding: 12px 15px; border-radius: 18px; }
+        .message.own .message-content { background: #1e1e2f; color: white; }
+        .message.teacher .message-content { background: #ffc107; color: #1e1e2f; }
+        .input-area { display: flex; gap: 10px; background: white; padding: 15px; border-radius: 50px; }
+        .message-input { flex: 1; border: none; padding: 12px 20px; background: #f0f2f5; border-radius: 40px; outline: none; }
+        .send-btn { background: #28a745; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.2em; }
+        .system-message { text-align: center; color: #999; padding: 10px; background: #f8f9fc; border-radius: 20px; }
+        .library-link { position: fixed; bottom: 100px; right: 30px; background: #17a2b8; color: white; padding: 15px 25px; border-radius: 50px; text-decoration: none; font-weight: 600; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="logo">🎸 Guitar<span>Studio</span></div>
+        <div class="logo">🎸 GuitarStudio</div>
         <div class="group-info">
-            <span class="user-badge" id="currentUserDisplay">Загрузка...</span>
             <span class="group-name" id="groupName">Загрузка...</span>
-            <span class="member-count" id="memberCount">0 уч.</span>
             <a href="javascript:history.back()" class="back-btn">← Назад</a>
         </div>
     </div>
 
     <div class="chat-container">
         <div class="messages-area" id="messagesArea">
-            <!-- Сообщения будут загружаться сюда -->
+            <div class="system-message">⏳ Загрузка сообщений...</div>
         </div>
-        
         <div class="input-area">
             <input type="text" class="message-input" id="messageInput" placeholder="Напишите сообщение..." onkeypress="checkEnter(event)">
             <button class="send-btn" onclick="sendMessage()">➤</button>
         </div>
     </div>
-    
     <a href="#" class="library-link" id="libraryLink">📁 Библиотека группы</a>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Получаем ID группы из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const groupId = urlParams.get('groupId');
-        
-        // Константы
-        const TEACHER_LOGIN = "EvgenyaGuitara01543";
-        
-        // ПОЛУЧАЕМ ДАННЫЕ О ПОЛЬЗОВАТЕЛЕ ИЗ localStorage (единые ключи)
-        const userRole = localStorage.getItem('currentUserRole') || 'student';
-        const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
-        const userName = localStorage.getItem('currentUserName') || 'Леонид Зас';
-        const userDisplay = localStorage.getItem('currentUserDisplay') || (userRole === 'teacher' ? '👩‍🏫 Евгения (Учитель)' : '👨‍🎓 Леонид Зас (Ученик)');
-        
-        console.log('========== ЧАТ ГРУППЫ ==========');
-        console.log('Роль:', userRole);
-        console.log('Логин:', userLogin);
-        console.log('Имя:', userName);
-        console.log('Отображение:', userDisplay);
-        console.log('================================');
-        
-        // Показываем в шапке, кто сейчас в чате
-        document.getElementById('currentUserDisplay').textContent = userDisplay;
-        
-        // Загружаем группы
-        let groups = JSON.parse(localStorage.getItem('groups')) || [];
-        const currentGroup = groups.find(g => g.id == groupId);
-        
-        if (!currentGroup) {
-            alert('Группа не найдена');
-            window.location.href = userRole === 'teacher' ? 'teacher-cabinet.html' : 'student-cabinet.html';
-        }
-        
-        document.getElementById('groupName').textContent = currentGroup.name;
-        document.getElementById('memberCount').textContent = `${currentGroup.members ? currentGroup.members.length : 0} уч.`;
-        document.getElementById('libraryLink').href = `group-library.html?groupId=${groupId}`;
-        
-        // Загружаем сообщения
-        let messages = JSON.parse(localStorage.getItem(`group_messages_${groupId}`)) || [];
-        
-        if (messages.length === 0) {
-            messages.push({
-                id: Date.now(),
-                type: 'system',
-                text: `📢 Добро пожаловать в группу "${currentGroup.name}"!`,
-                date: new Date().toLocaleString()
-            });
-            localStorage.setItem(`group_messages_${groupId}`, JSON.stringify(messages));
-        }
-        
-        function renderMessages() {
-            const container = document.getElementById('messagesArea');
-            let html = '';
+        (function() {
+            const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
             
-            if (!messages || messages.length === 0) {
-                container.innerHTML = '<div class="system-message">💬 Нет сообщений. Напишите первое!</div>';
-                return;
-            }
+            const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            messages.forEach(msg => {
-                if (msg.type === 'system') {
-                    html += `<div class="system-message">📢 ${msg.text} • ${msg.date}</div>`;
-                } else {
-                    const isOwn = msg.sender === userLogin;
-                    const isTeacherMsg = msg.sender === TEACHER_LOGIN;
-                    html += `
-                        <div class="message ${isOwn ? 'own' : ''} ${isTeacherMsg ? 'teacher' : ''}">
-                            <div class="message-header">
-                                <span class="message-sender">
-                                    ${msg.senderName}
-                                    ${isTeacherMsg ? '<span class="teacher-badge">👑 Учитель</span>' : ''}
-                                </span>
-                                <span class="message-time">${msg.date}</span>
-                            </div>
-                            <div class="message-content">${msg.text}</div>
-                        </div>
-                    `;
+            const urlParams = new URLSearchParams(window.location.search);
+            const groupId = urlParams.get('groupId');
+            
+            const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
+            const userName = localStorage.getItem('currentUserName') || 'Ученик';
+            const isTeacher = userLogin === 'EvgenyaGuitara01543';
+            
+            let currentGroup = null;
+            let messages = [];
+            
+            async function loadGroup() {
+                const { data } = await _supabase.from('groups').select('*').eq('id', groupId).single();
+                if (!data) {
+                    document.getElementById('messagesArea').innerHTML = '<div class="system-message">❌ Группа не найдена</div>';
+                    return;
                 }
-            });
-            
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            
-            if (!text) return;
-            
-            const message = {
-                id: Date.now(),
-                type: 'message',
-                sender: userLogin,
-                senderName: userName,
-                groupId: groupId,
-                groupName: currentGroup.name,
-                text: text,
-                date: new Date().toLocaleString(),
-                read: false
-            };
-            
-            messages.push(message);
-            localStorage.setItem(`group_messages_${groupId}`, JSON.stringify(messages));
-            
-            let allMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-            allMessages.push(message);
-            localStorage.setItem('groupMessages', JSON.stringify(allMessages));
-            
-            input.value = '';
-            renderMessages();
-        }
-        
-        function checkEnter(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+                currentGroup = data;
+                document.getElementById('groupName').textContent = currentGroup.name;
+                document.getElementById('libraryLink').href = `group-library.html?groupId=${groupId}`;
+                await loadMessages();
             }
-        }
-        
-        renderMessages();
-        
-        setInterval(() => {
-            const newMessages = JSON.parse(localStorage.getItem(`group_messages_${groupId}`)) || [];
-            if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
-                messages = newMessages;
+            
+            async function loadMessages() {
+                const { data } = await _supabase.from('group_messages').select('*').eq('group_id', groupId).order('id', { ascending: true });
+                messages = data || [];
                 renderMessages();
             }
-        }, 2000);
+            
+            function renderMessages() {
+                const container = document.getElementById('messagesArea');
+                if (!messages.length) {
+                    container.innerHTML = '<div class="system-message">💬 Нет сообщений</div>';
+                    return;
+                }
+                let html = '';
+                for (let msg of messages) {
+                    const isOwn = msg.sender === userLogin;
+                    const isTeacherMsg = msg.sender === 'EvgenyaGuitara01543';
+                    html += `<div class="message ${isOwn ? 'own' : ''} ${isTeacherMsg ? 'teacher' : ''}">
+                        <div class="message-header">
+                            <span class="message-sender">${escapeHtml(msg.sender_name)}</span>
+                            <span class="message-time">${msg.date}</span>
+                        </div>
+                        <div class="message-content">${escapeHtml(msg.text)}</div>
+                    </div>`;
+                }
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight;
+            }
+            
+            async function sendMessage() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                if (!text) return;
+                
+                const message = {
+                    group_id: parseInt(groupId),
+                    sender: userLogin,
+                    sender_name: userName,
+                    text: text,
+                    date: new Date().toLocaleString(),
+                    read: false
+                };
+                
+                const { error } = await _supabase.from('group_messages').insert([message]);
+                if (error) { alert('Ошибка отправки'); return; }
+                input.value = '';
+                await loadMessages();
+            }
+            
+            window.checkEnter = function(e) {
+                if (e.key === 'Enter') sendMessage();
+            };
+            
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+            
+            loadGroup();
+            
+            // Подписка на новые сообщения
+            _supabase.channel(`group_${groupId}`)
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` }, () => loadMessages())
+                .subscribe();
+        })();
     </script>
 </body>
 </html>
