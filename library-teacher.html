@@ -33,29 +33,6 @@
         .logo span {
             color: #f0b90b;
         }
-        .notification-bell {
-            position: relative;
-            cursor: pointer;
-            font-size: 1.5em;
-            padding: 5px;
-            margin-right: 15px;
-        }
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            color: white;
-            font-size: 0.6em;
-            font-weight: bold;
-            min-width: 20px;
-            height: 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-        }
         .user-info {
             display: flex;
             align-items: center;
@@ -154,6 +131,10 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(40,167,69,0.3);
         }
+        .btn-upload:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
         .filters {
             display: flex;
@@ -169,32 +150,6 @@
             font-size: 1em;
             background: white;
             min-width: 200px;
-        }
-        .clear-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .clear-btn:hover {
-            background: #b02a37;
-        }
-        .migrate-btn {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .migrate-btn:hover {
-            background: #138496;
         }
         
         .materials-grid {
@@ -333,74 +288,6 @@
             text-decoration: none;
             border-bottom: 1px dashed #aaa;
         }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .modal.active {
-            display: flex;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .modal-header h3 {
-            font-size: 1.5em;
-            color: #1e1e2f;
-        }
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 2em;
-            cursor: pointer;
-            color: #999;
-        }
-        .notes-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .note-item {
-            background: #f8f9fc;
-            border-radius: 15px;
-            padding: 20px;
-            border-left: 5px solid #ffc107;
-        }
-        .note-title {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #1e1e2f;
-            margin-bottom: 10px;
-        }
-        .note-date {
-            color: #999;
-            font-size: 0.85em;
-            margin-bottom: 10px;
-        }
-        .note-text {
-            color: #555;
-            line-height: 1.5;
-        }
         .error-message {
             background: #ffebee;
             color: #c62828;
@@ -408,11 +295,6 @@
             border-radius: 10px;
             margin-bottom: 15px;
             display: none;
-        }
-        .size-hint {
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
         }
         .loading {
             text-align: center;
@@ -425,10 +307,6 @@
     <header class="header">
         <div class="logo">🎸 Guitar<span>Studio</span></div>
         <div class="user-info">
-            <div class="notification-bell" onclick="openNotificationsModal()">
-                🔔
-                <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
-            </div>
             <div class="user-name" id="currentUserDisplay">Загрузка...</div>
             <a href="teacher-cabinet.html" class="back-btn">← В кабинет</a>
             <a href="login.html" class="logout-btn">Выйти</a>
@@ -445,7 +323,7 @@
             <div class="upload-form">
                 <div class="form-group">
                     <label>Тип материала</label>
-                    <select id="materialType" onchange="updateSizeHint()">
+                    <select id="materialType">
                         <option value="photo">📸 Фото</option>
                         <option value="video">🎥 Видео</option>
                     </select>
@@ -453,7 +331,6 @@
                 <div class="form-group">
                     <label>Выберите файл</label>
                     <input type="file" id="materialFile" accept="image/*,video/*">
-                    <div id="sizeHint" class="size-hint">📦 IndexedDB позволяет хранить большие файлы</div>
                 </div>
                 <div class="form-group">
                     <label>Название</label>
@@ -486,8 +363,6 @@
                 <option value="photo">📸 Фото</option>
                 <option value="video">🎥 Видео</option>
             </select>
-            <button class="clear-btn" onclick="clearAllMaterials()">🗑️ Очистить все</button>
-            <button class="migrate-btn" onclick="migrateFromLocalStorage()">📦 Перенести старые материалы</button>
         </div>
 
         <div id="materialsGrid" class="materials-grid">
@@ -499,227 +374,60 @@
         </div>
     </div>
 
-    <div id="notificationsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔔 Уведомления</h3>
-                <button class="close-btn" onclick="closeNotificationsModal()">&times;</button>
-            </div>
-            <div id="notificationsContainer" class="notes-list"></div>
-        </div>
-    </div>
-
     <script>
+        // Supabase конфигурация
+        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+        
+        let supabase = null;
+        
         // Данные пользователя
         const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
         document.getElementById('currentUserDisplay').textContent = userDisplay;
         
-        // Загружаем учеников
-        let students = JSON.parse(localStorage.getItem('students')) || [];
-        let groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
+        let students = [];
+        let materials = [];
         
-        // ========== INDEXEDDB ДЛЯ ХРАНЕНИЯ ФАЙЛОВ ==========
-        const DB_NAME = 'GuitarStudioDB';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'materials';
-        
-        let db = null;
-        let allMaterials = [];
-        
-        // Открытие базы данных
-        function openDB() {
-            return new Promise((resolve, reject) => {
-                if (db) {
-                    resolve(db);
-                    return;
-                }
-                
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                
-                request.onerror = function(event) {
-                    console.error('Ошибка открытия БД:', event);
-                    reject('Ошибка открытия базы данных');
-                };
-                
-                request.onsuccess = function(event) {
-                    db = event.target.result;
-                    console.log('База данных открыта');
-                    resolve(db);
-                };
-                
-                request.onupgradeneeded = function(event) {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-                        store.createIndex('studentLogin', 'studentLogin', { unique: false });
-                        store.createIndex('type', 'type', { unique: false });
-                        console.log('Хранилище создано');
-                    }
-                };
-            });
-        }
-        
-        // Получение всех материалов
-        async function getAllMaterials() {
-            try {
-                const database = await openDB();
-                return new Promise((resolve, reject) => {
-                    const transaction = database.transaction([STORE_NAME], 'readonly');
-                    const store = transaction.objectStore(STORE_NAME);
-                    const request = store.getAll();
-                    
-                    request.onsuccess = function() {
-                        allMaterials = request.result || [];
-                        resolve(allMaterials);
-                    };
-                    
-                    request.onerror = function() {
-                        reject('Ошибка получения материалов');
-                    };
-                });
-            } catch (error) {
-                console.error('Ошибка:', error);
-                return [];
-            }
-        }
-        
-        // Добавление материала
-        async function addMaterial(material) {
-            const database = await openDB();
-            return new Promise((resolve, reject) => {
-                const transaction = database.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.add(material);
-                
-                request.onsuccess = function() {
-                    allMaterials.push(material);
-                    resolve();
-                };
-                
-                request.onerror = function(event) {
-                    console.error('Ошибка добавления:', event);
-                    reject('Ошибка сохранения материала');
-                };
-            });
-        }
-        
-        // Удаление материала
-        async function deleteMaterialFromDB(id) {
-            const database = await openDB();
-            return new Promise((resolve, reject) => {
-                const transaction = database.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.delete(id);
-                
-                request.onsuccess = function() {
-                    allMaterials = allMaterials.filter(m => m.id !== id);
-                    resolve();
-                };
-                
-                request.onerror = function() {
-                    reject('Ошибка удаления');
-                };
-            });
-        }
-        
-        // Очистка всех материалов
-        async function clearAllMaterialsFromDB() {
-            const database = await openDB();
-            return new Promise((resolve, reject) => {
-                const transaction = database.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                const request = store.clear();
-                
-                request.onsuccess = function() {
-                    allMaterials = [];
-                    resolve();
-                };
-                
-                request.onerror = function() {
-                    reject('Ошибка очистки');
-                };
-            });
-        }
-        
-        // Перенос материалов из localStorage в IndexedDB
-        async function migrateFromLocalStorage() {
-            const oldMaterials = JSON.parse(localStorage.getItem('libraryMaterials')) || [];
-            
-            if (oldMaterials.length === 0) {
-                alert('📭 Нет материалов для переноса в старом хранилище (localStorage)');
-                return;
-            }
-            
-            if (confirm(`Найдено ${oldMaterials.length} материалов в старом хранилище. Перенести их в новую базу данных?`)) {
-                const database = await openDB();
-                const transaction = database.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                
-                let count = 0;
-                oldMaterials.forEach(material => {
-                    store.put(material);
-                    count++;
-                });
-                
-                transaction.oncomplete = () => {
-                    alert(`✅ Перенесено ${count} материалов! Обновите страницу.`);
-                    renderMaterials();
-                };
-                
-                transaction.onerror = () => {
-                    alert('❌ Ошибка при переносе');
-                };
-            }
-        }
-        
-        // Уведомления
-        function updateNotificationBadge() {
-            const unreadCount = groupMessages.filter(m => !m.read).length;
-            const badge = document.getElementById('notificationBadge');
-            if (unreadCount > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = unreadCount;
+        // Инициализация Supabase
+        async function initSupabase() {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase инициализирован');
+                await loadData();
             } else {
-                badge.style.display = 'none';
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await initSupabase();
             }
         }
         
-        function openNotificationsModal() {
-            renderNotifications();
-            document.getElementById('notificationsModal').classList.add('active');
-            groupMessages.forEach(m => m.read = true);
-            localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
-            updateNotificationBadge();
-        }
-        
-        function closeNotificationsModal() {
-            document.getElementById('notificationsModal').classList.remove('active');
-        }
-        
-        function renderNotifications() {
-            const container = document.getElementById('notificationsContainer');
-            const allNotifications = [...groupMessages];
-            allNotifications.sort((a, b) => b.id - a.id);
-            
-            if (allNotifications.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
-                return;
+        async function loadData() {
+            try {
+                // Загружаем учеников
+                const { data: studentsData, error: studentsError } = await supabase
+                    .from('students')
+                    .select('*')
+                    .order('name');
+                
+                if (studentsError) throw studentsError;
+                students = studentsData || [];
+                
+                // Загружаем материалы
+                const { data: materialsData, error: materialsError } = await supabase
+                    .from('library_materials')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (materialsError) throw materialsError;
+                materials = materialsData || [];
+                
+                updateStudentSelects();
+                renderMaterials();
+                
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
             }
-            
-            let html = '';
-            allNotifications.forEach(n => {
-                html += `
-                    <div class="note-item">
-                        <div class="note-title">${n.groupName || 'Сообщение'}</div>
-                        <div class="note-date">${n.date}</div>
-                        <div class="note-text"><strong>${n.senderName}:</strong> ${n.text}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
         }
         
-        // Обновление списков учеников
         function updateStudentSelects() {
             const studentSelect = document.getElementById('materialStudent');
             const filterSelect = document.getElementById('filterStudent');
@@ -741,7 +449,6 @@
             filterSelect.innerHTML = filterOptions;
         }
         
-        // Загрузка материала
         async function uploadMaterial() {
             const errorDiv = document.getElementById('uploadError');
             errorDiv.style.display = 'none';
@@ -754,7 +461,6 @@
             const description = document.getElementById('materialDescription').value.trim();
             const targetStudent = document.getElementById('materialStudent').value;
             
-            // Проверки
             if (!file) {
                 errorDiv.style.display = 'block';
                 errorDiv.innerHTML = '❌ Выберите файл для загрузки!';
@@ -785,134 +491,117 @@
             uploadBtn.disabled = true;
             
             try {
-                const reader = new FileReader();
+                // Генерируем уникальное имя файла
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                const filePath = `materials/${fileName}`;
                 
-                reader.onload = async function(e) {
-                    const material = {
-                        id: Date.now(),
-                        type: type,
-                        title: title,
-                        description: description,
-                        studentLogin: targetStudent,
-                        studentDisplay: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
-                        date: new Date().toLocaleString(),
-                        fileName: file.name,
-                        fileType: file.type,
-                        fileSize: file.size,
-                        fileData: e.target.result
-                    };
-                    
-                    try {
-                        await addMaterial(material);
-                        console.log('Материал сохранён в IndexedDB');
-                        
-                        // Создаём уведомления
-                        if (targetStudent === "ALL") {
-                            students.forEach(student => {
-                                const notification = {
-                                    id: Date.now() + Math.random(),
-                                    type: 'new_material',
-                                    studentLogin: student.login,
-                                    title: '📹 Новый материал в библиотеке',
-                                    text: `Учитель добавил новый материал: "${title}"`,
-                                    date: new Date().toLocaleString(),
-                                    read: false
-                                };
-                                let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                                allNotes.push(notification);
-                                localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-                            });
-                            alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
-                        } else {
-                            const student = students.find(s => s.login === targetStudent);
-                            const notification = {
-                                id: Date.now() + Math.random(),
-                                type: 'new_material',
-                                studentLogin: targetStudent,
+                // Загружаем файл в Supabase Storage
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('guitar-studio')
+                    .upload(filePath, file);
+                
+                if (uploadError) throw uploadError;
+                
+                // Получаем публичный URL
+                const { data: urlData } = supabase.storage
+                    .from('guitar-studio')
+                    .getPublicUrl(filePath);
+                
+                const fileUrl = urlData.publicUrl;
+                
+                // Сохраняем информацию о материале в базу данных
+                const material = {
+                    type: type,
+                    title: title,
+                    description: description,
+                    student_login: targetStudent,
+                    student_display: targetStudent === "ALL" ? "🌟 Для всех учеников" : (students.find(s => s.login === targetStudent)?.name || targetStudent),
+                    date: new Date().toLocaleString(),
+                    file_name: file.name,
+                    file_type: file.type,
+                    file_size: file.size,
+                    file_url: fileUrl,
+                    created_at: new Date()
+                };
+                
+                const { error: insertError } = await supabase
+                    .from('library_materials')
+                    .insert([material]);
+                
+                if (insertError) throw insertError;
+                
+                // Создаём уведомления для учеников
+                if (targetStudent === "ALL") {
+                    for (const student of students) {
+                        await supabase
+                            .from('teacher_notes')
+                            .insert([{
+                                student_login: student.login,
                                 title: '📹 Новый материал в библиотеке',
-                                text: `Учитель добавил новый материал специально для вас: "${title}"`,
+                                text: `Учитель добавил новый материал: "${title}"`,
                                 date: new Date().toLocaleString(),
-                                read: false
-                            };
-                            let allNotes = JSON.parse(localStorage.getItem('teacherNotes')) || [];
-                            allNotes.push(notification);
-                            localStorage.setItem('teacherNotes', JSON.stringify(allNotes));
-                            alert(`✅ Материал загружен для ученика ${student?.name}`);
-                        }
-                        
-                        // Очищаем форму
-                        fileInput.value = '';
-                        document.getElementById('materialTitle').value = '';
-                        document.getElementById('materialDescription').value = '';
-                        document.getElementById('materialStudent').value = '';
-                        
-                        await renderMaterials();
-                        updateNotificationBadge();
-                        
-                        uploadBtn.innerHTML = originalText;
-                        uploadBtn.disabled = false;
-                        
-                    } catch (saveError) {
-                        console.error('Ошибка сохранения:', saveError);
-                        errorDiv.style.display = 'block';
-                        errorDiv.innerHTML = '❌ Ошибка сохранения материала!';
-                        uploadBtn.innerHTML = originalText;
-                        uploadBtn.disabled = false;
+                                read: false,
+                                type: 'new_material'
+                            }]);
                     }
-                };
+                    alert(`✅ Материал загружен и отправлен ВСЕМ ${students.length} ученикам!`);
+                } else {
+                    const student = students.find(s => s.login === targetStudent);
+                    await supabase
+                        .from('teacher_notes')
+                        .insert([{
+                            student_login: targetStudent,
+                            title: '📹 Новый материал в библиотеке',
+                            text: `Учитель добавил новый материал специально для вас: "${title}"`,
+                            date: new Date().toLocaleString(),
+                            read: false,
+                            type: 'new_material'
+                        }]);
+                    alert(`✅ Материал загружен для ученика ${student?.name}`);
+                }
                 
-                reader.onerror = function() {
-                    errorDiv.style.display = 'block';
-                    errorDiv.innerHTML = '❌ Ошибка при чтении файла!';
-                    uploadBtn.innerHTML = originalText;
-                    uploadBtn.disabled = false;
-                };
+                // Очищаем форму
+                fileInput.value = '';
+                document.getElementById('materialTitle').value = '';
+                document.getElementById('materialDescription').value = '';
+                document.getElementById('materialStudent').value = '';
                 
-                reader.readAsDataURL(file);
+                await loadData();
                 
-            } catch (err) {
-                console.error('Ошибка:', err);
+                uploadBtn.innerHTML = originalText;
+                uploadBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
                 errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '❌ Ошибка: ' + err.message;
+                errorDiv.innerHTML = `❌ Ошибка загрузки: ${error.message}`;
                 uploadBtn.innerHTML = originalText;
                 uploadBtn.disabled = false;
             }
         }
         
-        function updateSizeHint() {
-            const hint = document.getElementById('sizeHint');
-            hint.innerHTML = '📦 IndexedDB позволяет хранить большие файлы (до сотен МБ)';
-        }
-        
-        // Применение фильтров
         function applyFilters() {
             renderMaterials();
         }
         
-        // Отображение материалов
-        async function renderMaterials() {
+        function renderMaterials() {
             const grid = document.getElementById('materialsGrid');
             const filterStudent = document.getElementById('filterStudent').value;
             const filterType = document.getElementById('filterType').value;
             
-            grid.innerHTML = '<div class="loading">⏳ Загрузка материалов...</div>';
-            
-            const materials = await getAllMaterials();
-            
             let filteredMaterials = [...materials];
             
             if (filterStudent) {
-                filteredMaterials = filteredMaterials.filter(m => m.studentLogin === filterStudent);
+                filteredMaterials = filteredMaterials.filter(m => m.student_login === filterStudent);
             }
             
             if (filterType) {
                 filteredMaterials = filteredMaterials.filter(m => m.type === filterType);
             }
             
-            filteredMaterials.sort((a, b) => b.id - a.id);
-            
             if (filteredMaterials.length === 0) {
-                grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет. Загрузите первый или нажмите "Перенести старые материалы"!</div>';
+                grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет. Загрузите первый!</div>';
                 return;
             }
             
@@ -922,19 +611,15 @@
                 if (material.type === 'video') {
                     previewHtml = `<div class="material-preview video">🎥</div>`;
                 } else {
-                    if (material.fileData && material.fileData.startsWith('data:image')) {
-                        previewHtml = `<div class="material-preview"><img src="${material.fileData}" alt="${material.title}"></div>`;
-                    } else {
-                        previewHtml = `<div class="material-preview">📸</div>`;
-                    }
+                    previewHtml = `<div class="material-preview"><img src="${material.file_url}" alt="${material.title}"></div>`;
                 }
                 
                 let fileSizeText = '';
-                if (material.fileSize) {
-                    if (material.fileSize < 1024 * 1024) {
-                        fileSizeText = `${(material.fileSize / 1024).toFixed(1)} КБ`;
+                if (material.file_size) {
+                    if (material.file_size < 1024 * 1024) {
+                        fileSizeText = `${(material.file_size / 1024).toFixed(1)} КБ`;
                     } else {
-                        fileSizeText = `${(material.fileSize / 1024 / 1024).toFixed(1)} МБ`;
+                        fileSizeText = `${(material.file_size / 1024 / 1024).toFixed(1)} МБ`;
                     }
                 }
                 
@@ -948,13 +633,13 @@
                             <div class="material-title">${material.title}</div>
                             <div class="material-description">${material.description}</div>
                             <div class="material-meta">
-                                <span class="material-student ${material.studentLogin === 'ALL' ? 'all' : ''}">
-                                    ${material.studentLogin === 'ALL' ? '🌟 Для всех учеников' : `👤 ${material.studentDisplay}`}
+                                <span class="material-student ${material.student_login === 'ALL' ? 'all' : ''}">
+                                    ${material.student_login === 'ALL' ? '🌟 Для всех учеников' : `👤 ${material.student_display}`}
                                 </span>
                                 <span class="material-date">📅 ${material.date}</span>
                             </div>
                             <div class="material-actions">
-                                <a href="view-material.html?id=${material.id}&role=teacher" class="btn-view" target="_blank">👁️ Просмотр</a>
+                                <a href="${material.file_url}" class="btn-view" target="_blank">👁️ Просмотр</a>
                                 <button class="btn-delete" onclick="deleteMaterial(${material.id})">🗑️</button>
                             </div>
                         </div>
@@ -964,37 +649,41 @@
             grid.innerHTML = html;
         }
         
-        // Удаление одного материала
         async function deleteMaterial(id) {
             if (confirm('Удалить этот материал?')) {
-                await deleteMaterialFromDB(id);
-                await renderMaterials();
+                // Находим материал
+                const material = materials.find(m => m.id === id);
+                
+                if (material && material.file_url) {
+                    // Извлекаем путь из URL
+                    const urlParts = material.file_url.split('/');
+                    const filePath = urlParts.slice(-2).join('/');
+                    
+                    // Удаляем файл из Storage
+                    await supabase.storage
+                        .from('guitar-studio')
+                        .remove([filePath]);
+                }
+                
+                // Удаляем запись из базы данных
+                await supabase
+                    .from('library_materials')
+                    .delete()
+                    .eq('id', id);
+                
+                await loadData();
                 alert('✅ Материал удалён');
             }
         }
         
-        // Очистка всех материалов
-        async function clearAllMaterials() {
-            if (confirm('ВНИМАНИЕ! Это удалит ВСЕ материалы из библиотеки. Продолжить?')) {
-                await clearAllMaterialsFromDB();
-                await renderMaterials();
-                alert('✅ Все материалы удалены');
-            }
-        }
-        
-        // Инициализация
-        async function init() {
-            updateStudentSelects();
-            await renderMaterials();
-            updateNotificationBadge();
-        }
-        
-        init();
-        
-        setInterval(() => {
-            groupMessages = JSON.parse(localStorage.getItem('groupMessages')) || [];
-            updateNotificationBadge();
-        }, 3000);
+        // Инициализация Supabase
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+            console.log('Supabase JS загружен');
+            initSupabase();
+        };
+        document.head.appendChild(script);
     </script>
 </body>
 </html>
