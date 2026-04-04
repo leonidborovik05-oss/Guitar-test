@@ -690,534 +690,534 @@
     </div>
 
     <script>
-        // Supabase конфигурация
-        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
-        
-        let supabase = null;
-        
-        // Данные пользователя
-        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
-        const userName = localStorage.getItem('currentUserName') || 'Евгения';
-        document.getElementById('currentUserDisplay').textContent = userDisplay;
-        document.getElementById('greetingTitle').textContent = `Здравствуйте, ${userName}!`;
-        
-        // Список тем
-        const topics = [
-            { id: 0, name: "🎸 Всё о гитаре", totalQuestions: 9 },
-            { id: 1, name: "🎵 Аккорды и тональности", totalQuestions: 9 },
-            { id: 2, name: "✋ Техники и приёмы", totalQuestions: 9 },
-            { id: 3, name: "🔊 Струны и интервалы", totalQuestions: 9 },
-            { id: 4, name: "📖 История и теория", totalQuestions: 9 },
-            { id: 5, name: "🎼 Чтение нот и табулатур", totalQuestions: 9 },
-            { id: 6, name: "🎤 Песни и репертуар", totalQuestions: 9 },
-            { id: 7, name: "🎧 Звук и оборудование", totalQuestions: 9 },
-            { id: 8, name: "🖐️ Упражнения и развитие", totalQuestions: 9 },
-            { id: 9, name: "🌟 Советы профессионалов", totalQuestions: 9 }
-        ];
-        
-        let students = [];
-        let notes = [];
-        let groups = [];
-        let groupMessages = [];
-        let studentProgress = {};
-        let tasksAnswers = {};
-        
-        // Инициализация Supabase
-        async function initSupabase() {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ Supabase инициализирован');
-                await loadData();
-            } else {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await initSupabase();
+        (function() {
+            // Supabase конфигурация
+            const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+            
+            let supabase = null;
+            let supabaseInitialized = false;
+            
+            // Данные пользователя
+            const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
+            const userName = localStorage.getItem('currentUserName') || 'Евгения';
+            document.getElementById('currentUserDisplay').textContent = userDisplay;
+            document.getElementById('greetingTitle').textContent = `Здравствуйте, ${userName}!`;
+            
+            // Список тем
+            const topics = [
+                { id: 0, name: "🎸 Всё о гитаре", totalQuestions: 9 },
+                { id: 1, name: "🎵 Аккорды и тональности", totalQuestions: 9 },
+                { id: 2, name: "✋ Техники и приёмы", totalQuestions: 9 },
+                { id: 3, name: "🔊 Струны и интервалы", totalQuestions: 9 },
+                { id: 4, name: "📖 История и теория", totalQuestions: 9 },
+                { id: 5, name: "🎼 Чтение нот и табулатур", totalQuestions: 9 },
+                { id: 6, name: "🎤 Песни и репертуар", totalQuestions: 9 },
+                { id: 7, name: "🎧 Звук и оборудование", totalQuestions: 9 },
+                { id: 8, name: "🖐️ Упражнения и развитие", totalQuestions: 9 },
+                { id: 9, name: "🌟 Советы профессионалов", totalQuestions: 9 }
+            ];
+            
+            let students = [];
+            let notes = [];
+            let groups = [];
+            let groupMessages = [];
+            let studentProgress = {};
+            let tasksAnswers = {};
+            
+            // Инициализация Supabase
+            async function initSupabase() {
+                if (supabaseInitialized) return;
+                
+                if (window.supabase) {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    supabaseInitialized = true;
+                    console.log('✅ Supabase инициализирован');
+                    await loadData();
+                } else {
+                    setTimeout(initSupabase, 100);
+                }
             }
-        }
-        
-        async function loadData() {
-            try {
-                console.log('📥 Загрузка данных из Supabase...');
-                
-                // Загружаем учеников
-                const { data: studentsData, error: studentsError } = await supabase
-                    .from('students')
-                    .select('*')
-                    .order('name');
-                
-                if (studentsError) throw studentsError;
-                students = studentsData || [];
-                console.log(`✅ Загружено учеников: ${students.length}`);
-                
-                // Загружаем группы
-                const { data: groupsData, error: groupsError } = await supabase
-                    .from('groups')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (groupsError) throw groupsError;
-                groups = groupsData || [];
-                console.log(`✅ Загружено групп: ${groups.length}`);
-                
-                // Загружаем заметки
-                const { data: notesData, error: notesError } = await supabase
-                    .from('teacher_notes')
-                    .select('*')
-                    .order('id', { ascending: false });
-                
-                if (notesError) throw notesError;
-                notes = notesData || [];
-                
-                // Загружаем сообщения групп
-                const { data: messagesData, error: messagesError } = await supabase
-                    .from('group_messages')
-                    .select('*')
-                    .order('id', { ascending: false });
-                
-                if (messagesError) throw messagesError;
-                groupMessages = messagesData || [];
-                
-                renderStudents();
-                renderGroups();
+            
+            async function loadData() {
+                try {
+                    console.log('📥 Загрузка данных из Supabase...');
+                    
+                    const { data: studentsData, error: studentsError } = await supabase
+                        .from('students')
+                        .select('*')
+                        .order('name');
+                    
+                    if (studentsError) throw studentsError;
+                    students = studentsData || [];
+                    console.log(`✅ Загружено учеников: ${students.length}`);
+                    
+                    const { data: groupsData, error: groupsError } = await supabase
+                        .from('groups')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+                    
+                    if (groupsError) throw groupsError;
+                    groups = groupsData || [];
+                    console.log(`✅ Загружено групп: ${groups.length}`);
+                    
+                    const { data: notesData, error: notesError } = await supabase
+                        .from('teacher_notes')
+                        .select('*')
+                        .order('id', { ascending: false });
+                    
+                    if (notesError) throw notesError;
+                    notes = notesData || [];
+                    
+                    const { data: messagesData, error: messagesError } = await supabase
+                        .from('group_messages')
+                        .select('*')
+                        .order('id', { ascending: false });
+                    
+                    if (messagesError) throw messagesError;
+                    groupMessages = messagesData || [];
+                    
+                    renderStudents();
+                    renderGroups();
+                    updateNotificationBadge();
+                    
+                } catch (error) {
+                    console.error('❌ Ошибка загрузки данных:', error);
+                    document.getElementById('studentsContainer').innerHTML = 
+                        '<div class="empty-state">❌ Ошибка загрузки данных. Проверьте интернет.</div>';
+                }
+            }
+            
+            function updateNotificationBadge() {
+                const unreadCount = groupMessages.filter(m => !m.read).length;
+                const badge = document.getElementById('notificationBadge');
+                if (unreadCount > 0) {
+                    badge.style.display = 'flex';
+                    badge.textContent = unreadCount;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            
+            function openNotificationsModal() {
+                renderNotifications();
+                document.getElementById('notificationsModal').classList.add('active');
+                groupMessages.forEach(m => m.read = true);
                 updateNotificationBadge();
+            }
+            
+            function closeNotificationsModal() {
+                document.getElementById('notificationsModal').classList.remove('active');
+            }
+            
+            function renderNotifications() {
+                const container = document.getElementById('notificationsContainer');
+                const allNotifications = [...groupMessages];
+                allNotifications.sort((a, b) => b.id - a.id);
                 
-            } catch (error) {
-                console.error('❌ Ошибка загрузки данных:', error);
-                document.getElementById('studentsContainer').innerHTML = 
-                    '<div class="empty-state">❌ Ошибка загрузки данных. Проверьте интернет.</div>';
-            }
-        }
-        
-        function updateNotificationBadge() {
-            const unreadCount = groupMessages.filter(m => !m.read).length;
-            const badge = document.getElementById('notificationBadge');
-            if (unreadCount > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = unreadCount;
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-        
-        function openNotificationsModal() {
-            renderNotifications();
-            document.getElementById('notificationsModal').classList.add('active');
-            groupMessages.forEach(m => m.read = true);
-            localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
-            updateNotificationBadge();
-        }
-        
-        function closeNotificationsModal() {
-            document.getElementById('notificationsModal').classList.remove('active');
-        }
-        
-        function renderNotifications() {
-            const container = document.getElementById('notificationsContainer');
-            const allNotifications = [...groupMessages];
-            allNotifications.sort((a, b) => b.id - a.id);
-            
-            if (allNotifications.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
-                return;
-            }
-            
-            let html = '';
-            allNotifications.forEach(n => {
-                html += `
-                    <div class="note-item">
-                        <div class="note-title">${n.group_name || 'Сообщение'}</div>
-                        <div class="note-date">${n.date}</div>
-                        <div class="note-text"><strong>${n.sender_name}:</strong> ${n.text}</div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-        
-        function renderStudents() {
-            const container = document.getElementById('studentsContainer');
-            
-            if (!students || students.length === 0) {
-                container.innerHTML = '<div class="empty-state">👥 Список учеников пуст. Добавьте первого ученика!</div>';
-                return;
-            }
-            
-            let html = '';
-            students.forEach((student) => {
-                const studentNotes = notes.filter(n => n.student_login === student.login);
-                const unreadCount = studentNotes.filter(n => !n.read).length;
-                
-                let totalCorrect = 0;
-                let totalQuestions = 0;
-                for (const topic of topics) {
-                    const progress = studentProgress[student.login]?.find(p => p.topic_id === topic.id);
-                    if (progress) {
-                        totalCorrect += progress.correct_count || 0;
-                        totalQuestions += progress.total_count || topic.totalQuestions;
-                    } else {
-                        totalQuestions += topic.totalQuestions;
-                    }
+                if (allNotifications.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">🔔 Нет новых уведомлений</div>';
+                    return;
                 }
-                const progressPercent = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
                 
-                html += `
-                    <div class="student-card">
-                        <div class="student-name">${student.name}</div>
-                        <div class="student-login">Логин: ${student.login}</div>
-                        ${unreadCount > 0 ? `<div class="student-notes-badge">📝 ${unreadCount} новая заметка</div>` : ''}
-                        <div class="student-progress">
-                            <div class="progress-item">
-                                <span class="progress-label">📊 Общий прогресс:</span>
-                                <span class="progress-value">${progressPercent}%</span>
-                            </div>
+                let html = '';
+                allNotifications.forEach(n => {
+                    html += `
+                        <div class="note-item">
+                            <div class="note-title">${n.group_name || 'Сообщение'}</div>
+                            <div class="note-date">${n.date}</div>
+                            <div class="note-text"><strong>${n.sender_name}:</strong> ${n.text}</div>
                         </div>
-                        <div class="student-buttons">
-                            <button class="view-student-btn" onclick="viewStudent('${student.login}')">📝 Заметки</button>
-                            <button class="progress-student-btn" onclick="showStudentProgress('${student.login}', '${student.name}')">📊 Прогресс</button>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-            updateStudentSelect();
-            updateStudentCheckboxes();
-        }
-        
-        function renderGroups() {
-            const container = document.getElementById('groupsContainer');
-            
-            if (!groups || groups.length === 0) {
-                container.innerHTML = '<div class="empty-state">👥 Групп пока нет. Создайте первую группу!</div>';
-                return;
+                    `;
+                });
+                container.innerHTML = html;
             }
             
-            let html = '';
-            groups.forEach((group) => {
-                const memberCount = group.members ? group.members.length : 0;
+            function renderStudents() {
+                const container = document.getElementById('studentsContainer');
                 
-                html += `
-                    <div class="group-card">
-                        <div class="group-header">
-                            <span class="group-name">${group.name}</span>
-                            <span class="group-badge">${memberCount} уч.</span>
-                        </div>
-                        <div class="group-members">${group.description || 'Нет описания'}</div>
-                        <div class="group-actions">
-                            <a href="group-chat.html?groupId=${group.id}" class="group-btn chat">💬 Чат</a>
-                            <a href="group-library.html?groupId=${group.id}" class="group-btn library">📁 Библиотека</a>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-        
-        function updateStudentSelect() {
-            const select = document.getElementById('noteStudentSelect');
-            if (!select) return;
-            
-            let options = '<option value="">-- Выберите ученика --</option>';
-            students.forEach(student => {
-                options += `<option value="${student.login}">${student.name} (${student.login})</option>`;
-            });
-            select.innerHTML = options;
-        }
-        
-        function updateStudentCheckboxes() {
-            const container = document.getElementById('studentCheckboxes');
-            if (!container) return;
-            
-            if (!students || students.length === 0) {
-                container.innerHTML = '<p style="color: #999;">Нет учеников для добавления</p>';
-                return;
-            }
-            
-            let html = '';
-            students.forEach(student => {
-                html += `
-                    <div class="student-checkbox">
-                        <input type="checkbox" id="student_${student.login}" value="${student.login}">
-                        <label for="student_${student.login}">${student.name}</label>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-        
-        async function showStudentProgress(login, name) {
-            document.getElementById('progressStudentName').textContent = `📚 ${name}`;
-            
-            // Загружаем прогресс
-            const { data: progressData } = await supabase
-                .from('student_progress')
-                .select('*')
-                .eq('student_login', login);
-            
-            const { data: answersData } = await supabase
-                .from('tasks_answers')
-                .select('answers')
-                .eq('student_login', login);
-            
-            const studentAnswers = answersData && answersData.length > 0 ? answersData[0].answers : {};
-            
-            let html = '';
-            for (const topic of topics) {
-                const topicProgress = progressData ? progressData.find(p => p.topic_id === topic.id) : null;
-                const correctCount = topicProgress ? topicProgress.correct_count || 0 : 0;
-                const totalCount = topic.totalQuestions;
-                const percent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+                if (!students || students.length === 0) {
+                    container.innerHTML = '<div class="empty-state">👥 Список учеников пуст. Добавьте первого ученика!</div>';
+                    return;
+                }
                 
-                html += `
-                    <div class="topic-progress-card">
-                        <div class="topic-title" onclick="toggleTopicAnswers(${topic.id})">
-                            <span>${topic.name}</span>
-                            <span>${percent}% (${correctCount}/${totalCount})</span>
-                        </div>
-                        <div class="topic-stats">${correctCount} из ${totalCount} вопросов правильно</div>
-                        <div id="topic-answers-${topic.id}" class="topic-answers"></div>
-                    </div>
-                `;
-            }
-            
-            document.getElementById('progressTopicsContainer').innerHTML = html;
-            
-            // Загружаем ответы для каждой темы
-            for (const topic of topics) {
-                const topicAnswers = studentAnswers[topic.id] || {};
-                const container = document.getElementById(`topic-answers-${topic.id}`);
-                if (container) {
-                    let answersHtml = '<div style="margin-top: 10px;">';
-                    for (let i = 0; i < topic.totalQuestions; i++) {
-                        const answer = topicAnswers[i];
-                        let statusClass = '';
-                        let statusText = '';
-                        
-                        if (answer === undefined || answer === null) {
-                            statusClass = 'answer-not-answered';
-                            statusText = '❌ Не решён';
+                let html = '';
+                students.forEach((student) => {
+                    const studentNotes = notes.filter(n => n.student_login === student.login);
+                    const unreadCount = studentNotes.filter(n => !n.read).length;
+                    
+                    let totalCorrect = 0;
+                    let totalQuestions = 0;
+                    for (const topic of topics) {
+                        const progress = studentProgress[student.login]?.find(p => p.topic_id === topic.id);
+                        if (progress) {
+                            totalCorrect += progress.correct_count || 0;
+                            totalQuestions += progress.total_count || topic.totalQuestions;
                         } else {
-                            statusClass = 'answer-correct';
-                            statusText = '✅ Решён';
+                            totalQuestions += topic.totalQuestions;
                         }
-                        
-                        answersHtml += `
-                            <div class="answer-item-progress">
-                                Вопрос ${i + 1}: <span class="${statusClass}">${statusText}</span>
-                            </div>
-                        `;
                     }
-                    answersHtml += '</div>';
-                    container.innerHTML = answersHtml;
+                    const progressPercent = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+                    
+                    html += `
+                        <div class="student-card">
+                            <div class="student-name">${student.name}</div>
+                            <div class="student-login">Логин: ${student.login}</div>
+                            ${unreadCount > 0 ? `<div class="student-notes-badge">📝 ${unreadCount} новая заметка</div>` : ''}
+                            <div class="student-progress">
+                                <div class="progress-item">
+                                    <span class="progress-label">📊 Общий прогресс:</span>
+                                    <span class="progress-value">${progressPercent}%</span>
+                                </div>
+                            </div>
+                            <div class="student-buttons">
+                                <button class="view-student-btn" onclick="viewStudent('${student.login}')">📝 Заметки</button>
+                                <button class="progress-student-btn" onclick="showStudentProgress('${student.login}', '${student.name}')">📊 Прогресс</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                updateStudentSelect();
+                updateStudentCheckboxes();
+            }
+            
+            function renderGroups() {
+                const container = document.getElementById('groupsContainer');
+                
+                if (!groups || groups.length === 0) {
+                    container.innerHTML = '<div class="empty-state">👥 Групп пока нет. Создайте первую группу!</div>';
+                    return;
+                }
+                
+                let html = '';
+                groups.forEach((group) => {
+                    const memberCount = group.members ? group.members.length : 0;
+                    
+                    html += `
+                        <div class="group-card">
+                            <div class="group-header">
+                                <span class="group-name">${group.name}</span>
+                                <span class="group-badge">${memberCount} уч.</span>
+                            </div>
+                            <div class="group-members">${group.description || 'Нет описания'}</div>
+                            <div class="group-actions">
+                                <a href="group-chat.html?groupId=${group.id}" class="group-btn chat">💬 Чат</a>
+                                <a href="group-library.html?groupId=${group.id}" class="group-btn library">📁 Библиотека</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+            
+            function updateStudentSelect() {
+                const select = document.getElementById('noteStudentSelect');
+                if (!select) return;
+                
+                let options = '<option value="">-- Выберите ученика --</option>';
+                students.forEach(student => {
+                    options += `<option value="${student.login}">${student.name} (${student.login})</option>`;
+                });
+                select.innerHTML = options;
+            }
+            
+            function updateStudentCheckboxes() {
+                const container = document.getElementById('studentCheckboxes');
+                if (!container) return;
+                
+                if (!students || students.length === 0) {
+                    container.innerHTML = '<p style="color: #999;">Нет учеников для добавления</p>';
+                    return;
+                }
+                
+                let html = '';
+                students.forEach(student => {
+                    html += `
+                        <div class="student-checkbox">
+                            <input type="checkbox" id="student_${student.login}" value="${student.login}">
+                            <label for="student_${student.login}">${student.name}</label>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+            
+            async function showStudentProgress(login, name) {
+                document.getElementById('progressStudentName').textContent = `📚 ${name}`;
+                
+                const { data: progressData } = await supabase
+                    .from('student_progress')
+                    .select('*')
+                    .eq('student_login', login);
+                
+                const { data: answersData } = await supabase
+                    .from('tasks_answers')
+                    .select('answers')
+                    .eq('student_login', login);
+                
+                const studentAnswers = answersData && answersData.length > 0 ? answersData[0].answers : {};
+                
+                let html = '';
+                for (const topic of topics) {
+                    const topicProgress = progressData ? progressData.find(p => p.topic_id === topic.id) : null;
+                    const correctCount = topicProgress ? topicProgress.correct_count || 0 : 0;
+                    const totalCount = topic.totalQuestions;
+                    const percent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+                    
+                    html += `
+                        <div class="topic-progress-card">
+                            <div class="topic-title" onclick="toggleTopicAnswers(${topic.id})">
+                                <span>${topic.name}</span>
+                                <span>${percent}% (${correctCount}/${totalCount})</span>
+                            </div>
+                            <div class="topic-stats">${correctCount} из ${totalCount} вопросов правильно</div>
+                            <div id="topic-answers-${topic.id}" class="topic-answers"></div>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('progressTopicsContainer').innerHTML = html;
+                
+                for (const topic of topics) {
+                    const topicAnswers = studentAnswers[topic.id] || {};
+                    const container = document.getElementById(`topic-answers-${topic.id}`);
+                    if (container) {
+                        let answersHtml = '<div style="margin-top: 10px;">';
+                        for (let i = 0; i < topic.totalQuestions; i++) {
+                            const answer = topicAnswers[i];
+                            let statusClass = '';
+                            let statusText = '';
+                            
+                            if (answer === undefined || answer === null) {
+                                statusClass = 'answer-not-answered';
+                                statusText = '❌ Не решён';
+                            } else {
+                                statusClass = 'answer-correct';
+                                statusText = '✅ Решён';
+                            }
+                            
+                            answersHtml += `
+                                <div class="answer-item-progress">
+                                    Вопрос ${i + 1}: <span class="${statusClass}">${statusText}</span>
+                                </div>
+                            `;
+                        }
+                        answersHtml += '</div>';
+                        container.innerHTML = answersHtml;
+                    }
+                }
+                
+                document.getElementById('progressModal').classList.add('active');
+            }
+            
+            function toggleTopicAnswers(topicId) {
+                const container = document.getElementById(`topic-answers-${topicId}`);
+                if (container) {
+                    container.classList.toggle('show');
                 }
             }
             
-            document.getElementById('progressModal').classList.add('active');
-        }
-        
-        function toggleTopicAnswers(topicId) {
-            const container = document.getElementById(`topic-answers-${topicId}`);
-            if (container) {
-                container.classList.toggle('show');
-            }
-        }
-        
-        function closeProgressModal() {
-            document.getElementById('progressModal').classList.remove('active');
-        }
-        
-        function openAddStudentModal() {
-            document.getElementById('addStudentModal').classList.add('active');
-        }
-        
-        function closeAddStudentModal() {
-            document.getElementById('addStudentModal').classList.remove('active');
-            document.getElementById('studentLogin').value = '';
-            document.getElementById('studentPassword').value = '';
-            document.getElementById('studentName').value = '';
-        }
-        
-        function openAddNoteModal() {
-            if (!students || students.length === 0) {
-                alert('❌ Сначала добавьте хотя бы одного ученика!');
-                return;
-            }
-            document.getElementById('addNoteModal').classList.add('active');
-        }
-        
-        function closeAddNoteModal() {
-            document.getElementById('addNoteModal').classList.remove('active');
-            document.getElementById('noteStudentSelect').value = '';
-            document.getElementById('noteTitle').value = '';
-            document.getElementById('noteText').value = '';
-        }
-        
-        function openCreateGroupModal() {
-            if (!students || students.length === 0) {
-                alert('❌ Сначала добавьте хотя бы одного ученика!');
-                return;
-            }
-            updateStudentCheckboxes();
-            document.getElementById('createGroupModal').classList.add('active');
-        }
-        
-        function closeCreateGroupModal() {
-            document.getElementById('createGroupModal').classList.remove('active');
-            document.getElementById('groupName').value = '';
-            document.getElementById('groupDescription').value = '';
-        }
-        
-        async function addStudent() {
-            const login = document.getElementById('studentLogin').value.trim();
-            const password = document.getElementById('studentPassword').value.trim();
-            const name = document.getElementById('studentName').value.trim();
-            
-            if (!login || !password || !name) {
-                alert('❌ Заполните все поля!');
-                return;
+            function closeProgressModal() {
+                document.getElementById('progressModal').classList.remove('active');
             }
             
-            // Проверяем, есть ли уже такой ученик
-            const { data: existing } = await supabase
-                .from('students')
-                .select('login')
-                .eq('login', login);
-            
-            if (existing && existing.length > 0) {
-                alert('❌ Ученик с таким логином уже существует!');
-                return;
+            function openAddStudentModal() {
+                document.getElementById('addStudentModal').classList.add('active');
             }
             
-            try {
-                const { error } = await supabase
+            function closeAddStudentModal() {
+                document.getElementById('addStudentModal').classList.remove('active');
+                document.getElementById('studentLogin').value = '';
+                document.getElementById('studentPassword').value = '';
+                document.getElementById('studentName').value = '';
+            }
+            
+            function openAddNoteModal() {
+                if (!students || students.length === 0) {
+                    alert('❌ Сначала добавьте хотя бы одного ученика!');
+                    return;
+                }
+                document.getElementById('addNoteModal').classList.add('active');
+            }
+            
+            function closeAddNoteModal() {
+                document.getElementById('addNoteModal').classList.remove('active');
+                document.getElementById('noteStudentSelect').value = '';
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('noteText').value = '';
+            }
+            
+            function openCreateGroupModal() {
+                if (!students || students.length === 0) {
+                    alert('❌ Сначала добавьте хотя бы одного ученика!');
+                    return;
+                }
+                updateStudentCheckboxes();
+                document.getElementById('createGroupModal').classList.add('active');
+            }
+            
+            function closeCreateGroupModal() {
+                document.getElementById('createGroupModal').classList.remove('active');
+                document.getElementById('groupName').value = '';
+                document.getElementById('groupDescription').value = '';
+            }
+            
+            async function addStudent() {
+                const login = document.getElementById('studentLogin').value.trim();
+                const password = document.getElementById('studentPassword').value.trim();
+                const name = document.getElementById('studentName').value.trim();
+                
+                if (!login || !password || !name) {
+                    alert('❌ Заполните все поля!');
+                    return;
+                }
+                
+                const { data: existing } = await supabase
                     .from('students')
-                    .insert([{ login, password, name }]);
+                    .select('login')
+                    .eq('login', login);
                 
-                if (error) throw error;
+                if (existing && existing.length > 0) {
+                    alert('❌ Ученик с таким логином уже существует!');
+                    return;
+                }
                 
-                await loadData();
-                closeAddStudentModal();
-                alert('✅ Ученик успешно добавлен!');
-                
-            } catch (error) {
-                console.error('Ошибка добавления:', error);
-                alert('❌ Ошибка добавления ученика');
-            }
-        }
-        
-        async function addNote() {
-            const studentLogin = document.getElementById('noteStudentSelect').value;
-            const title = document.getElementById('noteTitle').value.trim();
-            const text = document.getElementById('noteText').value.trim();
-            
-            if (!studentLogin || !title || !text) {
-                alert('❌ Заполните все поля!');
-                return;
-            }
-            
-            try {
-                const { error } = await supabase
-                    .from('teacher_notes')
-                    .insert([{
-                        student_login: studentLogin,
-                        title: title,
-                        text: text,
-                        date: new Date().toLocaleString(),
-                        read: false
-                    }]);
-                
-                if (error) throw error;
-                
-                await loadData();
-                closeAddNoteModal();
-                alert('✅ Заметка успешно добавлена!');
-                
-            } catch (error) {
-                console.error('Ошибка добавления заметки:', error);
-                alert('❌ Ошибка добавления заметки');
-            }
-        }
-        
-        async function createGroup() {
-            const name = document.getElementById('groupName').value.trim();
-            const description = document.getElementById('groupDescription').value.trim();
-            
-            const checkboxes = document.querySelectorAll('#studentCheckboxes input[type="checkbox"]:checked');
-            const members = Array.from(checkboxes).map(cb => cb.value);
-            
-            if (!name) {
-                alert('❌ Введите название группы!');
-                return;
+                try {
+                    const { error } = await supabase
+                        .from('students')
+                        .insert([{ login, password, name }]);
+                    
+                    if (error) throw error;
+                    
+                    await loadData();
+                    closeAddStudentModal();
+                    alert('✅ Ученик успешно добавлен!');
+                    
+                } catch (error) {
+                    console.error('Ошибка добавления:', error);
+                    alert('❌ Ошибка добавления ученика');
+                }
             }
             
-            if (members.length === 0) {
-                alert('❌ Выберите хотя бы одного ученика!');
-                return;
-            }
-            
-            try {
-                const { data: groupData, error: groupError } = await supabase
-                    .from('groups')
-                    .insert([{
-                        name: name,
-                        description: description,
-                        created_by: 'EvgenyaGuitara01543',
-                        created_at: new Date().toLocaleString(),
-                        members: members
-                    }])
-                    .select();
+            async function addNote() {
+                const studentLogin = document.getElementById('noteStudentSelect').value;
+                const title = document.getElementById('noteTitle').value.trim();
+                const text = document.getElementById('noteText').value.trim();
                 
-                if (groupError) throw groupError;
+                if (!studentLogin || !title || !text) {
+                    alert('❌ Заполните все поля!');
+                    return;
+                }
                 
-                // Создаём уведомления для учеников
-                for (const studentLogin of members) {
-                    await supabase
+                try {
+                    const { error } = await supabase
                         .from('teacher_notes')
                         .insert([{
                             student_login: studentLogin,
-                            title: '👥 Приглашение в группу',
-                            text: `Вас добавили в группу "${name}"`,
+                            title: title,
+                            text: text,
                             date: new Date().toLocaleString(),
-                            read: false,
-                            type: 'group_invite',
-                            group_id: groupData[0].id,
-                            group_name: name
+                            read: false
                         }]);
+                    
+                    if (error) throw error;
+                    
+                    await loadData();
+                    closeAddNoteModal();
+                    alert('✅ Заметка успешно добавлена!');
+                    
+                } catch (error) {
+                    console.error('Ошибка добавления заметки:', error);
+                    alert('❌ Ошибка добавления заметки');
+                }
+            }
+            
+            async function createGroup() {
+                const name = document.getElementById('groupName').value.trim();
+                const description = document.getElementById('groupDescription').value.trim();
+                
+                const checkboxes = document.querySelectorAll('#studentCheckboxes input[type="checkbox"]:checked');
+                const members = Array.from(checkboxes).map(cb => cb.value);
+                
+                if (!name) {
+                    alert('❌ Введите название группы!');
+                    return;
                 }
                 
-                await loadData();
-                closeCreateGroupModal();
-                alert('✅ Группа успешно создана!');
+                if (members.length === 0) {
+                    alert('❌ Выберите хотя бы одного ученика!');
+                    return;
+                }
                 
-            } catch (error) {
-                console.error('Ошибка создания группы:', error);
-                alert('❌ Ошибка создания группы');
+                try {
+                    const { data: groupData, error: groupError } = await supabase
+                        .from('groups')
+                        .insert([{
+                            name: name,
+                            description: description,
+                            created_by: 'EvgenyaGuitara01543',
+                            created_at: new Date().toLocaleString(),
+                            members: members
+                        }])
+                        .select();
+                    
+                    if (groupError) throw groupError;
+                    
+                    for (const studentLogin of members) {
+                        await supabase
+                            .from('teacher_notes')
+                            .insert([{
+                                student_login: studentLogin,
+                                title: '👥 Приглашение в группу',
+                                text: `Вас добавили в группу "${name}"`,
+                                date: new Date().toLocaleString(),
+                                read: false,
+                                type: 'group_invite',
+                                group_id: groupData[0].id,
+                                group_name: name
+                            }]);
+                    }
+                    
+                    await loadData();
+                    closeCreateGroupModal();
+                    alert('✅ Группа успешно создана!');
+                    
+                } catch (error) {
+                    console.error('Ошибка создания группы:', error);
+                    alert('❌ Ошибка создания группы');
+                }
             }
-        }
-        
-        function viewStudent(login) {
-            const student = students.find(s => s.login === login);
-            const studentNotes = notes.filter(n => n.student_login === login);
             
-            let notesText = '';
-            if (studentNotes.length > 0) {
-                notesText = '\n\n📝 Заметки:\n' + studentNotes.map(n => 
-                    `- ${n.title} (${n.date}): ${n.text}`
-                ).join('\n');
+            function viewStudent(login) {
+                const student = students.find(s => s.login === login);
+                const studentNotes = notes.filter(n => n.student_login === login);
+                
+                let notesText = '';
+                if (studentNotes.length > 0) {
+                    notesText = '\n\n📝 Заметки:\n' + studentNotes.map(n => 
+                        `- ${n.title} (${n.date}): ${n.text}`
+                    ).join('\n');
+                } else {
+                    notesText = '\n\n📝 Заметок пока нет.';
+                }
+                
+                alert(`👤 ${student.name}\nЛогин: ${student.login}\nПароль: ${student.password}${notesText}`);
+            }
+            
+            // Загрузка Supabase JS и инициализация
+            if (!window.supabase) {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                script.onload = () => {
+                    console.log('Supabase JS загружен');
+                    initSupabase();
+                };
+                document.head.appendChild(script);
             } else {
-                notesText = '\n\n📝 Заметок пока нет.';
+                initSupabase();
             }
-            
-            alert(`👤 ${student.name}\nЛогин: ${student.login}\nПароль: ${student.password}${notesText}`);
-        }
-        
-        // Загрузка Supabase JS
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        script.onload = () => {
-            console.log('Supabase JS загружен');
-            initSupabase();
-        };
-        document.head.appendChild(script);
+        })();
     </script>
 </body>
 </html>
