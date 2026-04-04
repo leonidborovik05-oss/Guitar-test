@@ -284,6 +284,24 @@
             padding: 5px 10px;
             border-radius: 8px;
         }
+        .student-progress {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .progress-label {
+            color: #555;
+        }
+        .progress-value {
+            font-weight: 600;
+            color: #1976d2;
+        }
         .student-notes-badge {
             background: #ffc107;
             color: #1e1e2f;
@@ -399,7 +417,6 @@
             border-bottom: 1px dashed #aaa;
         }
         
-        /* Стили для модального окна уведомлений */
         .notes-list {
             display: flex;
             flex-direction: column;
@@ -427,7 +444,6 @@
             line-height: 1.5;
         }
         
-        /* Стили для окна прогресса */
         .progress-modal {
             display: none;
             position: fixed;
@@ -496,9 +512,6 @@
             justify-content: space-between;
             align-items: center;
         }
-        .topic-title:hover {
-            color: #6f42c1;
-        }
         .topic-stats {
             font-size: 0.9em;
             color: #666;
@@ -528,13 +541,6 @@
         .answer-not-answered {
             color: #999;
             font-style: italic;
-        }
-        
-        @media (max-width: 768px) {
-            .progress-modal-content {
-                width: 95%;
-                padding: 20px;
-            }
         }
     </style>
 </head>
@@ -657,7 +663,6 @@
             </div>
         </div>
 
-        <!-- Модальное окно уведомлений -->
         <div id="notificationsModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -668,7 +673,6 @@
             </div>
         </div>
 
-        <!-- Модальное окно прогресса ученика -->
         <div id="progressModal" class="progress-modal">
             <div class="progress-modal-content">
                 <div class="progress-modal-header">
@@ -691,9 +695,14 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
         
         let supabase = null;
-        let currentProgressStudent = null;
         
-        // Список тем для заданий (10 тем)
+        // Данные пользователя
+        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
+        const userName = localStorage.getItem('currentUserName') || 'Евгения';
+        document.getElementById('currentUserDisplay').textContent = userDisplay;
+        document.getElementById('greetingTitle').textContent = `Здравствуйте, ${userName}!`;
+        
+        // Список тем
         const topics = [
             { id: 0, name: "🎸 Всё о гитаре", totalQuestions: 9 },
             { id: 1, name: "🎵 Аккорды и тональности", totalQuestions: 9 },
@@ -707,25 +716,6 @@
             { id: 9, name: "🌟 Советы профессионалов", totalQuestions: 9 }
         ];
         
-        // Инициализация Supabase
-        async function initSupabase() {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('Supabase инициализирован');
-                await loadData();
-            } else {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await initSupabase();
-            }
-        }
-        
-        // Данные пользователя
-        const userDisplay = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения (Учитель)';
-        const userName = localStorage.getItem('currentUserName') || 'Евгения';
-        document.getElementById('currentUserDisplay').textContent = userDisplay;
-        document.getElementById('greetingTitle').textContent = `Здравствуйте, ${userName}!`;
-        
-        // Данные
         let students = [];
         let notes = [];
         let groups = [];
@@ -733,9 +723,22 @@
         let studentProgress = {};
         let tasksAnswers = {};
         
-        // Загрузка данных из Supabase
+        // Инициализация Supabase
+        async function initSupabase() {
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase инициализирован');
+                await loadData();
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await initSupabase();
+            }
+        }
+        
         async function loadData() {
             try {
+                console.log('📥 Загрузка данных из Supabase...');
+                
                 // Загружаем учеников
                 const { data: studentsData, error: studentsError } = await supabase
                     .from('students')
@@ -744,7 +747,7 @@
                 
                 if (studentsError) throw studentsError;
                 students = studentsData || [];
-                localStorage.setItem('students', JSON.stringify(students));
+                console.log(`✅ Загружено учеников: ${students.length}`);
                 
                 // Загружаем группы
                 const { data: groupsData, error: groupsError } = await supabase
@@ -754,7 +757,7 @@
                 
                 if (groupsError) throw groupsError;
                 groups = groupsData || [];
-                localStorage.setItem('groups', JSON.stringify(groups));
+                console.log(`✅ Загружено групп: ${groups.length}`);
                 
                 // Загружаем заметки
                 const { data: notesData, error: notesError } = await supabase
@@ -764,7 +767,6 @@
                 
                 if (notesError) throw notesError;
                 notes = notesData || [];
-                localStorage.setItem('teacherNotes', JSON.stringify(notes));
                 
                 // Загружаем сообщения групп
                 const { data: messagesData, error: messagesError } = await supabase
@@ -774,35 +776,15 @@
                 
                 if (messagesError) throw messagesError;
                 groupMessages = messagesData || [];
-                localStorage.setItem('groupMessages', JSON.stringify(groupMessages));
-                
-                // Загружаем прогресс учеников
-                for (const student of students) {
-                    const { data: progressData, error: progressError } = await supabase
-                        .from('student_progress')
-                        .select('*')
-                        .eq('student_login', student.login);
-                    
-                    if (!progressError && progressData) {
-                        studentProgress[student.login] = progressData;
-                    }
-                    
-                    const { data: answersData, error: answersError } = await supabase
-                        .from('tasks_answers')
-                        .select('*')
-                        .eq('student_login', student.login);
-                    
-                    if (!answersError && answersData && answersData.length > 0) {
-                        tasksAnswers[student.login] = answersData[0].answers;
-                    }
-                }
                 
                 renderStudents();
                 renderGroups();
                 updateNotificationBadge();
                 
             } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
+                console.error('❌ Ошибка загрузки данных:', error);
+                document.getElementById('studentsContainer').innerHTML = 
+                    '<div class="empty-state">❌ Ошибка загрузки данных. Проверьте интернет.</div>';
             }
         }
         
@@ -855,7 +837,7 @@
         function renderStudents() {
             const container = document.getElementById('studentsContainer');
             
-            if (students.length === 0) {
+            if (!students || students.length === 0) {
                 container.innerHTML = '<div class="empty-state">👥 Список учеников пуст. Добавьте первого ученика!</div>';
                 return;
             }
@@ -865,10 +847,17 @@
                 const studentNotes = notes.filter(n => n.student_login === student.login);
                 const unreadCount = studentNotes.filter(n => !n.read).length;
                 
-                // Подсчитываем общий прогресс
-                const progressData = studentProgress[student.login] || [];
-                const totalCorrect = progressData.reduce((sum, p) => sum + (p.correct_count || 0), 0);
-                const totalQuestions = progressData.reduce((sum, p) => sum + (p.total_count || 0), 0);
+                let totalCorrect = 0;
+                let totalQuestions = 0;
+                for (const topic of topics) {
+                    const progress = studentProgress[student.login]?.find(p => p.topic_id === topic.id);
+                    if (progress) {
+                        totalCorrect += progress.correct_count || 0;
+                        totalQuestions += progress.total_count || topic.totalQuestions;
+                    } else {
+                        totalQuestions += topic.totalQuestions;
+                    }
+                }
                 const progressPercent = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
                 
                 html += `
@@ -897,7 +886,7 @@
         function renderGroups() {
             const container = document.getElementById('groupsContainer');
             
-            if (groups.length === 0) {
+            if (!groups || groups.length === 0) {
                 container.innerHTML = '<div class="empty-state">👥 Групп пока нет. Создайте первую группу!</div>';
                 return;
             }
@@ -938,7 +927,7 @@
             const container = document.getElementById('studentCheckboxes');
             if (!container) return;
             
-            if (students.length === 0) {
+            if (!students || students.length === 0) {
                 container.innerHTML = '<p style="color: #999;">Нет учеников для добавления</p>';
                 return;
             }
@@ -956,10 +945,9 @@
         }
         
         async function showStudentProgress(login, name) {
-            currentProgressStudent = login;
             document.getElementById('progressStudentName').textContent = `📚 ${name}`;
             
-            // Загружаем прогресс и ответы
+            // Загружаем прогресс
             const { data: progressData } = await supabase
                 .from('student_progress')
                 .select('*')
@@ -976,10 +964,8 @@
             for (const topic of topics) {
                 const topicProgress = progressData ? progressData.find(p => p.topic_id === topic.id) : null;
                 const correctCount = topicProgress ? topicProgress.correct_count || 0 : 0;
-                const totalCount = topicProgress ? topicProgress.total_count || topic.totalQuestions : topic.totalQuestions;
+                const totalCount = topic.totalQuestions;
                 const percent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-                
-                const topicAnswers = studentAnswers[topic.id] || {};
                 
                 html += `
                     <div class="topic-progress-card">
@@ -997,42 +983,35 @@
             
             // Загружаем ответы для каждой темы
             for (const topic of topics) {
-                await loadTopicAnswers(login, topic.id, studentAnswers[topic.id] || {});
+                const topicAnswers = studentAnswers[topic.id] || {};
+                const container = document.getElementById(`topic-answers-${topic.id}`);
+                if (container) {
+                    let answersHtml = '<div style="margin-top: 10px;">';
+                    for (let i = 0; i < topic.totalQuestions; i++) {
+                        const answer = topicAnswers[i];
+                        let statusClass = '';
+                        let statusText = '';
+                        
+                        if (answer === undefined || answer === null) {
+                            statusClass = 'answer-not-answered';
+                            statusText = '❌ Не решён';
+                        } else {
+                            statusClass = 'answer-correct';
+                            statusText = '✅ Решён';
+                        }
+                        
+                        answersHtml += `
+                            <div class="answer-item-progress">
+                                Вопрос ${i + 1}: <span class="${statusClass}">${statusText}</span>
+                            </div>
+                        `;
+                    }
+                    answersHtml += '</div>';
+                    container.innerHTML = answersHtml;
+                }
             }
             
             document.getElementById('progressModal').classList.add('active');
-        }
-        
-        async function loadTopicAnswers(login, topicId, answers) {
-            const container = document.getElementById(`topic-answers-${topicId}`);
-            if (!container) return;
-            
-            // Здесь нужно загрузить вопросы для темы
-            // Для демонстрации покажем заглушку
-            let html = '<div style="margin-top: 10px;">';
-            
-            for (let i = 0; i < 9; i++) {
-                const answer = answers[i];
-                let statusClass = '';
-                let statusText = '';
-                
-                if (answer === undefined || answer === null) {
-                    statusClass = 'answer-not-answered';
-                    statusText = '❌ Не решён';
-                } else {
-                    statusClass = 'answer-correct';
-                    statusText = '✅ Решён';
-                }
-                
-                html += `
-                    <div class="answer-item-progress">
-                        Вопрос ${i + 1}: <span class="${statusClass}">${statusText}</span>
-                    </div>
-                `;
-            }
-            
-            html += '</div>';
-            container.innerHTML = html;
         }
         
         function toggleTopicAnswers(topicId) {
@@ -1058,7 +1037,7 @@
         }
         
         function openAddNoteModal() {
-            if (students.length === 0) {
+            if (!students || students.length === 0) {
                 alert('❌ Сначала добавьте хотя бы одного ученика!');
                 return;
             }
@@ -1073,7 +1052,7 @@
         }
         
         function openCreateGroupModal() {
-            if (students.length === 0) {
+            if (!students || students.length === 0) {
                 alert('❌ Сначала добавьте хотя бы одного ученика!');
                 return;
             }
@@ -1097,7 +1076,13 @@
                 return;
             }
             
-            if (students.some(s => s.login === login)) {
+            // Проверяем, есть ли уже такой ученик
+            const { data: existing } = await supabase
+                .from('students')
+                .select('login')
+                .eq('login', login);
+            
+            if (existing && existing.length > 0) {
                 alert('❌ Ученик с таким логином уже существует!');
                 return;
             }
@@ -1112,6 +1097,7 @@
                 await loadData();
                 closeAddStudentModal();
                 alert('✅ Ученик успешно добавлен!');
+                
             } catch (error) {
                 console.error('Ошибка добавления:', error);
                 alert('❌ Ошибка добавления ученика');
@@ -1144,6 +1130,7 @@
                 await loadData();
                 closeAddNoteModal();
                 alert('✅ Заметка успешно добавлена!');
+                
             } catch (error) {
                 console.error('Ошибка добавления заметки:', error);
                 alert('❌ Ошибка добавления заметки');
@@ -1200,6 +1187,7 @@
                 await loadData();
                 closeCreateGroupModal();
                 alert('✅ Группа успешно создана!');
+                
             } catch (error) {
                 console.error('Ошибка создания группы:', error);
                 alert('❌ Ошибка создания группы');
@@ -1222,7 +1210,7 @@
             alert(`👤 ${student.name}\nЛогин: ${student.login}\nПароль: ${student.password}${notesText}`);
         }
         
-        // Инициализация
+        // Загрузка Supabase JS
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
         script.onload = () => {
