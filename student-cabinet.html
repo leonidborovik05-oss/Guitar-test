@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кабинет ученика | Студия гитары</title>
+    <title>Кабинет ученика</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
@@ -19,7 +19,6 @@
         .action-btn.tasks { background: #28a745; }
         .action-btn.groups { background: #6f42c1; }
         .action-btn.library { background: #17a2b8; }
-        
         .students-section { background: white; border-radius: 20px; padding: 25px; margin-bottom: 30px; }
         .section-title { font-size: 1.4em; margin-bottom: 20px; }
         .students-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -45,16 +44,14 @@
             <p>Твои группы и задания</p>
             <div class="action-buttons">
                 <a href="tasks.html" class="action-btn tasks">📚 Задания</a>
-                <button class="action-btn groups" id="groupsBtn">👥 Мои группы</button>
+                <a href="#" class="action-btn groups" id="groupsBtn">👥 Мои группы</a>
                 <a href="library-student.html" class="action-btn library">📹 Библиотека</a>
             </div>
         </div>
-
         <div class="students-section">
             <div class="section-title">👥 Мои группы</div>
             <div id="groupsContainer" class="students-grid">Загрузка...</div>
         </div>
-
         <div class="footer-links"><a href="index.html">🏠 На главную</a></div>
     </div>
 
@@ -63,7 +60,6 @@
         (function() {
             const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
-            
             const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
             const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
@@ -72,34 +68,17 @@
             document.getElementById('greetingTitle').textContent = `Привет, ${userName}!`;
             
             async function loadGroups() {
-                const { data } = await _supabase.from('groups').select('*');
-                const myGroups = (data || []).filter(g => g.members && g.members.includes(userLogin));
-                const container = document.getElementById('groupsContainer');
-                if (myGroups.length === 0) {
-                    container.innerHTML = '<div class="empty-state">👥 Вы пока не состоите в группах</div>';
-                    return;
-                }
+                const { data: memberships } = await _supabase.from('group_members').select('group_id').eq('student_login', userLogin);
+                if (!memberships || !memberships.length) { document.getElementById('groupsContainer').innerHTML = '<div class="empty-state">👥 Вы пока не состоите в группах</div>'; return; }
+                const { data: groups } = await _supabase.from('groups').select('*').in('id', memberships.map(m => m.group_id));
+                if (!groups || !groups.length) { document.getElementById('groupsContainer').innerHTML = '<div class="empty-state">👥 Вы пока не состоите в группах</div>'; return; }
                 let html = '';
-                for (let g of myGroups) {
-                    html += `<div class="group-card" onclick="window.location.href='group-chat.html?groupId=${g.id}'">
-                        <div class="group-name">${escapeHtml(g.name)}</div>
-                        <div class="group-members">${escapeHtml(g.description || 'Нет описания')}</div>
-                        <div class="group-members">👥 Участников: ${g.members.length}</div>
-                    </div>`;
+                for (let g of groups) {
+                    html += `<div class="group-card" onclick="window.location.href='group-chat.html?groupId=${g.id}'"><div class="group-name">${escapeHtml(g.name)}</div><div class="group-members">${escapeHtml(g.description || 'Нет описания')}</div><div class="group-members">👥 Участников: ${g.members ? g.members.length : 0}</div></div>`;
                 }
-                container.innerHTML = html;
+                document.getElementById('groupsContainer').innerHTML = html;
             }
-            
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.replace(/[&<>]/g, function(m) {
-                    if (m === '&') return '&amp;';
-                    if (m === '<') return '&lt;';
-                    if (m === '>') return '&gt;';
-                    return m;
-                });
-            }
-            
+            function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
             loadGroups();
         })();
     </script>
