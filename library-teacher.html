@@ -40,42 +40,20 @@
             <a href="login.html" class="logout-btn">Выйти</a>
         </div>
     </div>
-
     <div class="main-container">
-        <h1 style="margin-bottom: 20px;">📹 Библиотека материалов</h1>
-        
+        <h1 style="margin-bottom:20px;">📹 Библиотека</h1>
         <div id="uploadError" class="error-message"></div>
-        
         <div class="upload-section">
-            <h3 style="margin-bottom: 20px;">📤 Загрузить материал</h3>
+            <h3>📤 Загрузить</h3>
             <div class="upload-form">
-                <div class="form-group">
-                    <label>Тип</label>
-                    <select id="materialType">
-                        <option value="photo">📸 Фото</option>
-                        <option value="video">🎥 Видео</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Файл</label>
-                    <input type="file" id="materialFile" accept="image/*,video/*">
-                </div>
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" id="materialTitle" placeholder="Название">
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea id="materialDescription" placeholder="Описание"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Для кого</label>
-                    <select id="materialStudent"></select>
-                </div>
+                <div class="form-group"><label>Тип</label><select id="materialType"><option value="photo">📸 Фото</option><option value="video">🎥 Видео</option></select></div>
+                <div class="form-group"><label>Файл</label><input type="file" id="materialFile" accept="image/*,video/*"></div>
+                <div class="form-group"><label>Название</label><input type="text" id="materialTitle"></div>
+                <div class="form-group"><label>Описание</label><textarea id="materialDescription"></textarea></div>
+                <div class="form-group"><label>Для кого</label><select id="materialStudent"></select></div>
                 <button class="btn-upload" id="uploadBtn">⬆️ Загрузить</button>
             </div>
         </div>
-
         <div id="materialsGrid" class="materials-grid">Загрузка...</div>
     </div>
 
@@ -84,123 +62,45 @@
         (function() {
             const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
-            
             const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            let students = [];
-            let materials = [];
-            
             document.getElementById('currentUserDisplay').textContent = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения';
+            let students = [];
             
-            // Загрузка учеников
             async function loadStudents() {
-                const { data } = await _supabase.from('students').select('*').order('name');
+                const { data } = await _supabase.from('students').select('*');
                 students = data || [];
                 const select = document.getElementById('materialStudent');
-                if (select) {
-                    let options = '<option value="ALL">🌟 ДЛЯ ВСЕХ</option>';
-                    students.forEach(s => options += `<option value="${s.login}">👤 ${s.name}</option>`);
-                    select.innerHTML = options;
-                }
+                if (select) select.innerHTML = '<option value="ALL">🌟 ДЛЯ ВСЕХ</option>' + students.map(s => `<option value="${s.login}">👤 ${s.name}</option>`).join('');
             }
-            
-            // Загрузка материалов
             async function loadMaterials() {
                 const { data } = await _supabase.from('library_materials').select('*').order('created_at', { ascending: false });
-                materials = data || [];
                 const grid = document.getElementById('materialsGrid');
-                if (materials.length === 0) {
-                    grid.innerHTML = '<div class="empty-state">📭 Материалов пока нет</div>';
-                    return;
-                }
+                if (!data || !data.length) { grid.innerHTML = '<div class="empty-state">📭 Нет материалов</div>'; return; }
                 let html = '';
-                for (let m of materials) {
-                    let preview = m.type === 'video' ? '<div class="material-preview">🎥</div>' : `<div class="material-preview"><img src="${m.file_url}" alt="${m.title}"></div>`;
-                    html += `<div class="material-card">
-                        ${preview}
-                        <div class="material-info">
-                            <div class="material-title">${escapeHtml(m.title)}</div>
-                            <div>${escapeHtml(m.description)}</div>
-                            <div class="material-meta">
-                                <span>${m.student_login === 'ALL' ? '🌟 Для всех' : `👤 ${m.student_display || 'Ученик'}`}</span>
-                                <span>📅 ${m.date}</span>
-                            </div>
-                        </div>
-                    </div>`;
+                for (let m of data) {
+                    html += `<div class="material-card"><div class="material-preview">${m.type === 'video' ? '🎥' : `<img src="${m.file_url}">`}</div><div class="material-info"><div class="material-title">${escapeHtml(m.title)}</div><div>${escapeHtml(m.description)}</div><div class="material-meta"><span>${m.student_login === 'ALL' ? '🌟 Для всех' : '👤 Ученик'}</span><span>📅 ${m.date}</span></div></div></div>`;
                 }
                 grid.innerHTML = html;
             }
-            
-            // Загрузка файла в Storage
-            async function uploadFile(file, path) {
-                const { error } = await _supabase.storage.from('guitar-studio').upload(path, file);
-                if (error) throw error;
-                const { data } = _supabase.storage.from('guitar-studio').getPublicUrl(path);
-                return data.publicUrl;
-            }
-            
-            // Загрузка материала
             document.getElementById('uploadBtn').onclick = async () => {
-                const errorDiv = document.getElementById('uploadError');
-                errorDiv.style.display = 'none';
-                
-                const type = document.getElementById('materialType').value;
                 const file = document.getElementById('materialFile').files[0];
                 const title = document.getElementById('materialTitle').value.trim();
-                const description = document.getElementById('materialDescription').value.trim();
+                const desc = document.getElementById('materialDescription').value.trim();
                 const target = document.getElementById('materialStudent').value;
-                
-                if (!file) { errorDiv.innerHTML = '❌ Выберите файл'; errorDiv.style.display = 'block'; return; }
-                if (!title) { errorDiv.innerHTML = '❌ Введите название'; errorDiv.style.display = 'block'; return; }
-                if (!description) { errorDiv.innerHTML = '❌ Введите описание'; errorDiv.style.display = 'block'; return; }
-                if (!target) { errorDiv.innerHTML = '❌ Выберите получателя'; errorDiv.style.display = 'block'; return; }
-                
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-                const filePath = `materials/${fileName}`;
-                
-                try {
-                    const fileUrl = await uploadFile(file, filePath);
-                    const studentName = target === 'ALL' ? 'Все ученики' : (students.find(s => s.login === target)?.name || target);
-                    
-                    const { error } = await _supabase.from('library_materials').insert([{
-                        type: type,
-                        title: title,
-                        description: description,
-                        student_login: target,
-                        student_display: target === 'ALL' ? '🌟 Для всех учеников' : studentName,
-                        date: new Date().toLocaleString(),
-                        file_name: file.name,
-                        file_url: fileUrl,
-                        created_at: new Date()
-                    }]);
-                    
-                    if (error) throw error;
-                    
-                    alert('✅ Материал загружен');
-                    document.getElementById('materialFile').value = '';
-                    document.getElementById('materialTitle').value = '';
-                    document.getElementById('materialDescription').value = '';
-                    await loadMaterials();
-                    
-                } catch (err) {
-                    errorDiv.innerHTML = '❌ Ошибка: ' + err.message;
-                    errorDiv.style.display = 'block';
-                }
+                if (!file || !title || !desc || !target) { alert('Заполните всё'); return; }
+                const ext = file.name.split('.').pop();
+                const path = `materials/${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`;
+                const { error: uploadError } = await _supabase.storage.from('guitar-studio').upload(path, file);
+                if (uploadError) { alert('Ошибка загрузки файла'); return; }
+                const { data: urlData } = _supabase.storage.from('guitar-studio').getPublicUrl(path);
+                const { error } = await _supabase.from('library_materials').insert([{ type: document.getElementById('materialType').value, title, description: desc, student_login: target, student_display: target === 'ALL' ? 'Для всех' : students.find(s => s.login === target)?.name, date: new Date().toLocaleString(), file_url: urlData.publicUrl }]);
+                if (error) { alert('Ошибка: ' + error.message); return; }
+                alert('✅ Материал загружен');
+                loadMaterials();
             };
-            
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.replace(/[&<>]/g, function(m) {
-                    if (m === '&') return '&amp;';
-                    if (m === '<') return '&lt;';
-                    if (m === '>') return '&gt;';
-                    return m;
-                });
-            }
-            
-            loadStudents();
-            loadMaterials();
+            function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+            loadStudents(); loadMaterials();
         })();
     </script>
 </body>
