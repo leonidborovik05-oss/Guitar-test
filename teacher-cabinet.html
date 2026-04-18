@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кабинет учителя | Студия гитары</title>
+    <title>Кабинет учителя</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
@@ -84,13 +84,12 @@
             <div id="studentsContainer" class="students-grid">Загрузка...</div>
         </div>
 
-        <!-- Модалки -->
         <div id="addStudentModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header"><h3>➕ Добавить ученика</h3><button class="close-btn" onclick="closeModal('addStudentModal')">&times;</button></div>
-                <div class="form-group"><label>Логин</label><input type="text" id="studentLogin" placeholder="login"></div>
-                <div class="form-group"><label>Пароль</label><input type="text" id="studentPassword" placeholder="password"></div>
-                <div class="form-group"><label>Имя</label><input type="text" id="studentName" placeholder="Имя"></div>
+                <div class="form-group"><label>Логин</label><input type="text" id="studentLogin"></div>
+                <div class="form-group"><label>Пароль</label><input type="text" id="studentPassword"></div>
+                <div class="form-group"><label>Имя</label><input type="text" id="studentName"></div>
                 <button class="btn-save" id="saveStudentBtn">Добавить</button>
             </div>
         </div>
@@ -121,183 +120,101 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function() {
-            // Конфиг
             const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
-            
-            // Создаём клиент
             const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            // Данные
-            let students = [];
-            let groups = [];
+            let students = [], groups = [];
             
-            // DOM элементы
-            const studentsContainer = document.getElementById('studentsContainer');
-            const groupsContainer = document.getElementById('groupsContainer');
-            const noteStudentSelect = document.getElementById('noteStudentSelect');
-            const studentCheckboxes = document.getElementById('studentCheckboxes');
-            
-            // Отображение имени
             document.getElementById('currentUserDisplay').textContent = localStorage.getItem('currentUserDisplay') || '👩‍🏫 Евгения';
             document.getElementById('greetingTitle').textContent = `Здравствуйте, ${localStorage.getItem('currentUserName') || 'Евгения'}!`;
             
-            // Загрузка учеников
             async function loadStudents() {
                 const { data } = await _supabase.from('students').select('*').order('name');
                 students = data || [];
-                if (students.length === 0) {
-                    studentsContainer.innerHTML = '<div class="empty-state">👥 Нет учеников</div>';
-                    return;
-                }
+                const container = document.getElementById('studentsContainer');
+                if (!students.length) { container.innerHTML = '<div class="empty-state">👥 Нет учеников</div>'; return; }
                 let html = '';
                 for (let s of students) {
-                    html += `<div class="student-card">
-                        <div class="student-name">${escapeHtml(s.name)}</div>
-                        <div class="student-login">Логин: ${escapeHtml(s.login)}</div>
-                        <div class="student-buttons">
-                            <button class="view-student-btn" onclick="window.viewStudent('${s.login}')">📝 Заметки</button>
-                            <button class="progress-student-btn" onclick="window.showProgress('${s.login}')">📊 Прогресс</button>
-                        </div>
-                    </div>`;
+                    html += `<div class="student-card"><div class="student-name">${escapeHtml(s.name)}</div><div class="student-login">Логин: ${escapeHtml(s.login)}</div><div class="student-buttons"><button class="view-student-btn" onclick="viewStudent('${s.login}')">📝 Заметки</button><button class="progress-student-btn" onclick="showProgress('${s.login}')">📊 Прогресс</button></div></div>`;
                 }
-                studentsContainer.innerHTML = html;
-                
-                // Обновляем select для заметок
-                if (noteStudentSelect) {
-                    noteStudentSelect.innerHTML = '<option value="">-- Выберите --</option>' + students.map(s => `<option value="${escapeHtml(s.login)}">${escapeHtml(s.name)}</option>`).join('');
-                }
-                
-                // Обновляем чекбоксы для групп
-                if (studentCheckboxes) {
-                    studentCheckboxes.innerHTML = students.map(s => `<div style="margin-bottom: 8px;"><input type="checkbox" value="${escapeHtml(s.login)}" id="cb_${s.login}"> <label for="cb_${s.login}">${escapeHtml(s.name)}</label></div>`).join('');
-                }
+                container.innerHTML = html;
+                const select = document.getElementById('noteStudentSelect');
+                if (select) select.innerHTML = '<option value="">-- Выберите --</option>' + students.map(s => `<option value="${s.login}">${escapeHtml(s.name)}</option>`).join('');
+                const cb = document.getElementById('studentCheckboxes');
+                if (cb) cb.innerHTML = students.map(s => `<div><input type="checkbox" value="${s.login}" id="cb_${s.login}"> <label for="cb_${s.login}">${escapeHtml(s.name)}</label></div>`).join('');
             }
             
-            // Загрузка групп
             async function loadGroups() {
                 const { data } = await _supabase.from('groups').select('*').order('created_at', { ascending: false });
                 groups = data || [];
-                if (groups.length === 0) {
-                    groupsContainer.innerHTML = '<div class="empty-state">👥 Групп пока нет</div>';
-                    return;
-                }
+                const container = document.getElementById('groupsContainer');
+                if (!groups.length) { container.innerHTML = '<div class="empty-state">👥 Групп пока нет</div>'; return; }
                 let html = '';
                 for (let g of groups) {
-                    const memberCount = g.members ? g.members.length : 0;
-                    html += `<div class="group-card">
-                        <div class="group-name">${escapeHtml(g.name)}</div>
-                        <div class="group-members">${escapeHtml(g.description || 'Нет описания')}</div>
-                        <div class="group-members">👥 Участников: ${memberCount}</div>
-                        <div class="group-actions">
-                            <a href="group-chat.html?groupId=${g.id}" class="group-btn chat">💬 Чат</a>
-                            <a href="group-library.html?groupId=${g.id}" class="group-btn library">📁 Библиотека</a>
-                        </div>
-                    </div>`;
+                    html += `<div class="group-card"><div class="group-name">${escapeHtml(g.name)}</div><div class="group-members">${escapeHtml(g.description || '')}</div><div class="group-actions"><a href="group-chat.html?groupId=${g.id}" class="group-btn chat">💬 Чат</a><a href="group-library.html?groupId=${g.id}" class="group-btn library">📁 Библиотека</a></div></div>`;
                 }
-                groupsContainer.innerHTML = html;
+                container.innerHTML = html;
             }
             
-            // Функции для кнопок
             window.viewStudent = function(login) {
                 const s = students.find(s => s.login === login);
-                if (s) {
-                    alert(`👤 ${s.name}\nЛогин: ${s.login}\nПароль: ${s.password}`);
-                } else {
-                    alert('Ученик не найден');
-                }
+                alert(`👤 ${s.name}\nЛогин: ${s.login}\nПароль: ${s.password}`);
             };
+            window.showProgress = function(login) { alert('📊 Прогресс в разработке'); };
+            window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); };
             
-            window.showProgress = function(login) {
-                alert('📊 Прогресс ученика будет доступен позже');
-            };
-            
-            // Модалки
-            window.closeModal = function(id) {
-                document.getElementById(id).classList.remove('active');
-            };
-            
-            // Добавление ученика
             document.getElementById('addStudentBtn').onclick = () => document.getElementById('addStudentModal').classList.add('active');
             document.getElementById('saveStudentBtn').onclick = async () => {
                 const login = document.getElementById('studentLogin').value.trim();
                 const password = document.getElementById('studentPassword').value.trim();
                 const name = document.getElementById('studentName').value.trim();
-                if (!login || !password || !name) { alert('Заполните все поля'); return; }
+                if (!login || !password || !name) { alert('Заполните всё'); return; }
                 const { error } = await _supabase.from('students').insert([{ login, password, name }]);
                 if (error) { alert('Ошибка: ' + error.message); return; }
                 alert('✅ Ученик добавлен');
-                window.closeModal('addStudentModal');
+                closeModal('addStudentModal');
                 document.getElementById('studentLogin').value = '';
                 document.getElementById('studentPassword').value = '';
                 document.getElementById('studentName').value = '';
-                await loadStudents();
+                loadStudents();
             };
             
-            // Добавление заметки
-            document.getElementById('addNoteBtn').onclick = () => {
-                if (students.length === 0) { alert('Нет учеников'); return; }
-                document.getElementById('addNoteModal').classList.add('active');
-            };
+            document.getElementById('addNoteBtn').onclick = () => { if (!students.length) { alert('Нет учеников'); return; } document.getElementById('addNoteModal').classList.add('active'); };
             document.getElementById('saveNoteBtn').onclick = async () => {
-                const studentLogin = noteStudentSelect.value;
+                const studentLogin = document.getElementById('noteStudentSelect').value;
                 const title = document.getElementById('noteTitle').value.trim();
                 const text = document.getElementById('noteText').value.trim();
-                if (!studentLogin || !title || !text) { alert('Заполните все поля'); return; }
-                const { error } = await _supabase.from('teacher_notes').insert([{
-                    student_login: studentLogin,
-                    title: title,
-                    text: text,
-                    date: new Date().toLocaleString(),
-                    read: false
-                }]);
+                if (!studentLogin || !title || !text) { alert('Заполните всё'); return; }
+                const { error } = await _supabase.from('teacher_notes').insert([{ student_login: studentLogin, title, text, date: new Date().toLocaleString(), read: false }]);
                 if (error) { alert('Ошибка: ' + error.message); return; }
                 alert('✅ Заметка добавлена');
-                window.closeModal('addNoteModal');
+                closeModal('addNoteModal');
                 document.getElementById('noteTitle').value = '';
                 document.getElementById('noteText').value = '';
             };
             
-            // Создание группы
-            document.getElementById('createGroupBtn').onclick = () => {
-                if (students.length === 0) { alert('Нет учеников'); return; }
-                document.getElementById('createGroupModal').classList.add('active');
-            };
+            document.getElementById('createGroupBtn').onclick = () => { if (!students.length) { alert('Нет учеников'); return; } document.getElementById('createGroupModal').classList.add('active'); };
             document.getElementById('saveGroupBtn').onclick = async () => {
                 const name = document.getElementById('groupName').value.trim();
                 const description = document.getElementById('groupDescription').value.trim();
                 const members = Array.from(document.querySelectorAll('#studentCheckboxes input:checked')).map(cb => cb.value);
-                if (!name) { alert('Введите название группы'); return; }
-                if (members.length === 0) { alert('Выберите хотя бы одного ученика'); return; }
-                const { error } = await _supabase.from('groups').insert([{
-                    name: name,
-                    description: description,
-                    created_by: 'EvgenyaGuitara01543',
-                    created_at: new Date().toLocaleString(),
-                    members: members
-                }]);
+                if (!name) { alert('Введите название'); return; }
+                if (!members.length) { alert('Выберите учеников'); return; }
+                const { data: group, error } = await _supabase.from('groups').insert([{ name, description, created_by: 'EvgenyaGuitara01543', created_at: new Date().toLocaleString(), members }]).select();
                 if (error) { alert('Ошибка: ' + error.message); return; }
+                for (let m of members) {
+                    await _supabase.from('group_members').insert([{ group_id: group[0].id, student_login: m }]);
+                }
                 alert('✅ Группа создана');
-                window.closeModal('createGroupModal');
+                closeModal('createGroupModal');
                 document.getElementById('groupName').value = '';
                 document.getElementById('groupDescription').value = '';
-                await loadGroups();
+                loadGroups();
             };
             
-            // Экранирование HTML
-            function escapeHtml(str) {
-                if (!str) return '';
-                return str.replace(/[&<>]/g, function(m) {
-                    if (m === '&') return '&amp;';
-                    if (m === '<') return '&lt;';
-                    if (m === '>') return '&gt;';
-                    return m;
-                });
-            }
-            
-            // Запуск
-            loadStudents();
-            loadGroups();
+            function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+            loadStudents(); loadGroups();
         })();
     </script>
 </body>
