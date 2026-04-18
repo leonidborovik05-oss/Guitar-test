@@ -3,204 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чат группы | Студия гитары</title>
+    <title>Библиотека группы | Студия гитары</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .header {
-            background: linear-gradient(90deg, #1e1e2f, #2a2a40);
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-        }
-        .logo span {
-            color: #f0b90b;
-        }
-        .user-badge {
-            background: #ffc107;
-            color: #1e1e2f;
-            padding: 5px 15px;
-            border-radius: 30px;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
-        .group-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .group-name {
-            font-size: 1.2em;
-            font-weight: 600;
-        }
-        .member-count {
-            background: #3a3a55;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-        .back-btn {
-            background: #6c757d;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .chat-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            max-width: 1000px;
-            margin: 20px auto;
-            width: 100%;
-            padding: 0 20px;
-        }
-        .messages-area {
-            flex: 1;
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            min-height: 400px;
-            max-height: calc(100vh - 200px);
-        }
-        .message {
-            display: flex;
-            flex-direction: column;
-            max-width: 70%;
-        }
-        .message.own {
-            align-self: flex-end;
-        }
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
-            font-size: 0.9em;
-        }
-        .message-sender {
-            font-weight: 600;
-            color: #1e1e2f;
-        }
-        .message-time {
-            color: #999;
-        }
-        .message-content {
-            background: #f0f2f5;
-            padding: 12px 15px;
-            border-radius: 18px;
-            color: #333;
-            line-height: 1.5;
-        }
-        .message.own .message-content {
-            background: #1e1e2f;
-            color: white;
-        }
-        .message.teacher .message-content {
-            background: #ffc107;
-            color: #1e1e2f;
-        }
-        .input-area {
-            display: flex;
-            gap: 10px;
-            background: white;
-            padding: 15px;
-            border-radius: 50px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-        }
-        .message-input {
-            flex: 1;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1em;
-            outline: none;
-            background: #f0f2f5;
-            border-radius: 40px;
-        }
-        .send-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2em;
-            transition: transform 0.2s;
-        }
-        .send-btn:hover {
-            transform: scale(1.1);
-        }
-        .library-link {
-            position: fixed;
-            bottom: 100px;
-            right: 30px;
-            background: #17a2b8;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        .library-link:hover {
-            transform: translateY(-5px);
-        }
-        .system-message {
-            text-align: center;
-            color: #999;
-            font-size: 0.9em;
-            padding: 10px;
-            background: #f8f9fc;
-            border-radius: 20px;
-            margin: 10px 0;
-        }
-        .teacher-badge {
-            background: #ffc107;
-            color: #1e1e2f;
-            font-size: 0.7em;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-        }
-        @media (max-width: 768px) {
-            .message {
-                max-width: 85%;
-            }
-            .library-link {
-                bottom: 20px;
-                right: 20px;
-                padding: 12px 20px;
-                font-size: 0.9em;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; }
+        .header { background: linear-gradient(90deg, #1e1e2f, #2a2a40); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .logo { font-size: 1.8em; font-weight: bold; }
+        .logo span { color: #f0b90b; }
+        .user-badge { background: #ffc107; color: #1e1e2f; padding: 5px 15px; border-radius: 30px; font-size: 0.9em; font-weight: 600; }
+        .group-info { display: flex; align-items: center; gap: 15px; }
+        .group-name { font-size: 1.2em; font-weight: 600; }
+        .back-btn { background: #6c757d; color: white; padding: 8px 20px; border-radius: 40px; text-decoration: none; font-weight: 500; }
+        .main-container { max-width: 1300px; margin: 30px auto; padding: 0 20px; }
+        .upload-section { background: white; border-radius: 20px; padding: 25px; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .upload-form { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+        .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; }
+        .form-group input[type="file"] { padding: 8px; }
+        .btn-upload { background: #28a745; color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+        .filters { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; align-items: center; }
+        .filter-select { padding: 10px 20px; border: 2px solid #e0e0e0; border-radius: 40px; font-size: 1em; background: white; min-width: 150px; }
+        .clear-btn { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 40px; font-size: 1em; cursor: pointer; }
+        .materials-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .material-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .material-card:hover { transform: translateY(-5px); }
+        .material-preview { height: 180px; background: #1e1e2f; display: flex; align-items: center; justify-content: center; color: white; font-size: 3em; }
+        .material-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .material-info { padding: 15px; }
+        .material-title { font-weight: 600; font-size: 1.1em; margin-bottom: 8px; color: #1e1e2f; }
+        .material-meta { display: flex; justify-content: space-between; color: #999; font-size: 0.85em; margin-top: 10px; flex-wrap: wrap; gap: 5px; }
+        .empty-state { text-align: center; padding: 60px; color: #999; font-size: 1.2em; background: white; border-radius: 20px; grid-column: 1 / -1; }
+        .comment-section { margin-top: 10px; padding: 10px; background: #f8f9fc; border-radius: 10px; }
+        .comment-input { display: flex; gap: 10px; margin-top: 10px; }
+        .comment-input input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 20px; }
+        .comment-btn { background: #1e1e2f; color: white; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; }
+        .comment { padding: 8px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .comment.teacher { background: #fff9e6; border-left: 3px solid #ffc107; }
+        .error-message { background: #ffebee; color: #c62828; padding: 12px; border-radius: 10px; margin-bottom: 15px; display: none; }
+        .size-hint { font-size: 0.8em; color: #666; margin-top: 5px; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        .student-badge { background: #17a2b8; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-left: 5px; }
+        .teacher-badge { background: #ffc107; color: #1e1e2f; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-left: 5px; }
+        .delete-my-btn { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; cursor: pointer; margin-top: 8px; width: 100%; }
+        .delete-my-btn:hover { background: #b02a37; }
     </style>
 </head>
 <body>
@@ -209,230 +56,94 @@
         <div class="group-info">
             <span class="user-badge" id="currentUserDisplay">Загрузка...</span>
             <span class="group-name" id="groupName">Загрузка...</span>
-            <span class="member-count" id="memberCount">0 уч.</span>
-            <a href="javascript:history.back()" class="back-btn">← Назад</a>
+            <a href="group-chat.html?groupId=" id="chatLink" class="back-btn">← В чат</a>
+            <a href="javascript:history.back()" class="back-btn">Назад</a>
         </div>
     </div>
-
-    <div class="chat-container">
-        <div class="messages-area" id="messagesArea">
-            <div class="system-message">⏳ Загрузка сообщений...</div>
+    <div class="main-container">
+        <div id="uploadError" class="error-message"></div>
+        <div class="upload-section" id="uploadSection" style="display: none;">
+            <h3 style="margin-bottom: 20px;">📤 Поделиться</h3>
+            <div class="upload-form">
+                <div class="form-group"><label>Файл</label><input type="file" id="fileInput" accept="image/*,video/*"></div>
+                <div class="form-group"><label>Название</label><input type="text" id="fileTitle" placeholder="Название"></div>
+                <div class="form-group"><label>Описание</label><textarea id="fileDescription" placeholder="Описание"></textarea></div>
+                <button class="btn-upload" onclick="uploadFile()">Загрузить</button>
+            </div>
         </div>
-        
-        <div class="input-area">
-            <input type="text" class="message-input" id="messageInput" placeholder="Напишите сообщение..." onkeypress="checkEnter(event)">
-            <button class="send-btn" onclick="sendMessage()">➤</button>
+        <div class="filters">
+            <select class="filter-select" id="filterType" onchange="applyFilters()"><option value="">Все типы</option><option value="photo">📸 Фото</option><option value="video">🎥 Видео</option></select>
+            <button class="clear-btn" id="clearBtn" onclick="clearAllMaterials()" style="display: none;">🗑️ Очистить все</button>
         </div>
+        <div id="materialsGrid" class="materials-grid"><div class="loading">⏳ Загрузка...</div></div>
     </div>
-    
-    <a href="#" class="library-link" id="libraryLink">📁 Библиотека группы</a>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Supabase конфигурация
-        const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
-        
-        let supabase = null;
-        let currentGroup = null;
-        let messages = [];
-        let subscription = null;
-        
-        // Получаем ID группы из URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const groupId = urlParams.get('groupId');
-        
-        // Константы
-        const TEACHER_LOGIN = "EvgenyaGuitara01543";
-        
-        // Получаем информацию о текущем пользователе
-        const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
-        const userName = localStorage.getItem('currentUserName') || 'Ученик';
-        const userDisplay = localStorage.getItem('currentUserDisplay') || '👨‍🎓 Ученик';
-        const isTeacher = userLogin === TEACHER_LOGIN;
-        
-        console.log('========== ЧАТ ГРУППЫ ==========');
-        console.log('Роль:', isTeacher ? 'teacher' : 'student');
-        console.log('Логин:', userLogin);
-        console.log('Имя:', userName);
-        console.log('ID группы:', groupId);
-        
-        document.getElementById('currentUserDisplay').textContent = userDisplay;
-        
-        // Инициализация Supabase
-        async function initSupabase() {
-            if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('Supabase инициализирован');
-                await loadGroupData();
-                await loadMessages();
-                subscribeToMessages();
-            } else {
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await initSupabase();
-            }
-        }
-        
-        async function loadGroupData() {
-            try {
-                // Загружаем информацию о группе
-                const { data: groupData, error: groupError } = await supabase
-                    .from('groups')
-                    .select('*')
-                    .eq('id', groupId)
-                    .single();
-                
-                if (groupError) throw groupError;
-                currentGroup = groupData;
-                
-                document.getElementById('groupName').textContent = currentGroup.name;
-                const memberCount = currentGroup.members ? currentGroup.members.length : 0;
-                document.getElementById('memberCount').textContent = `${memberCount} уч.`;
-                document.getElementById('libraryLink').href = `group-library.html?groupId=${groupId}`;
-                
-            } catch (error) {
-                console.error('Ошибка загрузки группы:', error);
-                alert('Группа не найдена');
-                window.location.href = isTeacher ? 'teacher-cabinet.html' : 'student-cabinet.html';
-            }
-        }
-        
-        async function loadMessages() {
-            try {
-                const { data, error } = await supabase
-                    .from('group_messages')
-                    .select('*')
-                    .eq('group_id', groupId)
-                    .order('id', { ascending: true });
-                
-                if (error) throw error;
-                messages = data || [];
-                renderMessages();
-                
-            } catch (error) {
-                console.error('Ошибка загрузки сообщений:', error);
-            }
-        }
-        
-        function subscribeToMessages() {
-            // Подписываемся на новые сообщения в реальном времени
-            subscription = supabase
-                .channel(`group_${groupId}`)
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'group_messages',
-                    filter: `group_id=eq.${groupId}`
-                }, (payload) => {
-                    console.log('Новое сообщение:', payload);
-                    messages.push(payload.new);
-                    renderMessages();
-                })
-                .subscribe();
-        }
-        
-        function renderMessages() {
-            const container = document.getElementById('messagesArea');
+        (function() {
+            const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+            const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
-            if (!messages || messages.length === 0) {
-                container.innerHTML = '<div class="system-message">💬 Нет сообщений. Напишите первое!</div>';
-                return;
-            }
+            const groupId = new URLSearchParams(window.location.search).get('groupId');
+            const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
+            const userName = localStorage.getItem('currentUserName') || 'Ученик';
+            const isTeacher = userLogin === 'EvgenyaGuitara01543';
+            document.getElementById('currentUserDisplay').textContent = localStorage.getItem('currentUserDisplay') || (isTeacher ? '👩‍🏫 Учитель' : '👨‍🎓 ' + userName);
             
-            let html = '';
-            messages.forEach(msg => {
-                if (msg.type === 'system') {
-                    html += `<div class="system-message">📢 ${msg.text} • ${msg.date}</div>`;
-                } else {
-                    const isOwn = msg.sender === userLogin;
-                    const isTeacherMsg = msg.sender === TEACHER_LOGIN;
-                    html += `
-                        <div class="message ${isOwn ? 'own' : ''} ${isTeacherMsg ? 'teacher' : ''}">
-                            <div class="message-header">
-                                <span class="message-sender">
-                                    ${msg.sender_name}
-                                    ${isTeacherMsg ? '<span class="teacher-badge">👑 Учитель</span>' : ''}
-                                </span>
-                                <span class="message-time">${msg.date}</span>
-                            </div>
-                            <div class="message-content">${escapeHtml(msg.text)}</div>
-                        </div>
-                    `;
+            let groups = JSON.parse(localStorage.getItem('groups')) || [];
+            let currentGroup = groups.find(g => g.id == groupId);
+            if (currentGroup) { document.getElementById('groupName').textContent = currentGroup.name; document.getElementById('chatLink').href = `group-chat.html?groupId=${groupId}`; }
+            if (!isTeacher) document.getElementById('uploadSection').style.display = 'block';
+            else document.getElementById('clearBtn').style.display = 'inline-block';
+            
+            let materials = [];
+            async function loadMaterials() {
+                const { data } = await _supabase.from('group_library').select('*').eq('group_id', groupId).order('created_at', { ascending: false });
+                materials = data || [];
+                renderMaterials();
+            }
+            function renderMaterials() {
+                const grid = document.getElementById('materialsGrid');
+                const filterType = document.getElementById('filterType').value;
+                let filtered = materials.filter(m => !filterType || m.type === filterType);
+                if (!filtered.length) { grid.innerHTML = '<div class="empty-state">📭 Нет материалов</div>'; return; }
+                let html = '';
+                for (let m of filtered) {
+                    let preview = m.type === 'video' ? '<div class="material-preview">🎥</div>' : `<div class="material-preview"><img src="${m.file_url}"></div>`;
+                    let isOwn = m.uploaded_by === userLogin;
+                    html += `<div class="material-card"><div>${preview}</div><div class="material-info"><div class="material-title">${escapeHtml(m.title)}</div><div>${escapeHtml(m.description)}</div><div class="material-meta"><span>👤 ${m.uploaded_by_name} <span class="${m.uploaded_by === 'EvgenyaGuitara01543' ? 'teacher-badge' : 'student-badge'}">${m.uploaded_by === 'EvgenyaGuitara01543' ? 'учитель' : 'ученик'}</span></span><span>📅 ${m.date}</span></div>${isOwn ? `<button class="delete-my-btn" onclick="deleteMaterial(${m.id})">🗑️ Удалить</button>` : ''}</div></div>`;
                 }
-            });
-            
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            
-            if (!text) return;
-            
-            const message = {
-                group_id: parseInt(groupId),
-                sender: userLogin,
-                sender_name: userName,
-                text: text,
-                date: new Date().toLocaleString(),
-                read: false,
-                type: 'message'
+                grid.innerHTML = html;
+            }
+            window.uploadFile = async function() {
+                const file = document.getElementById('fileInput').files[0];
+                const title = document.getElementById('fileTitle').value.trim();
+                const desc = document.getElementById('fileDescription').value.trim();
+                if (!file || !title || !desc) { alert('Заполните всё'); return; }
+                const ext = file.name.split('.').pop();
+                const path = `group_${groupId}/${Date.now()}_${Math.random().toString(36).substring(2)}.${ext}`;
+                const { error: uploadErr } = await _supabase.storage.from('guitar-studio').upload(path, file);
+                if (uploadErr) { alert('Ошибка загрузки файла'); return; }
+                const { data: urlData } = _supabase.storage.from('guitar-studio').getPublicUrl(path);
+                const { error } = await _supabase.from('group_library').insert([{ group_id: parseInt(groupId), type: file.type.startsWith('video') ? 'video' : 'photo', title, description: desc, uploaded_by: userLogin, uploaded_by_name: userName, date: new Date().toLocaleString(), file_url: urlData.publicUrl }]);
+                if (error) { alert('Ошибка: ' + error.message); return; }
+                alert('✅ Материал загружен');
+                document.getElementById('fileInput').value = '';
+                document.getElementById('fileTitle').value = '';
+                document.getElementById('fileDescription').value = '';
+                loadMaterials();
             };
-            
-            try {
-                const { error } = await supabase
-                    .from('group_messages')
-                    .insert([message]);
-                
-                if (error) throw error;
-                
-                input.value = '';
-                
-                // Создаём уведомление для учителя (если ученик написал)
-                if (!isTeacher) {
-                    await supabase
-                        .from('group_messages')
-                        .insert([{
-                            ...message,
-                            type: 'notification',
-                            read: false
-                        }]);
-                }
-                
-            } catch (error) {
-                console.error('Ошибка отправки:', error);
-                alert('❌ Не удалось отправить сообщение');
-            }
-        }
-        
-        function checkEnter(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Загрузка Supabase JS
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        script.onload = () => {
-            console.log('Supabase JS загружен');
-            initSupabase();
-        };
-        document.head.appendChild(script);
-        
-        // Отписка при закрытии страницы
-        window.addEventListener('beforeunload', () => {
-            if (subscription) {
-                subscription.unsubscribe();
-            }
-        });
+            window.deleteMaterial = async function(id) {
+                if (confirm('Удалить?')) { await _supabase.from('group_library').delete().eq('id', id); loadMaterials(); }
+            };
+            window.clearAllMaterials = async function() {
+                if (confirm('Удалить ВСЕ материалы группы?')) { await _supabase.from('group_library').delete().eq('group_id', groupId); loadMaterials(); }
+            };
+            window.applyFilters = function() { renderMaterials(); };
+            function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+            loadMaterials();
+        })();
     </script>
 </body>
 </html>
