@@ -28,42 +28,108 @@
         <a href="index.html" class="back-link">← Вернуться на главную</a>
         <div class="hint"><strong>Тестовые данные:</strong><br>👩‍🏫 Учитель: EvgenyaGuitara01543 / 0019234509<br>👨‍🎓 Ученик: LeonidzasFire23457 / 11265497</div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function() {
+            // НАСТРОЙКИ ПОДКЛЮЧЕНИЯ К SUPABASE
             const SUPABASE_URL = 'https://lpiczwspyxmtncxodyxr.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwaWN6d3NweXhtdG5jeG9keXhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTAxNjEsImV4cCI6MjA5MjA2NjE2MX0.Q1FUwxGIabDi3rMsBC63caJ-QZt3nwixuXccXPTgqEw';
+            
+            // СОЗДАЁМ КЛИЕНТА SUPABASE
             const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
+            // ГЛАВНАЯ ФУНКЦИЯ ВХОДА
             window.checkLogin = async function() {
                 const username = document.getElementById('username').value.trim();
                 const password = document.getElementById('password').value.trim();
                 const errorDiv = document.getElementById('errorMessage');
-                if (!username || !password) { errorDiv.style.display = 'block'; errorDiv.innerText = '❌ Поля не могут быть пустыми'; return; }
                 
-                const { data: teacher } = await _supabase.from('teachers').select('*').eq('login', username).eq('password', password);
-                if (teacher && teacher.length > 0) {
-                    localStorage.setItem('currentUserRole', 'teacher');
-                    localStorage.setItem('currentUserLogin', teacher[0].login);
-                    localStorage.setItem('currentUserName', teacher[0].name);
-                    localStorage.setItem('currentUserDisplay', '👩‍🏫 ' + teacher[0].name + ' (Учитель)');
-                    window.location.href = 'teacher-cabinet.html';
+                // Проверка на пустые поля
+                if (!username || !password) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.innerText = '❌ Поля не могут быть пустыми';
                     return;
                 }
                 
-                const { data: student } = await _supabase.from('students').select('*').eq('login', username).eq('password', password);
-                if (student && student.length > 0) {
-                    localStorage.setItem('currentUserRole', 'student');
-                    localStorage.setItem('currentUserLogin', student[0].login);
-                    localStorage.setItem('currentUserName', student[0].name);
-                    localStorage.setItem('currentUserDisplay', '👨‍🎓 ' + student[0].name + ' (Ученик)');
-                    window.location.href = 'student-cabinet.html';
-                    return;
+                console.log('🔍 Поиск пользователя:', username);
+                
+                // 1. ПРОВЕРЯЕМ ТАБЛИЦУ УЧИТЕЛЕЙ
+                try {
+                    const { data: teacher, error: teacherError } = await _supabase
+                        .from('teachers')
+                        .select('*')
+                        .eq('login', username)
+                        .eq('password', password);
+                    
+                    console.log('📚 Результат проверки учителя:', teacher);
+                    
+                    if (teacherError) {
+                        console.error('Ошибка при запросе учителя:', teacherError);
+                    }
+                    
+                    // Если учитель найден
+                    if (teacher && teacher.length > 0) {
+                        console.log('✅ Учитель найден:', teacher[0].name);
+                        
+                        // Сохраняем данные в localStorage
+                        localStorage.setItem('currentUserRole', 'teacher');
+                        localStorage.setItem('currentUserLogin', teacher[0].login);
+                        localStorage.setItem('currentUserName', teacher[0].name);
+                        localStorage.setItem('currentUserDisplay', '👩‍🏫 ' + teacher[0].name + ' (Учитель)');
+                        
+                        // Перенаправляем в кабинет учителя
+                        window.location.href = 'teacher-cabinet.html';
+                        return;
+                    }
+                } catch (err) {
+                    console.error('❌ Ошибка при проверке учителя:', err);
                 }
                 
+                // 2. ПРОВЕРЯЕМ ТАБЛИЦУ УЧЕНИКОВ
+                try {
+                    const { data: student, error: studentError } = await _supabase
+                        .from('students')
+                        .select('*')
+                        .eq('login', username)
+                        .eq('password', password);
+                    
+                    console.log('📚 Результат проверки ученика:', student);
+                    
+                    if (studentError) {
+                        console.error('Ошибка при запросе ученика:', studentError);
+                    }
+                    
+                    // Если ученик найден
+                    if (student && student.length > 0) {
+                        console.log('✅ Ученик найден:', student[0].name);
+                        
+                        // Сохраняем данные в localStorage
+                        localStorage.setItem('currentUserRole', 'student');
+                        localStorage.setItem('currentUserLogin', student[0].login);
+                        localStorage.setItem('currentUserName', student[0].name);
+                        localStorage.setItem('currentUserDisplay', '👨‍🎓 ' + student[0].name + ' (Ученик)');
+                        
+                        // Перенаправляем в кабинет ученика
+                        window.location.href = 'student-cabinet.html';
+                        return;
+                    }
+                } catch (err) {
+                    console.error('❌ Ошибка при проверке ученика:', err);
+                }
+                
+                // Если ничего не найдено
+                console.log('❌ Пользователь не найден:', username);
                 errorDiv.style.display = 'block';
                 errorDiv.innerText = '❌ Неверный логин или пароль';
             };
+            
+            // Добавляем возможность войти по Enter
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    window.checkLogin();
+                }
+            });
         })();
     </script>
 </body>
