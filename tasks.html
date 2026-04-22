@@ -29,9 +29,6 @@
         .intro-section { background: #f8f9fc; border-radius: 20px; padding: 25px; margin-bottom: 30px; border-left: 5px solid #f0b90b; }
         .intro-section h3 { color: #1e1e2f; margin-bottom: 15px; font-size: 1.4em; }
         .intro-section p { color: #333; line-height: 1.6; margin-bottom: 15px; }
-        .intro-section ul, .intro-section ol { margin-left: 25px; margin-bottom: 15px; }
-        .intro-section li { margin: 8px 0; line-height: 1.5; }
-        .intro-section .note { background: #fff9e6; padding: 15px; border-radius: 12px; margin-top: 15px; border-left: 3px solid #ffc107; }
         .difficulty-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         .difficulty-btn { padding: 8px 20px; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .difficulty-btn.easy { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
@@ -83,8 +80,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function() {
-            const SUPABASE_URL = 'https://gvqxdbzsjamhrdjlbutt.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2cXhkYnpzamFtaHJkamxidXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMjI1NDIsImV4cCI6MjA5MDY5ODU0Mn0.5tx_Da1Zd82FUxa1M69fq_umlJVOnrKYphSjMlm7SeM';
+            const SUPABASE_URL = 'https://lpiczwspyxmtncxodyxr.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwaWN6d3NweXhtdG5jeG9keXhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTAxNjEsImV4cCI6MjA5MjA2NjE2MX0.Q1FUwxGIabDi3rMsBC63caJ-QZt3nwixuXccXPTgqEw';
             const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
             const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
