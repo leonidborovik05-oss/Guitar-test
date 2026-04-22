@@ -47,4 +47,46 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        (function
+        (function() {
+            const SUPABASE_URL = 'https://lpiczwspyxmtncxodyxr.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwaWN6d3NweXhtdG5jeG9keXhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTAxNjEsImV4cCI6MjA5MjA2NjE2MX0.Q1FUwxGIabDi3rMsBC63caJ-QZt3nwixuXccXPTgqEw';
+            const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            const groupId = new URLSearchParams(window.location.search).get('groupId');
+            const userLogin = localStorage.getItem('currentUserLogin') || 'LeonidzasFire23457';
+            const userName = localStorage.getItem('currentUserName') || 'Ученик';
+            
+            async function loadGroup() {
+                const { data } = await _supabase.from('groups').select('*').eq('id', groupId).single();
+                if (data) { document.getElementById('groupName').textContent = data.name; document.getElementById('libraryLink').href = `group-library.html?groupId=${groupId}`; }
+                else document.getElementById('messagesArea').innerHTML = '<div class="system-message">❌ Группа не найдена</div>';
+            }
+            async function loadMessages() {
+                const { data } = await _supabase.from('group_messages').select('*').eq('group_id', groupId).order('id', { ascending: true });
+                const container = document.getElementById('messagesArea');
+                if (!data || !data.length) { container.innerHTML = '<div class="system-message">💬 Нет сообщений</div>'; return; }
+                let html = '';
+                for (let m of data) {
+                    const isOwn = m.sender === userLogin;
+                    const isTeacher = m.sender === 'EvgenyaGuitara01543';
+                    html += `<div class="message ${isOwn ? 'own' : ''} ${isTeacher ? 'teacher' : ''}"><div class="message-header"><span class="message-sender">${escapeHtml(m.sender_name)}</span><span class="message-time">${m.date}</span></div><div class="message-content">${escapeHtml(m.text)}</div></div>`;
+                }
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight;
+            }
+            window.sendMessage = async function() {
+                const input = document.getElementById('messageInput');
+                const text = input.value.trim();
+                if (!text) return;
+                await _supabase.from('group_messages').insert([{ group_id: parseInt(groupId), sender: userLogin, sender_name: userName, text, date: new Date().toLocaleString(), read: false }]);
+                input.value = '';
+                loadMessages();
+            };
+            window.checkEnter = function(e) { if (e.key === 'Enter') sendMessage(); };
+            function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+            loadGroup(); loadMessages();
+            _supabase.channel(`group_${groupId}`).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'group_messages', filter: `group_id=eq.${groupId}` }, () => loadMessages()).subscribe();
+        })();
+    </script>
+</body>
+</html>
